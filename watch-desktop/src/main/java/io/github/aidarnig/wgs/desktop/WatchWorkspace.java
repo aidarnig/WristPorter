@@ -1,11 +1,14 @@
 package io.github.aidarnig.wgs.desktop;
 
+import atlantafx.base.theme.PrimerDark;
+import atlantafx.base.theme.PrimerLight;
 import io.github.aidarnig.wgs.adb.WatchDevice;
 import io.github.aidarnig.wgs.adb.WatchEndpoint;
 import io.github.aidarnig.wgs.core.TransferUpdate;
 import io.github.aidarnig.wgs.core.WatchTransferService;
 import io.github.aidarnig.wgs.domain.PhotoFiles;
 import io.github.aidarnig.wgs.domain.PhotoCollector;
+import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
@@ -27,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.prefs.Preferences;
 
 /** Functional first iteration. Preview thumbnails and settings are tracked for M2/M4. */
 public final class WatchWorkspace extends BorderPane {
@@ -50,11 +54,14 @@ public final class WatchWorkspace extends BorderPane {
     private Task<Void> activeTransfer;
     private String previousDevice;
     private boolean transferring;
+    private final Preferences preferences = Preferences.userNodeForPackage(WatchWorkspace.class);
+    private boolean lightTheme = preferences.getBoolean("appearance.light", false);
 
     public WatchWorkspace(WatchTransferService service, ExecutorService worker) {
         this.service = service;
         this.worker = worker;
         getStyleClass().add("app-shell");
+        applyTheme();
         setTop(header());
         ScrollPane connectionScroll = new ScrollPane(connectionPanel());
         connectionScroll.setFitToWidth(true);
@@ -72,11 +79,28 @@ public final class WatchWorkspace extends BorderPane {
         brand.getStyleClass().add("brand");
         Label subtitle = new Label("Фотографии на часах — без Android-смартфона");
         subtitle.getStyleClass().add("muted");
-        HBox box = new HBox(20, brand, subtitle);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        Button theme = new Button(lightTheme ? "Тёмная тема" : "Светлая тема");
+        theme.setOnAction(event -> {
+            lightTheme = !lightTheme;
+            applyTheme();
+            theme.setText(lightTheme ? "Тёмная тема" : "Светлая тема");
+        });
+        HBox box = new HBox(20, brand, subtitle, spacer, theme);
         box.setAlignment(Pos.CENTER_LEFT);
         box.setPadding(new Insets(19, 26, 19, 26));
         box.getStyleClass().add("app-header");
         return box;
+    }
+
+    private void applyTheme() {
+        getStyleClass().remove("wgs-light");
+        if (lightTheme) getStyleClass().add("wgs-light");
+        Application.setUserAgentStylesheet(lightTheme
+                ? new PrimerLight().getUserAgentStylesheet()
+                : new PrimerDark().getUserAgentStylesheet());
+        preferences.putBoolean("appearance.light", lightTheme);
     }
 
     private VBox connectionPanel() {

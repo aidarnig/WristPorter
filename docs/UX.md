@@ -12,7 +12,7 @@ The device finder displays connected ADB devices and requires explicit selection
 
 ## Visual system
 
-JavaFX 27 + AtlantaFX 3; dark initial theme, low-noise surfaces, clear hierarchy, rounded interactive elements and status colors with adequate contrast. A light theme and RU/EN resource bundles are planned. The initial screen has asynchronous 64px image previews and recursive folder import; it is not the final polished layout.
+JavaFX 27 + AtlantaFX 3; light/dark theme switcher with the selected preference stored locally, low-noise surfaces, clear hierarchy, rounded interactive elements and status colors with adequate contrast. RU/EN resource bundles are planned. The initial screen has asynchronous 64px image previews and recursive folder import; it is not the final polished layout.
 
 ## Accessible behavior
 

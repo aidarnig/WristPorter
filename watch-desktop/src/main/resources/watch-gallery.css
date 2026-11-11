@@ -1,58 +1,89 @@
 .app-shell {
-    -fx-background-color: #10151f;
+    -wgs-bg: #10151f;
+    -wgs-header: #161e2b;
+    -wgs-panel: #151d2a;
+    -wgs-card: #1a2433;
+    -wgs-border: #2b3443;
+    -wgs-border-active: #55728f;
+    -wgs-title: #eef5ff;
+    -wgs-text: #e6eef9;
+    -wgs-muted: #9aa9bd;
+    -wgs-brand: #f3f7ff;
+    -wgs-accent: #287bd8;
+    -wgs-accent-hover: #4198f0;
+    -wgs-drop-icon: #8dbfff;
+    -wgs-success: #9bdab6;
+    -wgs-thumbnail: #263244;
+    -fx-background-color: -wgs-bg;
     -fx-font-family: "Segoe UI", "Inter", sans-serif;
     -fx-font-size: 13px;
 }
+
+.app-shell.wgs-light {
+    -wgs-bg: #f5f7fb;
+    -wgs-header: #ffffff;
+    -wgs-panel: #ebf0f7;
+    -wgs-card: #eef4fd;
+    -wgs-border: #d4deeb;
+    -wgs-border-active: #7ca5d6;
+    -wgs-title: #15243c;
+    -wgs-text: #233952;
+    -wgs-muted: #5b6e84;
+    -wgs-brand: #172c48;
+    -wgs-accent: #2175d1;
+    -wgs-accent-hover: #155ba8;
+    -wgs-drop-icon: #2b73c6;
+    -wgs-success: #19704c;
+    -wgs-thumbnail: #d9e4f1;
+}
+
 .app-header {
-    -fx-background-color: #161e2b;
-    -fx-border-color: transparent transparent #2b3443 transparent;
+    -fx-background-color: -wgs-header;
+    -fx-border-color: transparent transparent -wgs-border transparent;
 }
 .brand {
-    -fx-text-fill: #f3f7ff;
+    -fx-text-fill: -wgs-brand;
     -fx-font-weight: 800;
     -fx-font-size: 18px;
 }
-.muted { -fx-text-fill: #9aa9bd; }
+.muted { -fx-text-fill: -wgs-muted; }
 .side-panel {
-    -fx-background-color: #151d2a;
-    -fx-border-color: transparent #2b3443 transparent transparent;
+    -fx-background-color: -wgs-panel;
+    -fx-border-color: transparent -wgs-border transparent transparent;
 }
-.panel-heading { -fx-font-size: 19px; -fx-font-weight: bold; -fx-text-fill: #eef5ff; }
-.page-heading { -fx-font-size: 25px; -fx-font-weight: bold; -fx-text-fill: #eef5ff; }
-.section-heading { -fx-font-weight: 700; -fx-text-fill: #e6eef9; }
+.panel-heading { -fx-font-size: 19px; -fx-font-weight: bold; -fx-text-fill: -wgs-title; }
+.page-heading { -fx-font-size: 25px; -fx-font-weight: bold; -fx-text-fill: -wgs-title; }
+.section-heading { -fx-font-weight: 700; -fx-text-fill: -wgs-text; }
 .workspace { -fx-background-color: transparent; }
 .drop-zone {
-    -fx-background-color: #1a2433;
+    -fx-background-color: -wgs-card;
     -fx-background-radius: 14px;
-    -fx-border-color: #55728f;
+    -fx-border-color: -wgs-border-active;
     -fx-border-style: segments(5, 5);
     -fx-border-radius: 14px;
 }
-.drop-icon { -fx-font-size: 38px; -fx-text-fill: #8dbfff; }
+.drop-icon { -fx-font-size: 38px; -fx-text-fill: -wgs-drop-icon; }
 .accent-button {
-    -fx-background-color: #287bd8;
+    -fx-background-color: -wgs-accent;
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-background-radius: 8px;
 }
-.accent-button:hover { -fx-background-color: #4198f0; }
-.connection-state { -fx-text-fill: #9bdab6; -fx-font-weight: 700; }
+.accent-button:hover { -fx-background-color: -wgs-accent-hover; }
+.connection-state { -fx-text-fill: -wgs-success; -fx-font-weight: 700; }
 .app-footer {
-    -fx-background-color: #151d2a;
-    -fx-border-color: #2b3443 transparent transparent transparent;
+    -fx-background-color: -wgs-panel;
+    -fx-border-color: -wgs-border transparent transparent transparent;
 }
 .list-view { -fx-background-radius: 10px; }
 .text-field, .password-field { -fx-background-radius: 7px; }
-
-/* Bounded, asynchronous previews for the image queue. */
 .photo-preview { -fx-spacing: 14px; -fx-alignment: center-left; }
-.photo-name { -fx-font-weight: bold; -fx-text-fill: #e7f0fb; }
-.photo-extension { -fx-text-fill: #9aa9bd; -fx-font-size: 11px; }
-.photo-thumbnail { -fx-background-color: #263244; -fx-background-radius: 8px; }
-
+.photo-name { -fx-font-weight: bold; -fx-text-fill: -wgs-text; }
+.photo-extension { -fx-text-fill: -wgs-muted; -fx-font-size: 11px; }
+.photo-thumbnail { -fx-background-color: -wgs-thumbnail; -fx-background-radius: 8px; }
 .connection-scroll {
-    -fx-background-color: #151d2a;
+    -fx-background-color: -wgs-panel;
     -fx-background-insets: 0;
     -fx-padding: 0;
 }
-.connection-scroll > .viewport { -fx-background-color: #151d2a; }
+.connection-scroll > .viewport { -fx-background-color: -wgs-panel; }
