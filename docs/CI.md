@@ -6,6 +6,8 @@ The workflow runs on source, POM, CI script or workflow edits. Documentation-onl
 
 For ordinary pushes and PRs, Maven first installs changed modules and their required upstream dependencies with tests skipped, then runs tests **only for the changed modules**. Other modules are not tested. Manual `workflow_dispatch` runs full `mvn verify`.
 
+The selection policy has a standalone shell regression test with a fake Maven executable: `ci/test-verify-changed.sh`. It checks one-module, multiple-module, full-reactor and empty-change cases without compiling Java.
+
 ## Cost controls
 
 One Linux runner, Maven dependency cache, canceled superseded runs, no Windows matrix or installer creation per commit.

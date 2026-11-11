@@ -76,6 +76,8 @@ jobs:
           distribution: temurin
           java-version: '25'
           cache: maven
+      - name: Validate module selection policy
+        run: bash ci/test-verify-changed.sh
       - name: Verify selected modules
         env:
           DOMAIN_CHANGED: ${{ needs.detect.outputs.domain }}
