@@ -479,8 +479,15 @@ public final class WatchWorkspace extends BorderPane {
         String env = System.getenv("WGS_ADB");
         if (env != null && !env.isBlank()) return env;
         String name = System.getProperty("os.name", "").toLowerCase().contains("win") ? "adb.exe" : "adb";
-        Path path = Path.of(System.getProperty("user.home"), "Documents", "platform-tools", name);
-        return Files.isRegularFile(path) ? path.toString() : name;
+        // In a jpackage app image, java.home points inside the bundled runtime.
+        // A Platform-Tools folder alongside runtime/ is a portable, install-free option.
+        Path imageRoot = Path.of(System.getProperty("java.home")).toAbsolutePath().getParent();
+        if (imageRoot != null) {
+            Path bundledTools = imageRoot.resolve("platform-tools").resolve(name);
+            if (Files.isRegularFile(bundledTools)) return bundledTools.toString();
+        }
+        Path documentsTools = Path.of(System.getProperty("user.home"), "Documents", "platform-tools", name);
+        return Files.isRegularFile(documentsTools) ? documentsTools.toString() : name;
     }
 
     @FunctionalInterface

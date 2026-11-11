@@ -34,6 +34,8 @@ try {
 
     $exe = Join-Path $appImage "WatchGallerySync.exe"
     if (!(Test-Path $exe)) { throw "Expected executable missing from app image." }
+    if (!(Test-Path (Join-Path $appImage "runtime"))) { throw "Bundled Java runtime is missing." }
+    if (!(Test-Path (Join-Path $appImage "app"))) { throw "Application libraries are missing." }
 
     $zip = Join-Path $dist "WatchGallerySync-windows-x64.zip"
     if (Test-Path $zip) { Remove-Item $zip -Force }
