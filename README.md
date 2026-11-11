@@ -29,6 +29,16 @@ Choose `WristPorter-1.1.2-windows-x64.zip` under **Assets** — not the auto-gen
 
 *Illustration of the 1.1.2 interface, not a real screenshot. Real device and connection details are intentionally omitted.*
 
+## How it works
+
+1. Enable Developer options and **Wireless debugging** on the watch.
+2. Pair WristPorter using the displayed **pairing port** and six-digit code.
+3. Connect using the **different debugging port** shown on the watch.
+4. Select or drag JPEG/PNG images into the queue and click **Send to watch**.
+5. Open Samsung Gallery; copied images are automatically submitted for media indexing.
+
+For the detailed pairing steps, [see the Quick Start guide](docs/QUICK_START.md).
+
 ## First-time connection
 
 On the watch, enable Developer options and **Wireless debugging**. Use **Pair device with pairing code**, enter its pairing port and six-digit code in WristPorter, then connect using the **different debugging port** shown on the watch. For details, see [Quick start](docs/QUICK_START.md). Turn wireless debugging off when finished.

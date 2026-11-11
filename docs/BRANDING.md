@@ -35,7 +35,7 @@ GitHub's repository Social Preview is not set by merely committing an image. The
 
 ## Screenshots in README
 
-GitHub Markdown supports images directly: `![Description](docs/assets/ui-preview-en.png)`. Each language README uses its own localized illustration. Replace these mockups with sanitized, up-to-date screenshots from the *released* UI when available; never commit real device IP addresses, personal photo thumbnails or pairing codes.
+GitHub Markdown supports images directly, using repository-relative paths. The intended final assets for the public README are `docs/assets/ui-screenshot-en.png` and `docs/assets/ui-screenshot-ru.png`, taken from the actual 1.1.2 application (not illustrations). Screenshots provided by the product owner on 2026-11-11 confirm RU/EN rendering and the corrected WP logo. Before publishing the screenshot binaries, mask the visible private IP address and debugging port while preserving the rest of the application window. Until those screenshot files are committed, the README must continue using the existing illustration links rather than broken paths. Keep photo names, pairing codes and other private material out of public images.
 
 ## Windows Explorer icon troubleshooting
 

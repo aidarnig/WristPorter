@@ -82,3 +82,16 @@ The [v1.1.2 stable release](https://github.com/aidarnig/WristPorter/releases/tag
 - Windows Explorer may display a stale previously cached Java icon for the same EXE path. Users should check a *new extraction directory* before treating it as a packaging regression.
 - **Remaining manual acceptance:** user confirmation of the complete title wordmark and Explorer's icon on their desktop. CI verifies resources and EXE packaging but cannot assert the user's local icon-cache state.
 
+
+## 2026-11-11 — WristPorter 1.1.2 visual acceptance
+
+**Status: PASS for the inspected RU/EN application interface.** The product owner supplied two full application screenshots (Russian and English) and confirmed that everything now looks correct and no visible bugs were observed.
+
+Confirmed on the user's Windows desktop:
+- The approved smartwatch WP icon and complete “WristPorter” wordmark render correctly.
+- The description/tagline is aligned in the header.
+- Language switching displays both Russian and English labels correctly.
+- The queue, device controls, connection status, log and prominent transfer-progress panel display in both language versions.
+- Previous in-app pairing, discovery and photo-transfer acceptance remains unchanged.
+
+This is visual acceptance, not a repeat of the hardware transfer test. The original screenshots contain a local watch IP address and debugging port; any publicly committed version should redact only those identifiers. The current README still links to the earlier illustrations until the real image binaries are added.
