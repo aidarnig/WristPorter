@@ -8,7 +8,7 @@ A header identifies the app. The connection sidebar guides ADB discovery, first 
 
 ## Pairing guidance
 
-The **pairing port** and **debugging connection port** shown by Wear OS are different. The interface must explicitly distinguish them, explain where each is displayed, and never ask users to run shell commands.
+The device finder displays connected ADB devices and requires explicit selection if multiple are available. The **pairing port** and **debugging connection port** shown by Wear OS are different. The interface must explicitly distinguish them, explain where each is displayed, and never ask users to run shell commands.
 
 ## Visual system
 

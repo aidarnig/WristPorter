@@ -32,6 +32,7 @@ public final class WatchWorkspace extends BorderPane {
     private final TextField pairEndpoint = new TextField();
     private final PasswordField pairCode = new PasswordField();
     private final TextField connectionEndpoint = new TextField();
+    private final ComboBox<String> watchPicker = new ComboBox<>();
     private final Label deviceStatus = new Label("Нет соединения");
     private final Label activity = new Label("Добавьте фотографии и подключите часы");
     private final Label count = new Label("0 файлов");
@@ -97,6 +98,12 @@ public final class WatchWorkspace extends BorderPane {
         Label connecting = new Label("2  Подключение");
         connecting.getStyleClass().add("section-heading");
         connectionEndpoint.setPromptText("IP:порт отладки (другой порт)");
+        watchPicker.setPromptText("Выберите найденные часы");
+        watchPicker.setMaxWidth(Double.MAX_VALUE);
+        watchPicker.setDisable(true);
+        watchPicker.setOnAction(event -> {
+            if (watchPicker.getValue() != null) connectionEndpoint.setText(watchPicker.getValue());
+        });
         Button connect = new Button("Подключиться");
         connect.getStyleClass().add("accent-button");
         connect.setMaxWidth(Double.MAX_VALUE);
@@ -113,7 +120,7 @@ public final class WatchWorkspace extends BorderPane {
         VBox box = new VBox(10,
                 title, guidance, label("Путь к ADB"), adbPath, browse,
                 new Separator(), pairing, pairEndpoint, pairCode, pair,
-                new Separator(), connecting, connectionEndpoint, connect, discover,
+                new Separator(), connecting, connectionEndpoint, connect, discover, watchPicker,
                 deviceStatus, note("Порт сопряжения и порт подключения на часах различаются."));
         box.getStyleClass().add("side-panel");
         box.setPadding(new Insets(24));
@@ -211,12 +218,17 @@ public final class WatchWorkspace extends BorderPane {
         };
         task.setOnSucceeded(event -> {
             List<WatchDevice> ready = task.getValue().stream().filter(WatchDevice::ready).toList();
-            if (ready.size() == 1) {
-                connectionEndpoint.setText(ready.getFirst().serial());
-                deviceStatus.setText("Найдено: " + ready.getFirst().serial());
+            List<String> serials = ready.stream().map(WatchDevice::serial).toList();
+            watchPicker.getItems().setAll(serials);
+            watchPicker.setDisable(serials.isEmpty());
+            if (serials.size() == 1) {
+                watchPicker.getSelectionModel().selectFirst();
+                deviceStatus.setText("Найдено: " + serials.getFirst());
+            } else if (serials.isEmpty()) {
+                deviceStatus.setText("Часы не обнаружены. Проверьте Wi-Fi и беспроводную отладку.");
             } else {
-                deviceStatus.setText("Готовых устройств: " + ready.size()
-                        + ". При нескольких укажите адрес нужных часов.");
+                connectionEndpoint.clear();
+                deviceStatus.setText("Найдено " + serials.size() + " устройств. Выберите нужные часы.");
             }
             activity.setText("Поиск завершён");
         });
