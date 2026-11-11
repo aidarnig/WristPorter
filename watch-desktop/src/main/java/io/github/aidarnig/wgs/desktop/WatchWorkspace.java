@@ -49,7 +49,11 @@ public final class WatchWorkspace extends BorderPane {
         this.worker = worker;
         getStyleClass().add("app-shell");
         setTop(header());
-        setLeft(connectionPanel());
+        ScrollPane connectionScroll = new ScrollPane(connectionPanel());
+        connectionScroll.setFitToWidth(true);
+        connectionScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        connectionScroll.getStyleClass().add("connection-scroll");
+        setLeft(connectionScroll);
         setCenter(imagesPanel());
         setBottom(footer());
         BorderPane.setMargin(getCenter(), new Insets(20, 24, 20, 24));
@@ -223,6 +227,7 @@ public final class WatchWorkspace extends BorderPane {
             watchPicker.setDisable(serials.isEmpty());
             if (serials.size() == 1) {
                 watchPicker.getSelectionModel().selectFirst();
+                connectionEndpoint.setText(serials.getFirst());
                 deviceStatus.setText("Найдено: " + serials.getFirst());
             } else if (serials.isEmpty()) {
                 deviceStatus.setText("Часы не обнаружены. Проверьте Wi-Fi и беспроводную отладку.");

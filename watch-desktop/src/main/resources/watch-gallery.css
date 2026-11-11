@@ -49,3 +49,10 @@
 .photo-name { -fx-font-weight: bold; -fx-text-fill: #e7f0fb; }
 .photo-extension { -fx-text-fill: #9aa9bd; -fx-font-size: 11px; }
 .photo-thumbnail { -fx-background-color: #263244; -fx-background-radius: 8px; }
+
+.connection-scroll {
+    -fx-background-color: #151d2a;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+.connection-scroll > .viewport { -fx-background-color: #151d2a; }
