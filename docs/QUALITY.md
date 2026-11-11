@@ -66,3 +66,7 @@ Observed and confirmed in screenshots and user feedback:
 ## 2026-11-11 — 1.1.1 regression scope
 
 User screenshots of v1.1.0 revealed a missing smartwatch symbol in the header, incorrectly rendered runtime/taskbar icon and a tagline alignment issue. A red SmartScreen Unknown publisher warning also appeared; the unsigned executable requires genuine trusted signing to mitigate it. The 1.1.1 fix uses bundled logo PNGs for the JavaFX header/window, checks the embedded EXE icon, and includes bilingual portable guides. Manual Windows visual retesting and future code signing remain outstanding.
+
+### Verified 1.1.1 release build
+
+[WristPorter v1.1.1](https://github.com/aidarnig/WristPorter/releases/tag/v1.1.1) is published. [Windows release workflow](https://github.com/aidarnig/WristPorter/actions/runs/43068975192) succeeded: Java/resource tests, bundled ADB, icon comparison (354 blue pixels in both source ICO and embedded EXE icon), bilingual quick-start file checks, ZIP checksum verification and GitHub Release upload. The main window's new PNG-based logo is not yet visually verified by the user on Windows; SmartScreen remains an expected possibility until trusted code signing/reputation requirements are met (tracked in issue #9).
