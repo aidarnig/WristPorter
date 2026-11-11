@@ -7,14 +7,16 @@ on:
       - 'pom.xml'
       - 'watch-*/pom.xml'
       - 'watch-*/src/**'
-      - 'ci/**'
+      - 'ci/verify-changed.sh'
+      - 'ci/test-verify-changed.sh'
       - '.github/workflows/ci.yml'
   pull_request:
     paths:
       - 'pom.xml'
       - 'watch-*/pom.xml'
       - 'watch-*/src/**'
-      - 'ci/**'
+      - 'ci/verify-changed.sh'
+      - 'ci/test-verify-changed.sh'
       - '.github/workflows/ci.yml'
   workflow_dispatch:
 
@@ -46,22 +48,26 @@ jobs:
             domain:
               - 'watch-domain/**'
               - 'pom.xml'
-              - 'ci/**'
+              - 'ci/verify-changed.sh'
+      - 'ci/test-verify-changed.sh'
               - '.github/workflows/ci.yml'
             adb:
               - 'watch-adb/**'
               - 'pom.xml'
-              - 'ci/**'
+              - 'ci/verify-changed.sh'
+      - 'ci/test-verify-changed.sh'
               - '.github/workflows/ci.yml'
             core:
               - 'watch-core/**'
               - 'pom.xml'
-              - 'ci/**'
+              - 'ci/verify-changed.sh'
+      - 'ci/test-verify-changed.sh'
               - '.github/workflows/ci.yml'
             desktop:
               - 'watch-desktop/**'
               - 'pom.xml'
-              - 'ci/**'
+              - 'ci/verify-changed.sh'
+      - 'ci/test-verify-changed.sh'
               - '.github/workflows/ci.yml'
 
   verify:

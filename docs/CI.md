@@ -2,7 +2,7 @@
 
 This file owns **build triggering and verification costs**. Release gates live in [QUALITY.md](QUALITY.md).
 
-The workflow runs on source, POM, CI script or workflow edits. Documentation-only changes do not launch Maven. `dorny/paths-filter` detects changed modules; root POM or CI edits select all modules.
+The lightweight Java workflow runs when module sources/POMs, the root POM, the Java selection scripts, or its own workflow change. Documentation-only changes and Windows packaging-only changes do not launch Java CI. The separate Windows packaging workflow runs manually or when its packaging scripts/workflow change. `dorny/paths-filter` detects changed modules; root POM or CI edits select all modules.
 
 For ordinary pushes and PRs, Maven first installs changed modules and their required upstream dependencies with tests skipped, then runs tests **only for the changed modules**. Other modules are not tested. Manual `workflow_dispatch` runs full `mvn verify`.
 
