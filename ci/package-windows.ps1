@@ -45,6 +45,7 @@ try {
         if (!(Test-Path -LiteralPath $componentPath)) { throw "Bundled ADB component missing: $component" }
     }
     Copy-Item -LiteralPath (Join-Path $root "LICENSE") -Destination (Join-Path $appImage "LICENSE.txt") -Force
+    Copy-Item -LiteralPath (Join-Path $root "docs\QUICK_START.md") -Destination (Join-Path $appImage "START_HERE.md") -Force
 
     $filename = "$appName-$version-windows-x64.zip"
     $zip = Join-Path $dist $filename

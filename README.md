@@ -27,6 +27,7 @@ See [Development](docs/DEVELOPMENT.md) for build instructions; see [Quality](doc
 
 Each document has a distinct responsibility:
 
+- [Quick start](docs/QUICK_START.md): end-user pairing, photo transfer and troubleshooting
 - [Product](docs/PRODUCT.md): supported user scenarios and acceptance criteria
 - [Architecture](docs/ARCHITECTURE.md): modules, transport and dependency security
 - [UX](docs/UX.md): visual and interaction behavior
