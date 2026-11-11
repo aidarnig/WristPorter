@@ -4,6 +4,7 @@ import io.github.aidarnig.wgs.adb.WatchDevice;
 import io.github.aidarnig.wgs.core.TransferUpdate;
 import io.github.aidarnig.wgs.core.WatchTransferService;
 import io.github.aidarnig.wgs.domain.PhotoFiles;
+import io.github.aidarnig.wgs.domain.PhotoCollector;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
@@ -22,7 +23,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
 
 /** Functional first iteration. Preview thumbnails and settings are tracked for M2/M4. */
 public final class WatchWorkspace extends BorderPane {
@@ -286,13 +286,23 @@ public final class WatchWorkspace extends BorderPane {
     }
 
     private void importPath(Path path) {
-        if (Files.isDirectory(path)) {
-            try (Stream<Path> stream = Files.list(path)) {
-                stream.filter(Files::isRegularFile).filter(PhotoFiles::isSupported).forEach(this::addImage);
-            } catch (IOException ex) {
-                failure("Ошибка чтения папки", ex);
+        if (!Files.isDirectory(path)) {
+            addImage(path);
+            return;
+        }
+        activity.setText("Ищем фотографии в папке…");
+        Task<List<Path>> scan = new Task<>() {
+            @Override protected List<Path> call() throws Exception {
+                return PhotoCollector.collect(path);
             }
-        } else addImage(path);
+        };
+        scan.setOnSucceeded(event -> {
+            int before = files.getItems().size();
+            scan.getValue().forEach(this::addImage);
+            activity.setText("Добавлено " + (files.getItems().size() - before) + " фотографий");
+        });
+        scan.setOnFailed(event -> failure("Не удалось прочитать папку", scan.getException()));
+        worker.submit(scan);
     }
 
     private void addImage(Path image) {

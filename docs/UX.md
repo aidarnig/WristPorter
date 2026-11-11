@@ -12,7 +12,7 @@ The **pairing port** and **debugging connection port** shown by Wear OS are diff
 
 ## Visual system
 
-JavaFX 27 + AtlantaFX 3; dark initial theme, low-noise surfaces, clear hierarchy, rounded interactive elements and status colors with adequate contrast. A light theme and RU/EN resource bundles are planned. The initial screen is a working UI slice, not the final polished layout.
+JavaFX 27 + AtlantaFX 3; dark initial theme, low-noise surfaces, clear hierarchy, rounded interactive elements and status colors with adequate contrast. A light theme and RU/EN resource bundles are planned. The initial screen has asynchronous 64px image previews and recursive folder import; it is not the final polished layout.
 
 ## Accessible behavior
 
