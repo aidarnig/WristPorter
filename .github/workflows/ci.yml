@@ -1,0 +1,86 @@
+name: Selective Java checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'pom.xml'
+      - 'watch-*/pom.xml'
+      - 'watch-*/src/**'
+      - 'ci/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    paths:
+      - 'pom.xml'
+      - 'watch-*/pom.xml'
+      - 'watch-*/src/**'
+      - 'ci/**'
+      - '.github/workflows/ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: wgs-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      domain: ${{ steps.changed.outputs.domain }}
+      adb: ${{ steps.changed.outputs.adb }}
+      core: ${{ steps.changed.outputs.core }}
+      desktop: ${{ steps.changed.outputs.desktop }}
+      any: ${{ steps.changed.outputs.domain == 'true' || steps.changed.outputs.adb == 'true' || steps.changed.outputs.core == 'true' || steps.changed.outputs.desktop == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+        if: github.event_name != 'workflow_dispatch'
+      - uses: dorny/paths-filter@v4
+        id: changed
+        if: github.event_name != 'workflow_dispatch'
+        with:
+          filters: |
+            domain:
+              - 'watch-domain/**'
+              - 'pom.xml'
+              - 'ci/**'
+              - '.github/workflows/ci.yml'
+            adb:
+              - 'watch-adb/**'
+              - 'pom.xml'
+              - 'ci/**'
+              - '.github/workflows/ci.yml'
+            core:
+              - 'watch-core/**'
+              - 'pom.xml'
+              - 'ci/**'
+              - '.github/workflows/ci.yml'
+            desktop:
+              - 'watch-desktop/**'
+              - 'pom.xml'
+              - 'ci/**'
+              - '.github/workflows/ci.yml'
+
+  verify:
+    needs: detect
+    if: github.event_name == 'workflow_dispatch' || needs.detect.outputs.any == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Verify selected modules
+        env:
+          DOMAIN_CHANGED: ${{ needs.detect.outputs.domain }}
+          ADB_CHANGED: ${{ needs.detect.outputs.adb }}
+          CORE_CHANGED: ${{ needs.detect.outputs.core }}
+          DESKTOP_CHANGED: ${{ needs.detect.outputs.desktop }}
+          FULL_REACTOR: ${{ github.event_name == 'workflow_dispatch' }}
+        run: bash ci/verify-changed.sh
