@@ -56,7 +56,8 @@ class AdbClientProcessTest {
                 fi
                 """.formatted(log, log);
         AdbClient adb = new AdbClient(executable(fake).toString());
-        Path image = Files.writeString(temporary.resolve("name with spaces;é.png"), "image placeholder");
+        byte[] imageBytes = {(byte)137, 80, 78, 71, 13, 10, 26, 10};
+        Path image = Files.write(temporary.resolve("name with spaces;é.png"), imageBytes);
         String serial = "192.168.1.101:38267";
 
         adb.assertConnected(serial);
@@ -70,6 +71,6 @@ class AdbClientProcessTest {
         assertTrue(calls.contains("ARG:/sdcard/DCIM/Camera/" + remote));
         assertTrue(calls.contains("ARG:file:///sdcard/DCIM/Camera/" + remote));
         assertTrue(calls.indexOf("ARG:push") < calls.indexOf("ARG:android.intent.action.MEDIA_SCANNER_SCAN_FILE"));
-        assertEquals("image placeholder", Files.readString(image), "Local image must not change");
+        assertArrayEquals(imageBytes, Files.readAllBytes(image), "Local image must not change");
     }
 }

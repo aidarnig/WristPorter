@@ -26,8 +26,11 @@ class PhotoFilesTest {
 
     @Test void rejectsUnreadableAndUnsupportedPaths() throws Exception {
         assertThrows(IllegalArgumentException.class, () -> PhotoFiles.requireReadable(temp.resolve("absent.png")));
-        Path file = Files.writeString(temp.resolve("good.png"), "placeholder");
+        Path file = Files.write(temp.resolve("good.png"), new byte[] {(byte)137, 80, 78, 71, 13, 10, 26, 10});
         assertDoesNotThrow(() -> PhotoFiles.requireReadable(file));
+        Path spoofed = Files.writeString(temp.resolve("spoofed.png"), "this is not an image");
+        assertFalse(PhotoFiles.isReadableImage(spoofed));
+        assertThrows(IllegalArgumentException.class, () -> PhotoFiles.requireReadable(spoofed));
         assertThrows(IllegalArgumentException.class, () -> PhotoFiles.requireReadable(temp.resolve("bad.txt")));
     }
 }

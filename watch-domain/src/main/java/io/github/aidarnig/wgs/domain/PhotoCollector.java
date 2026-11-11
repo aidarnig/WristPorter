@@ -19,7 +19,7 @@ public final class PhotoCollector {
         if (!Files.exists(root)) throw new IOException("Folder or file does not exist: " + root);
         try (Stream<Path> paths = Files.walk(root)) {
             List<Path> found = paths.filter(Files::isRegularFile)
-                    .filter(PhotoFiles::isSupported)
+                    .filter(PhotoFiles::isReadableImage)
                     .limit(MAX_FILES + 1L)
                     .sorted(Comparator.comparing(Path::toString, String.CASE_INSENSITIVE_ORDER))
                     .toList();

@@ -32,9 +32,11 @@ class WatchTransferServiceProcessTest {
         Files.writeString(adb, "#!/bin/sh\n" + fake);
         assertTrue(adb.toFile().setExecutable(true));
 
-        Path good1 = Files.writeString(temp.resolve("first.png"), "placeholder");
-        Path bad = Files.writeString(temp.resolve("fail.png"), "placeholder");
-        Path good2 = Files.writeString(temp.resolve("second.jpg"), "placeholder");
+        byte[] png = {(byte)137, 80, 78, 71, 13, 10, 26, 10};
+        byte[] jpeg = {(byte)255, (byte)216, (byte)255, 0, 0, 0, 0, 0};
+        Path good1 = Files.write(temp.resolve("first.png"), png);
+        Path bad = Files.write(temp.resolve("fail.png"), png);
+        Path good2 = Files.write(temp.resolve("second.jpg"), jpeg);
         List<TransferUpdate> updates = new ArrayList<>();
 
         new WatchTransferService().send(adb.toString(), "192.168.1.101:38267",

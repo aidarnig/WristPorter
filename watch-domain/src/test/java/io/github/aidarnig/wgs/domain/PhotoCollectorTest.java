@@ -14,8 +14,8 @@ class PhotoCollectorTest {
 
     @Test void importsNestedFoldersAndIgnoresUnsupportedFiles() throws Exception {
         Path subfolder = Files.createDirectories(root.resolve("trip/day 1"));
-        Path one = Files.writeString(root.resolve("a.JPG"), "image");
-        Path two = Files.writeString(subfolder.resolve("b.png"), "image");
+        Path one = Files.write(root.resolve("a.JPG"), new byte[] {(byte)255, (byte)216, (byte)255, 0, 0, 0, 0, 0});
+        Path two = Files.write(subfolder.resolve("b.png"), new byte[] {(byte)137, 80, 78, 71, 13, 10, 26, 10});
         Files.writeString(subfolder.resolve("notes.txt"), "do not import");
         List<Path> photos = PhotoCollector.collect(root);
         assertEquals(2, photos.size());
@@ -24,7 +24,7 @@ class PhotoCollectorTest {
     }
 
     @Test void acceptsSingleFileAndReportsMissingPaths() throws Exception {
-        Path photo = Files.writeString(root.resolve("watch.png"), "image");
+        Path photo = Files.write(root.resolve("watch.png"), new byte[] {(byte)137, 80, 78, 71, 13, 10, 26, 10});
         assertEquals(List.of(photo), PhotoCollector.collect(photo));
         assertThrows(java.io.IOException.class, () -> PhotoCollector.collect(root.resolve("missing")));
     }

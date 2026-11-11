@@ -334,7 +334,7 @@ public final class WatchWorkspace extends BorderPane {
     }
 
     private void addImage(Path image) {
-        if (PhotoFiles.isSupported(image) && Files.isRegularFile(image) && !files.getItems().contains(image)) {
+        if (PhotoFiles.isReadableImage(image) && !files.getItems().contains(image)) {
             files.getItems().add(image);
         }
     }
