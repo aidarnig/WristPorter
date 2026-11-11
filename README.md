@@ -2,7 +2,6 @@
 
 **WristPorter** is an open-source Java desktop application for transferring photos directly from Windows to Samsung Galaxy Watch 4 Classic (and potentially other Wear OS watches) via wireless ADB, without an Android smartphone or Galaxy Wearable.
 
-**Tagline:** Your files, one wrist away.
 
 > **Early development / 0.1.0-SNAPSHOT:** not yet a hardware-verified portable release. The repository URL retains its original slug until it can be renamed.
 
