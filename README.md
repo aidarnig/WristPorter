@@ -1,8 +1,10 @@
-# Watch Gallery Sync
+# WristPorter
 
-Open-source Java desktop application for transferring photos directly from Windows to Samsung Galaxy Watch 4 Classic (and potentially other Wear OS watches) via wireless ADB, without an Android smartphone or Galaxy Wearable.
+**WristPorter** is an open-source Java desktop application for transferring photos directly from Windows to Samsung Galaxy Watch 4 Classic (and potentially other Wear OS watches) via wireless ADB, without an Android smartphone or Galaxy Wearable.
 
-> **Early development / 0.1.0-SNAPSHOT:** not yet a hardware-verified portable release.
+**Tagline:** Your files, one wrist away.
+
+> **Early development / 0.1.0-SNAPSHOT:** not yet a hardware-verified portable release. The repository URL retains its original slug until it can be renamed.
 
 ## Current capabilities
 
@@ -23,7 +25,7 @@ mvn -B -ntp -pl watch-desktop -am install
 mvn -pl watch-desktop javafx:run
 ```
 
-The UI can select `adb.exe`. Set `WGS_ADB` to override the default path.
+The Windows portable ZIP will include ADB inside the application folder, so separate installation is unnecessary. The UI can still select a custom `adb.exe`; `WRISTPORTER_ADB` overrides the default path and legacy `WGS_ADB` remains supported.
 
 ## Documentation — one file per responsibility
 

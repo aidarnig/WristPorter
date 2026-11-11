@@ -1,4 +1,4 @@
-# Roadmap
+# WristPorter roadmap
 
 This document defines only the **milestone sequence**. Actionable work and completion checks live in [GitHub Issues](https://github.com/aidarnig/watch-gallery-sync/issues).
 

@@ -75,9 +75,9 @@ public final class WatchWorkspace extends BorderPane {
     }
 
     private HBox header() {
-        Label brand = new Label("WATCH GALLERY SYNC");
+        Label brand = new Label("WRISTPORTER");
         brand.getStyleClass().add("brand");
-        Label subtitle = new Label("Фотографии на часах — без Android-смартфона");
+        Label subtitle = new Label("Файлы на часах — без Android-смартфона");
         subtitle.getStyleClass().add("muted");
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -476,7 +476,8 @@ public final class WatchWorkspace extends BorderPane {
     }
 
     private static String defaultAdb() {
-        String env = System.getenv("WGS_ADB");
+        String env = System.getenv("WRISTPORTER_ADB");
+        if (env == null || env.isBlank()) env = System.getenv("WGS_ADB");
         if (env != null && !env.isBlank()) return env;
         String name = System.getProperty("os.name", "").toLowerCase().contains("win") ? "adb.exe" : "adb";
         // In a jpackage app image, java.home points inside the bundled runtime.

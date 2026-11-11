@@ -2,6 +2,10 @@
 
 This is the canonical source for **observable product behavior**. Implementation decisions are documented in [ARCHITECTURE.md](ARCHITECTURE.md).
 
+## Identity
+
+**WristPorter** — a local desktop companion for moving files to compatible smartwatches. The first release handles JPEG/PNG photos; other file types require separate validation and UX work. The name must not imply official Samsung/Google affiliation.
+
 ## Primary scenario
 
 Someone with an already configured Galaxy Watch 4 Classic, Windows laptop and no available Android smartphone wants to transfer one or hundreds of photos without typing PowerShell commands.

@@ -26,7 +26,7 @@ public final class DesktopApplication extends Application {
         var workspace = new WatchWorkspace(context.getBean(WatchTransferService.class), workers);
         var scene = new Scene(workspace, 1160, 780);
         scene.getStylesheets().add(getClass().getResource("/watch-gallery.css").toExternalForm());
-        stage.setTitle("Watch Gallery Sync");
+        stage.setTitle("WristPorter");
         stage.setMinWidth(900);
         stage.setMinHeight(650);
         stage.setScene(scene);
