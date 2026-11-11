@@ -1,45 +1,39 @@
 # WristPorter
 
-**WristPorter** is an open-source Java desktop application for transferring photos directly from Windows to Samsung Galaxy Watch 4 Classic (and potentially other Wear OS watches) via wireless ADB, without an Android smartphone or Galaxy Wearable.
+**Your files, one wrist away.**
 
+WristPorter is an open-source Java desktop application that transfers photos from Windows directly to compatible Wear OS watches over local Wi-Fi ADB. It does not require a nearby Android phone once the watch is configured. The current feature set targets **JPEG/PNG** transfers to Samsung Gallery on the Galaxy Watch 4 Classic.
 
-> **Early development / 0.1.0-SNAPSHOT:** not yet a hardware-verified portable release. The repository URL retains its original slug until it can be renamed.
+> **0.1.0 development preview:** The Windows portable package has been built successfully on a GitHub Windows runner, but the app is **not yet a hardware-tested release**.
+
+## Portable Windows edition
+
+Download the `WristPorter-windows-x64` artifact from a successful [Windows portable build](.github/workflows/windows-portable.yml). Extract the included `WristPorter-0.1.0-windows-x64.zip`, then launch `WristPorter/WristPorter.exe`.
+
+The application folder already includes the Java runtime and a verified `adb.exe` with its required DLL files. No installer, separate Java installation, or manual Android Platform-Tools setup is needed. The application supports manual ADB overrides for advanced users.
+
+See [Development](docs/DEVELOPMENT.md) for build instructions; see [Quality](docs/QUALITY.md) for acceptance requirements before a public release.
 
 ## Current capabilities
 
-- Native JavaFX UI, AtlantaFX dark theme, Spring Boot in non-web mode.
-- Wireless ADB pairing by IP, pairing port and six-digit code.
-- ADB connection via the **different debugging port**; device discovery.
-- Add multiple JPEG/PNG photos via file picker, folder picker and drag-and-drop.
-- Sequential ADB copy with unique filenames, followed by a media scanner broadcast for each successful copy.
-- Live progress and per-file statuses. A successful scan request **does not guarantee** Gallery rendered the image.
+- JavaFX + AtlantaFX light/dark UI, Spring Boot non-web services
+- Wireless ADB pairing and device selection, without PowerShell
+- Batch JPEG/PNG import via file picker, folders or drag-and-drop, with previews
+- Per-photo copy + Samsung Gallery media scan request
+- Retry failed copies or re-scan already copied files, without duplicate upload
+- No accounts, cloud storage or telemetry
 
-## Run from sources
+## Documentation
 
-Requires JDK 25, Maven 3.9+ and Google's [ADB Platform-Tools](https://developer.android.com/tools/releases/platform-tools).
+Each document has a distinct responsibility:
 
-```bash
-mvn -B -ntp verify
-mvn -B -ntp -pl watch-desktop -am install
-mvn -pl watch-desktop javafx:run
-```
+- [Product](docs/PRODUCT.md): supported user scenarios and acceptance criteria
+- [Architecture](docs/ARCHITECTURE.md): modules, transport and dependency security
+- [UX](docs/UX.md): visual and interaction behavior
+- [Roadmap](docs/ROADMAP.md): milestone sequence
+- [Quality](docs/QUALITY.md): testing and release gates
+- [Development](docs/DEVELOPMENT.md): building, packaging and contributing
+- [CI](docs/CI.md): affected-module verification and cost controls
+- [GitHub Issues](https://github.com/aidarnig/WristPorter/issues): concrete implementation tasks
 
-The Windows portable ZIP will include ADB inside the application folder, so separate installation is unnecessary. The UI can still select a custom `adb.exe`; `WRISTPORTER_ADB` overrides the default path and legacy `WGS_ADB` remains supported.
-
-## Documentation — one file per responsibility
-
-- [Product](docs/PRODUCT.md): functional scope and acceptance criteria.
-- [Architecture](docs/ARCHITECTURE.md): modules, ADB protocol and security decisions.
-- [UX](docs/UX.md): screens, visuals and interaction.
-- [Roadmap](docs/ROADMAP.md): milestone sequence.
-- [Quality](docs/QUALITY.md): test strategy and release gates.
-- [Development](docs/DEVELOPMENT.md): setup, commands and contribution workflow.
-- [Windows portable build](.github/workflows/windows-portable.yml): manually triggered packaging workflow (prototype only); usage details are in [Development](docs/DEVELOPMENT.md).
-- [CI](docs/CI.md): affected-module test policy and build cost.
-- [Issues](https://github.com/aidarnig/watch-gallery-sync/issues): individual tasks and implementation progress.
-
-## Privacy
-
-No accounts, cloud service or telemetry. Photos remain between the PC and selected watch on the local wireless ADB connection. Turn off wireless debugging when finished.
-
-Licensed under [MIT](LICENSE).
+MIT licensed; see [LICENSE](LICENSE). This is an independent project, not affiliated with Samsung or Google.

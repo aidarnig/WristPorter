@@ -1,22 +1,28 @@
-# Quality strategy
+# Quality and release verification
 
-This file is the single source for **tests and release gates**. Execution scheduling and module selection belong to [CI.md](CI.md).
+This file owns test strategy and release gates. CI trigger and cost policy live in [CI.md](CI.md).
 
-## Automated tests
+## Automated checks
 
-- Domain: supported types, unsafe input and unique remote filenames.
-- ADB: parsing authorized/offline devices, command arguments, subprocess timeouts and secret handling.
-- Core: progress callbacks, transfer ordering, batch partial failures and interruption. Fake-ADB regression tests ensure a scan-only retry never repeats a successful push.
-- Desktop: non-blocking operations and UI state as test infrastructure becomes available.
+- Domain: JPEG/PNG validation, safe names, folder import
+- ADB: parsing, endpoint validation, subprocess failure handling and pairing code stdin
+- Core: transfer states, partial failures, cancellation, scan-only retries
+- CI: fake Maven process verifies affected-module routing without building irrelevant modules
 
-Use a fake ADB executable for integration tests; real hardware must not be necessary for pull request CI.
+Fake-ADB integration tests exercise the transport without touching a real watch.
 
-## Manual acceptance
+## Portable acceptance
 
-Reference device: Galaxy Watch 4 Classic with wireless debugging on a shared Wi-Fi network. Verify pairing, reconnect, 100-photo import, Gallery visibility, Cyrillic paths, missing ADB, disconnected watch, partial copy failures and insufficient storage.
+The manual Windows packaging pipeline must: run full Maven verification, create the Windows app-image, validate bundled runtime/app directories, verify that `adb.exe` and its two Windows DLLs exist, execute `adb version`, retain third-party notices, and generate a SHA-256 for the finished ZIP.
+
+A successful CI package **does not** verify UI launch after extraction. Before a public release, test on a clean Windows 10/11 x64 system without Java, Android Studio, or administrator privileges; confirm that the EXE launches, bundled ADB works, and connecting to a watch is possible.
+
+## Hardware acceptance
+
+Reference hardware: Galaxy Watch 4 Classic. Verify initial pairing, reconnect, Cyrillic paths, batch of 100 photos, cancellation, retry, Gallery display after scan request, missing network and full storage.
 
 ## Release gate
 
-Require green full Maven verification, a Windows x64 portable ZIP that launches from an extracted folder on a clean PC without JDK or administrator privileges, successful real-watch tests, no known data-loss bugs and checksums for release artifacts. Check the executable's launcher dependencies and bundled runtime before declaring the ZIP usable. Do not publish v1.0 based only on mocked integration tests.
+Only publish v1.0 after green full reactor, packaging validation, clean Windows smoke test, real-watch acceptance, license review, and matching checksums. Do not claim compatibility with all Wear OS devices based on one hardware model.
 
-**Current state:** source baseline is committed; successful complete build, packaging and hardware acceptance still need verification.
+**Current state:** full reactor and portable ZIP construction have passed a GitHub Windows runner; extracted-app GUI and physical-watch acceptance are still pending.

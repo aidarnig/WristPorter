@@ -1,12 +1,14 @@
 # Development workflow
 
-This file owns **local setup and collaboration conventions**.
+This document owns **local builds, contribution rules and portable packaging instructions**. Requirements and test gates live in [PRODUCT.md](PRODUCT.md) and [QUALITY.md](QUALITY.md).
 
-## Requirements
+## Prerequisites for developers
 
-JDK 25, Maven 3.9+, Android SDK Platform-Tools for watch testing; Windows 10/11 for final packaging verification.
+- JDK 25, Maven 3.9+
+- Windows 10/11 x64 for packaging and manual UI testing
+- ADB for development-time watch testing (the packaged ZIP supplies ADB automatically)
 
-## Useful commands
+## Build from source
 
 ```bash
 mvn -B -ntp verify
@@ -15,22 +17,26 @@ mvn -B -ntp -pl watch-desktop -am install
 mvn -pl watch-desktop javafx:run
 ```
 
-Build/install the reactor before `javafx:run` when running only the desktop module so local module dependencies resolve. The app checks the PATH and `~/Documents/platform-tools` for ADB and accepts `WGS_ADB` as an override.
+Install the reactor before executing the desktop module directly.
+
+## Portable build
+
+On Windows, run `./ci/package-windows.ps1` in PowerShell from the project root. It runs full verification, builds the `jpackage` app-image, fetches a pinned and checksum-verified ADB distribution, and produces:
+
+```text
+dist/
+  WristPorter-0.1.0-windows-x64.zip
+  WristPorter-0.1.0-windows-x64.zip.sha256
+```
+
+The GitHub [Windows portable workflow](../.github/workflows/windows-portable.yml) does the same. It runs manually or when packaging scripts change; ordinary Java edits do not trigger an expensive Windows build.
+
+To use the ZIP: extract **the entire folder** and run `WristPorter/WristPorter.exe`. Keep `runtime/`, `app/`, and `platform-tools/` alongside it; moving only the EXE will not work. No administrative installation or separate ADB download is required for the packaged version.
+
+ADB can be overridden through the advanced UI field or `WRISTPORTER_ADB` environment variable (`WGS_ADB` is an older compatibility alias). Development fallback searches `~/Documents/platform-tools` and PATH. The bundled ADB is downloaded only by the *packager*, never by the app at startup.
 
 ## Collaboration
 
-Use branches named `feat/<scope>` or `fix/<scope>`, focused PRs, and Conventional Commit-style messages. Link issues to changes. Edit **only the document owning the changed decision**, and link from another document rather than copying sections.
+Use focused `feat/<scope>` or `fix/<scope>` branches and Conventional Commit-style messages. Track acceptance in GitHub Issues; update only the document that owns the relevant decision. Do not commit photographs, pairing secrets, ADB keys, build artifacts or private device identifiers.
 
-Do not commit personal photos, pairing secrets, private ADB keys, binaries, IDE artifacts or build output.
-
-JavaFX state updates must happen on the FX Application Thread, while ADB work runs in a background executor.
-
-## Manual Windows portable build
-
-The separately triggered `Windows portable build (manual)` workflow runs the full reactor and packages a Windows app image using `jpackage`. It does not run on ordinary push/PR CI.
-
-On Windows with JDK 25 and Maven in PATH, run `./ci/package-windows.ps1` in PowerShell. The output is `dist/WatchGallerySync-windows-x64.zip` and a SHA-256 checksum. Extract the whole directory and start `WatchGallerySync.exe`. Java is bundled; Android Platform-Tools remain external.
-
-The **portable ZIP is the primary release format**; no MSI/EXE installer is planned for v1. After a successful manual GitHub Actions run, open its artifact, download the ZIP, extract the complete `WatchGallerySync` folder (including `runtime/` and `app/`), and launch `WatchGallerySync.exe`. Do not launch the exe from inside a ZIP viewer or move it out of its directory. The non-modular JavaFX app uses a plain-Java `DesktopLauncher` entry point.
-
-**Current limitation:** the portable ZIP bundles Java but **not** Android Platform-Tools. ADB must be available via `WGS_ADB`, the program's ADB selector, `~/Documents/platform-tools`, or PATH. For a portable setup, extract Google's Platform-Tools into a `platform-tools/` folder **beside** the packaged `runtime/` directory; the application will discover `platform-tools/adb.exe` automatically. Platform-Tools are not redistributed in the application's ZIP. No separate ADB installer or system PATH edits are required when using this layout. Packaging on Windows and actual clean-machine/Watch 4 operation are still unverified; do not describe this as a published release.
+There is currently **no v1.0 release**: real-watch and clean-Windows UI acceptance remain outstanding.

@@ -1,36 +1,37 @@
 # Software architecture
 
-This file defines **technical decisions and module boundaries**, not feature requirements or QA checklists.
+This document owns technical decisions and module boundaries. Product requirements live in [PRODUCT.md](PRODUCT.md), quality gates in [QUALITY.md](QUALITY.md).
 
-## Dependency direction
+## Modules
 
 ```text
-watch-domain    (Java only: validation and filenames)
+watch-domain    Plain Java: photo validation, naming
       ^
-watch-adb       (subprocess transport, parsing, pairing, scanning)
+watch-adb       ADB subprocess client: pairing, device state, push, scan
       ^
-watch-core      (Spring service orchestration)
+watch-core      Spring non-web orchestration: batch/retry
       ^
-watch-desktop   (JavaFX user interface and Spring Boot startup)
+watch-desktop   JavaFX UI, preferences and Spring Boot bootstrap
 ```
 
-Direct dependency edges may also skip an intermediate module where a consumer needs a domain type. Spring Boot starts with `WebApplicationType.NONE`; no local HTTP port, database or web server is needed.
+Spring runs with `WebApplicationType.NONE`, not as a local web server. Blocking ADB calls run on background workers and JavaFX state changes run on the JavaFX application thread.
 
-## Data flow
+## Copy and indexing
 
-Select a destination ADB serial. Ensure that exact serial is connected and authorized. Create the watch folder `/sdcard/DCIM/Camera`, generate a collision-resistant ASCII filename, push via `adb -s SERIAL`, then request `android.intent.action.MEDIA_SCANNER_SCAN_FILE` for the pushed file URI. Emit a separate result for each file; a scan failure must not be confused with a copy failure. A `TransferUpdate` carries the generated remote filename only once upload is confirmed. A retry of `FAILED` performs a new upload; a retry of `COPIED_SCAN_FAILED` reuses that remote filename for **scan-only** retry. A retry must target the same watch serial as the original batch. Uncertain ADB timeouts cannot prove whether a partially copied remote file exists.
-
-The broadcast is a legacy Android API known to work on the reference Watch 4 Classic. Keep it encapsulated in the ADB adapter for future replacement.
+Target the explicitly selected watch via `adb -s SERIAL`. Ensure `/sdcard/DCIM/Camera` exists; create a UUID-based safe filename; push the photo; then broadcast `android.intent.action.MEDIA_SCANNER_SCAN_FILE` for the uploaded URI. A scan failure must be distinguishable from a failed copy. A scan-only retry reuses the remote filename, without a second push. The broadcast is a legacy Android API confirmed on the reference Galaxy Watch 4 Classic.
 
 ## Security decisions
 
-- Use `ProcessBuilder(List<String>)`, never interpolate user input into a command shell.
-- Send pairing codes through stdin; never store them or include them in a process command line.
-- Validate local files; accept only generated remote filenames.
-- Never copy to an implicitly selected device or overwrite a known existing remote name.
-- No analytics, cloud access or destructive operations.
-- Run blocking ADB calls off JavaFX Application Thread.
+- Use `ProcessBuilder` argument arrays rather than a shell string.
+- Provide pairing codes through stdin, not command arguments or logs.
+- Validate image signatures and use generated ASCII basenames for destination paths.
+- Never write to an implicitly chosen watch or invoke destructive remote commands.
+- No telemetry, silent network services, or runtime downloads.
 
-## Packaging
+## Portable distribution and third-party ADB
 
-Plan for `jpackage` with bundled Java runtime. Keep ADB external until platform-tools redistribution licensing is reviewed.
+Windows `jpackage --type app-image` bundles the Java runtime. `ci/bundle-adb.ps1` obtains a **checksum-pinned official Genymobile scrcpy Windows distribution** at packaging time and extracts *only* `adb.exe`, `AdbWinApi.dll`, and `AdbWinUsbApi.dll`, which are published with scrcpy and originate from Android Debug Bridge (AOSP). This avoids redistributing the entire Android SDK. The script checks the upstream ZIP SHA-256 and tests `adb version`; the portable ZIP contains provenance and Apache-2.0 license text in `platform-tools/`. The third-party version/hash/source of truth is the pinned packaging script, not a duplicated constant in documentation.
+
+The app discovers `platform-tools/adb.exe` next to its packaged `runtime/` folder. An explicit `WRISTPORTER_ADB` override takes precedence; the legacy `WGS_ADB`, user Documents Platform-Tools and PATH remain supported fallbacks.
+
+A legal/license review before public release must confirm compliance with the upstream notices and any third-party terms. Do not use Samsung/Google marks in a way that implies endorsement.
