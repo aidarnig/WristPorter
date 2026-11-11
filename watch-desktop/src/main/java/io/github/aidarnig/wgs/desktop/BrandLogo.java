@@ -44,6 +44,14 @@ public final class BrandLogo extends HBox {
         HBox.setMargin(wrist, new javafx.geometry.Insets(0, 0, 0, 10));
     }
 
+    /** Matching watch-only icon for the native window, including the taskbar. */
+    public static javafx.scene.image.Image windowIcon() {
+        javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
+        params.setFill(Color.TRANSPARENT);
+        params.setTransform(new Scale(0.22, 0.22, 0, 0));
+        return watchMark().snapshot(params, null);
+    }
+
     public void setLightTheme(boolean light) {
         wrist.setFill(Color.web(light ? "#071e3c" : "#f5f9ff"));
     }

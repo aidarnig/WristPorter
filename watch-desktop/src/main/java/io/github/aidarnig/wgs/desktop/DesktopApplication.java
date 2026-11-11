@@ -27,6 +27,7 @@ public final class DesktopApplication extends Application {
         var scene = new Scene(workspace, 1160, 780);
         scene.getStylesheets().add(getClass().getResource("/watch-gallery.css").toExternalForm());
         stage.setTitle("WristPorter");
+        stage.getIcons().add(BrandLogo.windowIcon());
         stage.setMinWidth(900);
         stage.setMinHeight(650);
         stage.setScene(scene);
