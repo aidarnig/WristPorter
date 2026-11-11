@@ -31,6 +31,8 @@ Choose `WristPorter-1.1.0-windows-x64.zip` under **Assets** — not the auto-gen
 
 On the watch, enable Developer options and **Wireless debugging**. Use **Pair device with pairing code**, enter its pairing port and six-digit code in WristPorter, then connect using the **different debugging port** shown on the watch. For details, see [Quick start](docs/QUICK_START.md). Turn wireless debugging off when finished.
 
+> **SmartScreen:** the current Windows EXE is unsigned by a trusted publisher. Verify the download source and SHA-256. [Details](docs/SECURITY.md).
+
 ## Development
 
 Requires JDK 25 and Maven 3.9+ to build from source:
