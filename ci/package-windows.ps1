@@ -6,7 +6,9 @@ $desktop = Join-Path $root "watch-desktop"
 $inputDir = Join-Path $desktop "target\jpackage-input"
 $dist = Join-Path $root "dist"
 $appName = "WristPorter"
-$version = "0.1.0"
+$version = "1.0.0"
+[xml]$projectPom = Get-Content -LiteralPath (Join-Path $root "pom.xml")
+if ($projectPom.project.version -ne $version) { throw "Package version must match Maven version." }
 
 Push-Location $root
 try {
@@ -22,7 +24,7 @@ try {
     mvn -B -ntp -pl watch-desktop dependency:copy-dependencies "-DincludeScope=runtime" "-DoutputDirectory=$inputDir"
     if ($LASTEXITCODE -ne 0) { throw "Could not collect runtime dependencies." }
 
-    $mainJar = "watch-desktop-$version-SNAPSHOT.jar"
+    $mainJar = "watch-desktop-$version.jar"
     $mainPath = Join-Path $desktop "target\$mainJar"
     if (!(Test-Path -LiteralPath $mainPath)) { throw "Desktop JAR missing: $mainPath" }
     Copy-Item -LiteralPath $mainPath -Destination (Join-Path $inputDir $mainJar) -Force
@@ -46,6 +48,7 @@ try {
     }
     Copy-Item -LiteralPath (Join-Path $root "LICENSE") -Destination (Join-Path $appImage "LICENSE.txt") -Force
     Copy-Item -LiteralPath (Join-Path $root "docs\QUICK_START.md") -Destination (Join-Path $appImage "START_HERE.md") -Force
+    Copy-Item -LiteralPath (Join-Path $root "CHANGELOG.md") -Destination (Join-Path $appImage "RELEASE_NOTES.md") -Force
 
     $filename = "$appName-$version-windows-x64.zip"
     $zip = Join-Path $dist $filename
@@ -54,7 +57,7 @@ try {
 
     $checksum = (Get-FileHash -Algorithm SHA256 $zip).Hash.ToLowerInvariant()
     Set-Content -Path "$zip.sha256" -Encoding ascii -Value "$checksum  $filename"
-    Write-Host "Created portable WristPorter release candidate: $zip"
+    Write-Host "Created WristPorter stable portable package: $zip"
 } finally {
     Pop-Location
 }

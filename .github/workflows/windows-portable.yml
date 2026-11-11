@@ -1,4 +1,4 @@
-name: WristPorter Windows portable build
+name: WristPorter Windows portable release
 
 on:
   workflow_dispatch:
@@ -26,10 +26,10 @@ jobs:
           distribution: temurin
           java-version: '25'
           cache: maven
-      - name: Build portable app with bundled ADB
+      - name: Verify Java and build portable ZIP with bundled ADB
         shell: pwsh
         run: ./ci/package-windows.ps1
-      - name: Upload portable ZIP and checksum
+      - name: Upload ZIP and checksum for release job
         uses: actions/upload-artifact@v4
         with:
           name: WristPorter-windows-x64
@@ -39,53 +39,38 @@ jobs:
           retention-days: 5
           if-no-files-found: error
 
-  publish-preview:
-    name: Publish test build to GitHub Releases
+  publish-release:
+    name: Publish verified stable ZIP to GitHub Releases
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: windows-portable
     permissions:
       contents: write
     steps:
-      - name: Download verified Windows build
+      - uses: actions/checkout@v4
+      - name: Download Windows artifact
         uses: actions/download-artifact@v4
         with:
           name: WristPorter-windows-x64
           path: release-files
-      - name: Verify checksum and publish prerelease
+      - name: Verify checksum and publish stable release
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: v0.1.0-preview.${{ github.run_number }}
+          RELEASE_TAG: v1.0.0
         shell: bash
         run: |
           set -euo pipefail
           cd release-files
-          sha256sum --check WristPorter-0.1.0-windows-x64.zip.sha256
-          cat > /tmp/wristporter-preview-notes.md <<'RELEASE_NOTES'
-          ## WristPorter 0.1.0 — test build
-
-          This is an **early preview**, not a stable release. The Windows package was built and automatically tested, but its graphical launch on a clean Windows PC and photo transfer to a real Galaxy Watch 4 Classic have **not** been confirmed.
-
-          ### Download and run
-
-          1. Under **Assets** below, download `WristPorter-0.1.0-windows-x64.zip` (do not download GitHub's "Source code" archives).
-          2. Extract the ZIP completely.
-          3. Open the `WristPorter` folder and double-click `WristPorter.exe`.
-          4. Enable wireless debugging on your watch; use the pairing and connection ports shown there. Add photos and transfer.
-
-          Java and ADB (including the required DLLs) are included. No installer or Android Studio is required. A quick-start guide is inside the extracted folder.
-
-          The `.zip.sha256` asset is the SHA-256 checksum for integrity verification. Please report issues through the project's Issues tab.
-          RELEASE_NOTES
+          sha256sum --check WristPorter-1.0.0-windows-x64.zip.sha256
           if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "Release $RELEASE_TAG already exists; skipping duplicate publication."
+            echo "$RELEASE_TAG already exists. Never overwrite an existing stable release."
             exit 0
           fi
           gh release create "$RELEASE_TAG" \
-            WristPorter-0.1.0-windows-x64.zip \
-            WristPorter-0.1.0-windows-x64.zip.sha256 \
+            WristPorter-1.0.0-windows-x64.zip \
+            WristPorter-1.0.0-windows-x64.zip.sha256 \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title "WristPorter 0.1.0 Preview #$GITHUB_RUN_NUMBER" \
-            --notes-file /tmp/wristporter-preview-notes.md \
-            --prerelease
+            --title "WristPorter 1.0.0" \
+            --notes-file "$GITHUB_WORKSPACE/CHANGELOG.md" \
+            --latest
