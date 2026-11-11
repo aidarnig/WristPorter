@@ -5,44 +5,55 @@ $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $desktop = Join-Path $root "watch-desktop"
 $inputDir = Join-Path $desktop "target\jpackage-input"
 $dist = Join-Path $root "dist"
+$appName = "WristPorter"
 $version = "0.1.0"
 
 Push-Location $root
 try {
     mvn -B -ntp verify
-    if ($LASTEXITCODE -ne 0) { throw "Full reactor tests failed." }
+    if ($LASTEXITCODE -ne 0) { throw "Full Maven reactor tests failed." }
 
     mvn -B -ntp -DskipTests install
     if ($LASTEXITCODE -ne 0) { throw "Reactor installation failed." }
 
     New-Item -ItemType Directory -Force -Path $inputDir, $dist | Out-Null
-    Get-ChildItem $inputDir -Filter "*.jar" -ErrorAction SilentlyContinue | Remove-Item -Force
+    Get-ChildItem -Path $inputDir -Filter "*.jar" -ErrorAction SilentlyContinue | Remove-Item -Force
 
     mvn -B -ntp -pl watch-desktop dependency:copy-dependencies "-DincludeScope=runtime" "-DoutputDirectory=$inputDir"
-    if ($LASTEXITCODE -ne 0) { throw "Failed to collect runtime dependencies." }
+    if ($LASTEXITCODE -ne 0) { throw "Could not collect runtime dependencies." }
 
     $mainJar = "watch-desktop-$version-SNAPSHOT.jar"
     $mainPath = Join-Path $desktop "target\$mainJar"
-    if (!(Test-Path $mainPath)) { throw "Desktop application jar not found: $mainPath" }
-    Copy-Item $mainPath (Join-Path $inputDir $mainJar) -Force
+    if (!(Test-Path -LiteralPath $mainPath)) { throw "Desktop JAR missing: $mainPath" }
+    Copy-Item -LiteralPath $mainPath -Destination (Join-Path $inputDir $mainJar) -Force
 
-    $appImage = Join-Path $dist "WatchGallerySync"
+    $appImage = Join-Path $dist $appName
     if (Test-Path $appImage) { Remove-Item $appImage -Recurse -Force }
 
-    & (Join-Path $env:JAVA_HOME "bin\jpackage.exe") --type app-image --name WatchGallerySync --input $inputDir --main-jar $mainJar --main-class io.github.aidarnig.wgs.desktop.DesktopLauncher --app-version $version --dest $dist --java-options "-Dfile.encoding=UTF-8"
+    & (Join-Path $env:JAVA_HOME "bin\jpackage.exe") --type app-image --name $appName --input $inputDir --main-jar $mainJar --main-class io.github.aidarnig.wgs.desktop.DesktopLauncher --app-version $version --dest $dist --java-options "-Dfile.encoding=UTF-8"
     if ($LASTEXITCODE -ne 0) { throw "jpackage failed." }
 
-    $exe = Join-Path $appImage "WatchGallerySync.exe"
-    if (!(Test-Path $exe)) { throw "Expected executable missing from app image." }
-    if (!(Test-Path (Join-Path $appImage "runtime"))) { throw "Bundled Java runtime is missing." }
-    if (!(Test-Path (Join-Path $appImage "app"))) { throw "Application libraries are missing." }
+    foreach ($entry in @("$appName.exe", "runtime", "app")) {
+        if (!(Test-Path (Join-Path $appImage $entry))) { throw "App image missing $entry" }
+    }
 
-    $zip = Join-Path $dist "WatchGallerySync-windows-x64.zip"
+    # Download ADB only at packaging time; end users need no separate installation.
+    & (Join-Path $PSScriptRoot "bundle-adb.ps1") -Destination (Join-Path $appImage "platform-tools")
+
+    foreach ($component in @("adb.exe", "AdbWinApi.dll", "AdbWinUsbApi.dll", "THIRD_PARTY_NOTICES.txt", "licenses\Apache-2.0.txt")) {
+        $componentPath = Join-Path (Join-Path $appImage "platform-tools") $component
+        if (!(Test-Path -LiteralPath $componentPath)) { throw "Bundled ADB component missing: $component" }
+    }
+    Copy-Item -LiteralPath (Join-Path $root "LICENSE") -Destination (Join-Path $appImage "LICENSE.txt") -Force
+
+    $filename = "$appName-$version-windows-x64.zip"
+    $zip = Join-Path $dist $filename
     if (Test-Path $zip) { Remove-Item $zip -Force }
     Compress-Archive -Path $appImage -DestinationPath $zip -CompressionLevel Optimal
+
     $checksum = (Get-FileHash -Algorithm SHA256 $zip).Hash.ToLowerInvariant()
-    Set-Content -Path "$zip.sha256" -Encoding ascii -Value "$checksum  WatchGallerySync-windows-x64.zip"
-    Write-Host "Created $zip"
+    Set-Content -Path "$zip.sha256" -Encoding ascii -Value "$checksum  $filename"
+    Write-Host "Created portable WristPorter release candidate: $zip"
 } finally {
     Pop-Location
 }
