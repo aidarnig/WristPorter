@@ -54,7 +54,7 @@ class WatchTransferRetryProcessTest {
         assertEquals(first.getFirst().remoteName(), retry.getFirst().remoteName());
 
         List<String> invocations = Files.readAllLines(calls);
-        assertEquals(1, invocations.stream().filter("push-"::equals).count());
+        assertEquals(1, invocations.stream().filter(line -> line.startsWith("push-")).count());
         assertEquals(2, invocations.stream().filter("shell-am"::equals).count());
     }
 
