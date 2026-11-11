@@ -7,7 +7,7 @@ WristPorter передаёт JPG/PNG с Windows на совместимые ча
 ## Установка и запуск
 
 1. Откройте [GitHub Releases](https://github.com/aidarnig/WristPorter/releases/latest) и скачайте архив WristPorter-...-windows-x64.zip из раздела **Assets**, не **Source code**.
-2. Сверьте SHA-256 файла с отдельным файлом *.zip.sha256. Команда PowerShell: `(Get-FileHash .\WristPorter-1.1.1-windows-x64.zip -Algorithm SHA256).Hash`.
+2. Сверьте SHA-256 файла с отдельным файлом *.zip.sha256. Команда PowerShell: `(Get-FileHash .\WristPorter-1.1.2-windows-x64.zip -Algorithm SHA256).Hash`.
 3. Полностью распакуйте ZIP, откройте папку WristPorter и запустите WristPorter.exe.
 4. Сохраните рядом с EXE папки runtime/, app/ и platform-tools/ — Java и ADB включены в архив. Установщик не нужен.
 5. Компьютер и часы должны быть в одной сети Wi-Fi.

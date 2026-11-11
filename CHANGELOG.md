@@ -1,5 +1,24 @@
 # WristPorter releases
 
+## 1.1.2 — Complete wordmark and improved discoverability
+
+- Fixed clipped final letter **r** in the application header by increasing the canonical light/dark SVG canvas and regenerating PNG assets with safe right-side padding.
+- Matched the visual size of the corrected full logo inside the desktop application.
+- Added automated regression tests for the PNG transparent margin and the multiple icon resolutions used by Windows Explorer.
+- Added readable app description and vendor metadata to the Windows portable executable (this is **not** a digital signature).
+- Improved bilingual README discoverability for Wear OS / Galaxy Watch users and documented About metadata and Windows icon-cache troubleshooting.
+- No changes to photo copying, pairing or Galaxy Watch Gallery scanning.
+
+### Windows Explorer icon
+The packaged EXE already embeds the WP watch icon, confirmed by Windows CI. If Explorer still displays the Java logo, unpack the **new archive into a different folder** and refresh Explorer. Windows may cache an old icon for the same executable path.
+
+### Download
+Use `WristPorter-1.1.2-windows-x64.zip` under Assets. Extract the complete portable folder and start `WristPorter.exe`. Java and ADB are included. The binary remains unsigned and may show a SmartScreen warning; consult [Security](https://github.com/aidarnig/WristPorter/blob/main/docs/SECURITY.md).
+
+### Verification
+Full Java tests and Windows packaging/embedded-icon checks must pass before the GitHub Release is published. Corrected header layout and Explorer icon caching still benefit from manual Windows screenshots.
+
+
 ## 1.1.1 — Branded window and bilingual quick-start fix
 
 - Fixed the header by showing the full approved WP-on-watch logo from theme-specific PNG resources instead of the former custom JavaFX vector group.
