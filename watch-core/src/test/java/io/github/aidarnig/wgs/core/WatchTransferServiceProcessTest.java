@@ -20,7 +20,7 @@ class WatchTransferServiceProcessTest {
     @Test void continuesAfterFailedFileAndScansOnlySuccessfulCopies() throws Exception {
         Path log = temp.resolve("calls.txt");
         String fake = """
-                printf 'COMMAND:%%s\\n' "$3" >> '%s'
+                printf 'COMMAND:%%s-%%s\\n' "$3" "$4" >> '%s'
                 if [ "$1" = "devices" ]; then
                   printf 'List of devices attached\\n192.168.1.101:38267\\tdevice\\n'
                 fi
@@ -45,7 +45,7 @@ class WatchTransferServiceProcessTest {
         assertEquals(TransferUpdate.Status.FAILED, updates.get(1).status());
         assertEquals(TransferUpdate.Status.COPIED_SCAN_REQUESTED, updates.get(2).status());
         assertEquals(3, updates.get(2).position());
-        long scans = Files.readString(log).lines().filter("COMMAND:am"::equals).count();
+        long scans = Files.readString(log).lines().filter("COMMAND:shell-am"::equals).count();
         assertEquals(2, scans, "A failed push must not trigger a scan");
     }
 }
