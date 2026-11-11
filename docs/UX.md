@@ -4,7 +4,7 @@ This file owns **screen structure, interaction and visual guidance**. Functional
 
 ## Initial screen
 
-A header identifies the app. The connection sidebar uses bundled ADB automatically in portable mode and hides custom ADB path selection under a collapsed advanced section. It guides first pairing and connection without exposing ADB internals by default. The primary workspace provides a drag-and-drop zone, file and folder pickers, selected photos, transfer results and a prominent Send button. The footer shows task progress. After a batch, **Retry failures** acts only on photos still in the queue: failed copies are retried; failed scan requests are repeated without re-uploading. Switching to a different watch blocks retry of the previous batch.
+A header identifies the app. The connection sidebar uses bundled ADB automatically in portable mode and hides custom ADB path selection under a compact advanced button matching the width of pairing/connection controls. It guides first pairing and connection without exposing ADB internals by default. The primary workspace provides a compact drag-and-drop target, file/folder pickers, an adaptive multi-column thumbnail grid with clickable/keyboard-selectable cards, a vertically resizable results journal, a wide progress bar with prominent counts and a Send button. After a batch, **Retry failures** acts only on photos still in the queue: failed copies are retried; failed scan requests are repeated without re-uploading. Switching to a different watch blocks retry of the previous batch.
 
 ## Pairing guidance
 
@@ -12,7 +12,7 @@ The device finder displays connected ADB devices and requires explicit selection
 
 ## Visual system
 
-JavaFX 27 + AtlantaFX 3; light/dark theme switcher with the selected preference stored locally, low-noise surfaces, clear hierarchy, rounded interactive elements and status colors with adequate contrast. RU/EN resource bundles are planned. The initial screen has asynchronous 64px image previews and recursive folder import; it is not the final polished layout.
+JavaFX 27 + AtlantaFX 3; light/dark theme switcher with the selected preference stored locally, low-noise surfaces, clear hierarchy, rounded interactive elements and status colors with adequate contrast. RU/EN resource bundles are planned. The gallery uses asynchronous bounded thumbnails; cards wrap to use available width and display per-file transfer outcomes. Recursive folder import runs outside the UI thread.
 
 ## Accessible behavior
 
@@ -20,4 +20,4 @@ Every action must be keyboard-accessible and state should be textually represent
 
 ## Future screens
 
-Image thumbnail grid, explicit multi-device picker, resumable activity view and settings are separately tracked as GitHub Issues.
+Improved localization and extended activity history remain future enhancements; the initial screen includes a grid and explicit multi-device picker.

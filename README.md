@@ -4,11 +4,11 @@
 
 WristPorter is an open-source Java desktop application that transfers photos from Windows directly to compatible Wear OS watches over local Wi-Fi ADB. It does not require a nearby Android phone once the watch is configured. The current feature set targets **JPEG/PNG** transfers to Samsung Gallery on the Galaxy Watch 4 Classic.
 
-> **0.1.0 development preview:** The Windows portable package has been built successfully on a GitHub Windows runner, but the app is **not yet a hardware-tested release**.
+> **1.0.0 (Windows x64):** The core photo-transfer workflow was verified on Galaxy Watch 4 Classic. Other watch models and unusual network conditions remain best-effort.
 
 ## Portable Windows edition
 
-**[Download WristPorter from GitHub Releases](https://github.com/aidarnig/WristPorter/releases)**. Open the newest **Pre-release** and, under **Assets**, download `WristPorter-0.1.0-windows-x64.zip` — **not** the automatically generated "Source code" archive. Extract it fully, then launch `WristPorter/WristPorter.exe`.
+**[Download WristPorter from GitHub Releases](https://github.com/aidarnig/WristPorter/releases)**. Open the latest stable release and, under **Assets**, download `WristPorter-1.0.0-windows-x64.zip` — **not** the automatically generated "Source code" archive. Extract it fully, then launch `WristPorter/WristPorter.exe`.
 
 The application folder already includes the Java runtime and a verified `adb.exe` with its required DLL files. No installer, separate Java installation, or manual Android Platform-Tools setup is needed. The application supports manual ADB overrides for advanced users.
 
@@ -18,8 +18,8 @@ See [Development](docs/DEVELOPMENT.md) for build instructions; see [Quality](doc
 
 - JavaFX + AtlantaFX light/dark UI, Spring Boot non-web services
 - Wireless ADB pairing and device selection, without PowerShell
-- Batch JPEG/PNG import via file picker, folders or drag-and-drop, with previews
-- Per-photo copy + Samsung Gallery media scan request
+- Batch JPEG/PNG import via file picker, folders or drag-and-drop, with responsive thumbnail grid
+- Prominent transfer progress, per-photo outcome status, and Samsung Gallery media scan requests
 - Retry failed copies or re-scan already copied files, without duplicate upload
 - No accounts, cloud storage or telemetry
 

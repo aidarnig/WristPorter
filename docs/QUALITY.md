@@ -19,7 +19,7 @@ A successful CI package **does not** verify UI launch after extraction. Before a
 
 ## Hardware acceptance
 
-Reference hardware: Galaxy Watch 4 Classic. Verify initial pairing, reconnect, Cyrillic paths, batch of 100 photos, cancellation, retry, Gallery display after scan request, missing network and full storage.
+Reference hardware: Galaxy Watch 4 Classic. The pairing/reconnect and eight-photo Gallery scenario were accepted on 2026-11-11. Cancellation, retry, Unicode paths and subprocess behavior are covered by automated checks where implemented. A 100-photo stress test, storage-full test, and Wi-Fi fault injection are recommended future regression tests, **not** 1.0 release blockers by product-owner decision.
 
 ## Manual verification log
 
@@ -42,10 +42,12 @@ Observed and confirmed in screenshots and user feedback:
 
 **Evidence:** user-provided screenshots and confirmation in the project conversation. The screenshots are not committed to this public repository because they include personal desktop content and local device information.
 
-**Not yet covered by this test:** initial pairing using the application's pairing form, clean Windows without developer tools or an existing ADB environment, 100-photo batches, recovery from Wi-Fi disconnects, cancellations, retries after induced failures, full storage, Windows 10, or independent tests on other Wear OS watches.
+**Follow-up confirmation from user:** Initial pairing **was performed successfully in the app**; after restarting it, **Discover devices** found the previously connected watch again. The screenshots also revealed UX issues (tiny progress/results, excess whitespace in single-column queue, overly wide advanced settings control). These findings motivated the 1.0 UI improvements.
+
+**Still unverified manually:** clean Windows without developer tools, 100-photo stress batch, Wi-Fi disruption, cancellation/retry under induced failures, full storage, Windows 10 and other Wear OS hardware.
 
 ## Release gate
 
-Early **pre-releases** may be published after the Windows CI builds the portable ZIP and verifies its checksum, provided they clearly disclose missing real-device/GUI verification. Publish **stable v1.0** only after green full reactor, packaging validation, clean Windows smoke test, real-watch acceptance, license review, and matching checksums. Do not claim compatibility with all Wear OS devices based on one hardware model.
+**Stable 1.0 release decision (2026-11-11):** The product owner accepts the verified portable Windows launch, successful in-app pairing/re-discovery and real Watch 4 Classic eight-photo transfer, plus passing automated tests for other key workflows. The separate 100-photo and induced-cancellation/retry tests are **not required** for 1.0. Stable publication requires a green full Maven reactor, successful Windows app-image packaging, verified ADB/Java runtime and SHA-256 release assets. Limit the compatibility claim to the tested Watch 4 Classic scenario and disclose unverified clean-PC/Windows 10 conditions. Third-party license/provenance files must remain bundled; additional legal/trademark review is tracked separately before broader promotion.
 
-**Current state:** full reactor and portable ZIP construction passed GitHub Windows CI, and the 8-image real-watch acceptance scenario above passed. The remaining release-gate scenarios still require verification.
+**Current state:** The real-watch reference scenario and in-app pairing/re-discovery passed; 1.0 UI improvements have passed selective Java CI. The Windows 1.0 package must pass full CI before its stable release is considered complete.

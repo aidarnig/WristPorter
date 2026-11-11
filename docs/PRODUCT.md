@@ -13,7 +13,7 @@ A Windows user with an already-configured Galaxy Watch 4 Classic, without an And
 ## v1 acceptance criteria
 
 - Pair and connect from the UI, using the appropriate pairing and debugging ports.
-- Import 100+ local JPEG/PNG images without freezing the interface.
+- Import and send multiple local JPEG/PNG images without freezing the interface (eight-image batch verified on reference hardware).
 - Report per-photo copying and media-scan request outcomes independently.
 - Retry failed copies and scan requests without duplicating successfully uploaded photos.
 - Verify transferred PNG/JPEG visibility in Gallery on real Watch 4 Classic hardware.
@@ -26,3 +26,7 @@ A Windows user with an already-configured Galaxy Watch 4 Classic, without an And
 No cloud service, accounts, telemetry, Android companion app, destructive remote file management or automatic background transfers. Other Wear OS models are best-effort until verified.
 
 Successful ADB commands or media-scan broadcasts do **not** prove that Samsung Gallery displayed an image.
+
+## Verified launch target
+
+Initial stable scope is Windows x64 and Galaxy Watch 4 Classic over a local Wi-Fi ADB connection. Other devices, unusually large batches and transient network errors are supported on a best-effort basis and are not claims of hardware certification.
