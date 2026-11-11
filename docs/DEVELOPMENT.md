@@ -29,7 +29,7 @@ dist/
   WristPorter-0.1.0-windows-x64.zip.sha256
 ```
 
-The GitHub [Windows portable workflow](../.github/workflows/windows-portable.yml) does the same. It runs manually or when packaging scripts change; ordinary Java edits do not trigger an expensive Windows build.
+The GitHub [Windows portable workflow](../.github/workflows/windows-portable.yml) does the same. It runs manually or when packaging scripts change; ordinary Java edits do not trigger an expensive Windows build. After a successful packaging job, a lightweight Ubuntu job validates the ZIP checksum and publishes a **Pre-release** at [GitHub Releases](https://github.com/aidarnig/WristPorter/releases). Release tags use `v0.1.0-preview.<workflow-run-number>`, making each preview immutable and traceable. Only preview builds are automated; stable v1.0 remains gated by [Quality](QUALITY.md).
 
 To use the ZIP: extract **the entire folder** and run `WristPorter/WristPorter.exe`. Keep `runtime/`, `app/`, and `platform-tools/` alongside it; moving only the EXE will not work. No administrative installation or separate ADB download is required for the packaged version.
 

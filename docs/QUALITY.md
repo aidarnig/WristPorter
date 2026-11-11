@@ -23,6 +23,6 @@ Reference hardware: Galaxy Watch 4 Classic. Verify initial pairing, reconnect, C
 
 ## Release gate
 
-Only publish v1.0 after green full reactor, packaging validation, clean Windows smoke test, real-watch acceptance, license review, and matching checksums. Do not claim compatibility with all Wear OS devices based on one hardware model.
+Early **pre-releases** may be published after the Windows CI builds the portable ZIP and verifies its checksum, provided they clearly disclose missing real-device/GUI verification. Publish **stable v1.0** only after green full reactor, packaging validation, clean Windows smoke test, real-watch acceptance, license review, and matching checksums. Do not claim compatibility with all Wear OS devices based on one hardware model.
 
 **Current state:** full reactor and portable ZIP construction have passed a GitHub Windows runner; extracted-app GUI and physical-watch acceptance are still pending.

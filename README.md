@@ -8,7 +8,7 @@ WristPorter is an open-source Java desktop application that transfers photos fro
 
 ## Portable Windows edition
 
-Download the `WristPorter-windows-x64` artifact from a successful [Windows portable build](.github/workflows/windows-portable.yml). Extract the included `WristPorter-0.1.0-windows-x64.zip`, then launch `WristPorter/WristPorter.exe`.
+**[Download WristPorter from GitHub Releases](https://github.com/aidarnig/WristPorter/releases)**. Open the newest **Pre-release** and, under **Assets**, download `WristPorter-0.1.0-windows-x64.zip` — **not** the automatically generated "Source code" archive. Extract it fully, then launch `WristPorter/WristPorter.exe`.
 
 The application folder already includes the Java runtime and a verified `adb.exe` with its required DLL files. No installer, separate Java installation, or manual Android Platform-Tools setup is needed. The application supports manual ADB overrides for advanced users.
 
