@@ -16,7 +16,7 @@ JavaFX 27 + AtlantaFX 3; dark initial theme, low-noise surfaces, clear hierarchy
 
 ## Accessible behavior
 
-Every action must be keyboard-accessible and state should be textually represented, not only colored. Long-running actions show progress; failure messages tell users what they can fix. Never say Gallery definitely displays a photo simply because the scan request succeeded.
+Every action must be keyboard-accessible and state should be textually represented, not only colored. Long-running actions show progress and offer cancellation that interrupts the running ADB subprocess; failure messages tell users what they can fix. Never say Gallery definitely displays a photo simply because the scan request succeeded.
 
 ## Future screens
 

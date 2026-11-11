@@ -39,6 +39,9 @@ public final class WatchWorkspace extends BorderPane {
     private final ListView<Path> files = new ListView<>();
     private final ListView<String> history = new ListView<>();
     private final Button send = new Button("Передать на часы");
+    private final Button cancelTransfer = new Button("Отменить");
+    private Task<Void> activeTransfer;
+    private boolean transferring;
 
     public WatchWorkspace(WatchTransferService service, ExecutorService worker) {
         this.service = service;
@@ -150,7 +153,11 @@ public final class WatchWorkspace extends BorderPane {
         send.getStyleClass().add("accent-button");
         send.setOnAction(event -> sendImages());
         send.setPrefWidth(200);
-        HBox bottom = new HBox(send);
+        cancelTransfer.setDisable(true);
+        cancelTransfer.setOnAction(event -> {
+            if (activeTransfer != null) activeTransfer.cancel(true);
+        });
+        HBox bottom = new HBox(10, cancelTransfer, send);
         bottom.setAlignment(Pos.CENTER_RIGHT);
         VBox box = new VBox(12, title, explanation, drop, actions, queueHeader, files,
                 label("Результаты"), history, bottom);
@@ -218,6 +225,7 @@ public final class WatchWorkspace extends BorderPane {
     }
 
     private void sendImages() {
+        if (transferring || files.getItems().isEmpty()) return;
         List<Path> selected = List.copyOf(files.getItems());
         String executable = adbPath.getText().strip();
         String serial = connectionEndpoint.getText().strip();
@@ -225,7 +233,10 @@ public final class WatchWorkspace extends BorderPane {
             activity.setText("Сначала подключите часы и укажите порт отладки.");
             return;
         }
-        send.setDisable(true);
+        transferring = true;
+        activeTransfer = null;
+        cancelTransfer.setDisable(false);
+        updateCount();
         history.getItems().clear();
         progress.setProgress(0);
         AtomicInteger errors = new AtomicInteger();
@@ -248,14 +259,19 @@ public final class WatchWorkspace extends BorderPane {
             }
         };
         task.setOnSucceeded(event -> {
-            updateCount();
+            finishTransfer();
             activity.setText("Передача завершена: " + (selected.size() - errors.get())
                     + " успешно, " + errors.get() + " с ошибками");
         });
         task.setOnFailed(event -> {
-            updateCount();
+            finishTransfer();
             failure("Передача прервана", task.getException());
         });
+        task.setOnCancelled(event -> {
+            finishTransfer();
+            activity.setText("Передача отменена пользователем");
+        });
+        activeTransfer = task;
         worker.submit(task);
     }
 
@@ -313,7 +329,14 @@ public final class WatchWorkspace extends BorderPane {
 
     private void updateCount() {
         count.setText(files.getItems().size() + " файлов");
-        send.setDisable(files.getItems().isEmpty());
+        send.setDisable(transferring || files.getItems().isEmpty());
+    }
+
+    private void finishTransfer() {
+        transferring = false;
+        activeTransfer = null;
+        cancelTransfer.setDisable(true);
+        updateCount();
     }
 
     private void failure(String label, Throwable cause) {
