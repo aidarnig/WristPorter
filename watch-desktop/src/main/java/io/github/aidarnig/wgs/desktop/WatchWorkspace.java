@@ -46,7 +46,10 @@ public final class WatchWorkspace extends BorderPane {
     private final Label activity = new Label("Добавьте фотографии и подключите часы");
     private final Label count = new Label("0 файлов");
     private final ProgressBar progress = new ProgressBar(0);
-    private final ListView<Path> files = new ListView<>();
+    private final Label progressHeadline = new Label("Передача фотографий");
+    private final Label progressNumbers = new Label("0 / 0");
+    private final Label progressDetails = new Label("0 успешно · 0 ошибок");
+    private final PhotoQueueView files = new PhotoQueueView();
     private final ListView<String> history = new ListView<>();
     private final Button send = new Button("Передать на часы");
     private final Button cancelTransfer = new Button("Отменить");
@@ -70,7 +73,6 @@ public final class WatchWorkspace extends BorderPane {
         connectionScroll.getStyleClass().add("connection-scroll");
         setLeft(connectionScroll);
         setCenter(imagesPanel());
-        setBottom(footer());
         BorderPane.setMargin(getCenter(), new Insets(20, 24, 20, 24));
         updateCount();
     }
@@ -119,9 +121,15 @@ public final class WatchWorkspace extends BorderPane {
         });
 
         VBox advancedFields = new VBox(8, label("Путь к adb.exe"), adbPath, browse);
-        TitledPane advancedAdb = new TitledPane("Дополнительно: настройки ADB", advancedFields);
-        advancedAdb.setExpanded(false);
+        advancedFields.setVisible(false);
+        advancedFields.setManaged(false);
+        Button advancedAdb = new Button("Дополнительно: настройки ADB");
         advancedAdb.setMaxWidth(Double.MAX_VALUE);
+        advancedAdb.setOnAction(event -> {
+            boolean expanded = !advancedFields.isVisible();
+            advancedFields.setVisible(expanded);
+            advancedFields.setManaged(expanded);
+        });
         Label adbInfo = note(Files.isRegularFile(Path.of(adbPath.getText()))
                 ? "ADB найден автоматически — дополнительная установка не нужна."
                 : "ADB будет найден через PATH. При необходимости выберите его вручную.");
@@ -182,7 +190,7 @@ public final class WatchWorkspace extends BorderPane {
         deviceStatus.getStyleClass().add("connection-state");
         deviceStatus.setWrapText(true);
         VBox box = new VBox(10,
-                title, guidance, adbInfo, advancedAdb,
+                title, guidance, adbInfo, advancedAdb, advancedFields,
                 new Separator(), pairing, pairEndpoint, pairCode, pair,
                 new Separator(), connecting, connectionEndpoint, connect, discover, watchPicker,
                 deviceStatus, note("Порт сопряжения и порт подключения на часах различаются."));
@@ -196,7 +204,7 @@ public final class WatchWorkspace extends BorderPane {
     private VBox imagesPanel() {
         Label title = new Label("Мои фотографии");
         title.getStyleClass().add("page-heading");
-        Label explanation = note("Добавьте JPG или PNG. После копирования программа запрашивает обновление Samsung Gallery.");
+        Label explanation = note("Выберите JPG или PNG. После копирования фотографии добавляются в Samsung Gallery.");
         VBox drop = dropZone();
         Button add = new Button("Добавить файлы");
         add.getStyleClass().add("accent-button");
@@ -204,26 +212,41 @@ public final class WatchWorkspace extends BorderPane {
         Button folder = new Button("Добавить папку");
         folder.setOnAction(event -> chooseFolder());
         Button remove = new Button("Убрать выбранные");
-        remove.setOnAction(event -> files.getItems().removeAll(List.copyOf(files.getSelectionModel().getSelectedItems())));
-        Button clear = new Button("Очистить");
-        clear.setOnAction(event -> files.getItems().clear());
+        remove.setOnAction(event -> {
+            if (!transferring) files.removeSelected();
+        });
+        Button clear = new Button("Очистить очередь");
+        clear.setOnAction(event -> {
+            if (!transferring) files.getItems().clear();
+        });
         HBox actions = new HBox(8, add, folder, remove, clear);
         actions.setAlignment(Pos.CENTER_LEFT);
+
         Label queueTitle = new Label("Очередь передачи");
         queueTitle.getStyleClass().add("section-heading");
         count.getStyleClass().add("muted");
         HBox queueHeader = new HBox(14, queueTitle, count);
         queueHeader.setAlignment(Pos.CENTER_LEFT);
-        files.setPlaceholder(new Label("Здесь появятся выбранные изображения"));
-        files.setCellFactory(view -> new PhotoPreviewCell());
-        files.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        files.setMinHeight(150);
         files.getItems().addListener((javafx.collections.ListChangeListener<Path>) change -> updateCount());
-        VBox.setVgrow(files, Priority.ALWAYS);
-        history.setPrefHeight(105);
-        history.setPlaceholder(new Label("Здесь будет история текущей передачи"));
+
+        Label historyTitle = new Label("Журнал передачи");
+        historyTitle.getStyleClass().add("section-heading");
+        history.setMinHeight(95);
+        history.setPlaceholder(new Label("Здесь появятся результаты отправки"));
+        VBox resultsPanel = new VBox(8, historyTitle, history);
+        VBox.setVgrow(history, Priority.ALWAYS);
+        resultsPanel.setMinHeight(125);
+
+        SplitPane split = new SplitPane(files, resultsPanel);
+        split.setOrientation(javafx.geometry.Orientation.VERTICAL);
+        split.setDividerPositions(0.70);
+        split.getStyleClass().add("queue-split");
+        VBox.setVgrow(split, Priority.ALWAYS);
+
         send.getStyleClass().add("accent-button");
         send.setOnAction(event -> sendImages());
-        send.setPrefWidth(200);
+        send.setPrefWidth(215);
         cancelTransfer.setDisable(true);
         cancelTransfer.setOnAction(event -> {
             if (activeTransfer != null) {
@@ -236,13 +259,37 @@ public final class WatchWorkspace extends BorderPane {
         retryFailed.setOnAction(event -> retryFailures());
         HBox bottom = new HBox(10, retryFailed, cancelTransfer, send);
         bottom.setAlignment(Pos.CENTER_RIGHT);
-        VBox box = new VBox(12, title, explanation, drop, actions, queueHeader, files,
-                label("Результаты"), history, bottom);
+
+        VBox box = new VBox(12, title, explanation, drop, actions, queueHeader,
+                split, progressPanel(), bottom);
         box.getStyleClass().add("workspace");
         return box;
     }
 
-    private VBox dropZone() {
+    private VBox progressPanel() {
+        progressHeadline.getStyleClass().add("progress-headline");
+        progressNumbers.getStyleClass().add("progress-numbers");
+        progressDetails.getStyleClass().add("progress-details");
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        HBox summary = new HBox(12, progressHeadline, spacer, progressNumbers);
+        summary.setAlignment(Pos.CENTER_LEFT);
+        progress.setMaxWidth(Double.MAX_VALUE);
+        progress.setPrefHeight(16);
+        progress.getStyleClass().add("transfer-progress");
+        activity.getStyleClass().add("muted");
+        activity.setWrapText(true);
+        Region gap = new Region();
+        HBox.setHgrow(gap, Priority.ALWAYS);
+        HBox details = new HBox(12, activity, gap, progressDetails);
+        details.setAlignment(Pos.CENTER_LEFT);
+        VBox panel = new VBox(9, summary, progress, details);
+        panel.setPadding(new Insets(15, 18, 15, 18));
+        panel.getStyleClass().add("transfer-panel");
+        return panel;
+    }
+
+        private VBox dropZone() {
         Label icon = new Label("＋");
         icon.getStyleClass().add("drop-icon");
         Label title = new Label("Перетащите фотографии сюда");
@@ -251,7 +298,7 @@ public final class WatchWorkspace extends BorderPane {
         box.getStyleClass().add("drop-zone");
         box.setPadding(new Insets(24));
         box.setAlignment(Pos.CENTER);
-        box.setMinHeight(145);
+        box.setMinHeight(108);
         box.setOnDragOver(event -> {
             if (event.getDragboard().hasFiles()) event.acceptTransferModes(TransferMode.COPY);
             event.consume();
@@ -264,18 +311,6 @@ public final class WatchWorkspace extends BorderPane {
             event.consume();
         });
         return box;
-    }
-
-    private HBox footer() {
-        activity.getStyleClass().add("muted");
-        activity.setMaxWidth(Double.MAX_VALUE);
-        HBox.setHgrow(activity, Priority.ALWAYS);
-        progress.setPrefWidth(210);
-        HBox bar = new HBox(16, activity, progress);
-        bar.setAlignment(Pos.CENTER_LEFT);
-        bar.setPadding(new Insets(14, 24, 14, 24));
-        bar.getStyleClass().add("app-footer");
-        return bar;
     }
 
     private void discoverDevices() {
@@ -338,6 +373,7 @@ public final class WatchWorkspace extends BorderPane {
         if (total == 0) return;
         if (!isRetry) {
             latestResults.clear();
+            files.resetStatuses();
             previousDevice = serial;
         }
         transferring = true;
@@ -346,6 +382,10 @@ public final class WatchWorkspace extends BorderPane {
         updateCount();
         history.getItems().clear();
         progress.setProgress(0);
+        progressHeadline.setText(isRetry ? "Повтор ошибок" : "Передача фотографий");
+        progressNumbers.setText("0 / " + total);
+        progressDetails.setText("0 успешно · 0 ошибок");
+        activity.setText("Подготавливаем передачу на часы…");
         AtomicInteger errors = new AtomicInteger();
 
         Task<Void> task = new Task<>() {
@@ -356,7 +396,11 @@ public final class WatchWorkspace extends BorderPane {
                     }
                     Platform.runLater(() -> {
                         latestResults.put(update.source(), update);
+                        files.showOutcome(update);
                         progress.setProgress((double) update.position() / update.total());
+                        progressNumbers.setText(update.position() + " / " + update.total());
+                        progressDetails.setText((update.position() - errors.get())
+                                + " успешно · " + errors.get() + " ошибок");
                         String result = switch (update.status()) {
                             case COPIED_SCAN_REQUESTED -> "Скопировано, индексация запрошена";
                             case COPIED_SCAN_FAILED -> "Скопировано, ошибка индексации";
@@ -374,8 +418,10 @@ public final class WatchWorkspace extends BorderPane {
         };
         task.setOnSucceeded(event -> {
             finishTransfer();
-            activity.setText("Передача завершена: " + (total - errors.get())
-                    + " успешно, " + errors.get() + " с ошибками");
+            activity.setText("Передача завершена. Проверить фото можно в Галерее часов.");
+            progressHeadline.setText("Передача завершена");
+            progressNumbers.setText(total + " / " + total);
+            progressDetails.setText((total - errors.get()) + " успешно · " + errors.get() + " ошибок");
         });
         task.setOnFailed(event -> {
             finishTransfer();
@@ -394,7 +440,10 @@ public final class WatchWorkspace extends BorderPane {
             } finally {
                 Platform.runLater(() -> {
                     if (activeTransfer == task && transferring) finishTransfer();
-                    if (task.isCancelled()) activity.setText("Передача остановлена");
+                    if (task.isCancelled()) {
+                        progressHeadline.setText("Передача остановлена");
+                        activity.setText("Передача остановлена");
+                    }
                 });
             }
         });
@@ -416,17 +465,21 @@ public final class WatchWorkspace extends BorderPane {
         chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(
                 "JPEG и PNG", "*.jpg", "*.jpeg", "*.png", "*.JPG", "*.JPEG", "*.PNG"));
         List<File> result = chooser.showOpenMultipleDialog(getScene().getWindow());
-        if (result != null) result.forEach(file -> importPath(file.toPath()));
+        if (result != null && !transferring) {
+            files.addImages(result.stream().map(File::toPath)
+                    .filter(PhotoFiles::isReadableImage).toList());
+        }
     }
 
     private void chooseFolder() {
         DirectoryChooser chooser = new DirectoryChooser();
         chooser.setTitle("Выберите папку");
         File result = chooser.showDialog(getScene().getWindow());
-        if (result != null) importPath(result.toPath());
+        if (result != null && !transferring) importPath(result.toPath());
     }
 
     private void importPath(Path path) {
+        if (transferring) return;
         if (!Files.isDirectory(path)) {
             addImage(path);
             return;
@@ -439,7 +492,7 @@ public final class WatchWorkspace extends BorderPane {
         };
         scan.setOnSucceeded(event -> {
             int before = files.getItems().size();
-            scan.getValue().forEach(this::addImage);
+            files.addImages(scan.getValue());
             activity.setText("Добавлено " + (files.getItems().size() - before) + " фотографий");
         });
         scan.setOnFailed(event -> failure("Не удалось прочитать папку", scan.getException()));
@@ -448,7 +501,7 @@ public final class WatchWorkspace extends BorderPane {
 
     private void addImage(Path image) {
         if (PhotoFiles.isReadableImage(image) && !files.getItems().contains(image)) {
-            files.getItems().add(image);
+            files.addImages(List.of(image));
         }
     }
 
