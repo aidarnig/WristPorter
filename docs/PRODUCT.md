@@ -11,6 +11,7 @@ Someone with an already configured Galaxy Watch 4 Classic, Windows laptop and no
 - First-time pairing and subsequent connection work directly in the UI.
 - A user can import local JPEG/PNG images in batches of at least 100.
 - Every file receives an individually visible result: copy+scan requested, copied but scan failed, or copy failed.
+- Users can retry failed copies and re-request only media scanning for confirmed uploads, without creating duplicate watch images.
 - Transfer runs without freezing the interface; failed files do not prevent unrelated files from transferring.
 - Images are visible in Samsung Gallery after media scanning, confirmed through a real-watch acceptance test.
 - Local image bytes are not modified, existing watch files are not intentionally overwritten.

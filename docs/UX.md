@@ -4,7 +4,7 @@ This file owns **screen structure, interaction and visual guidance**. Functional
 
 ## Initial screen
 
-A header identifies the app. The connection sidebar guides ADB discovery, first pairing and connection. The primary workspace provides a drag-and-drop zone, file and folder pickers, selected photos, transfer results and a prominent Send button. The footer shows task progress.
+A header identifies the app. The connection sidebar guides ADB discovery, first pairing and connection. The primary workspace provides a drag-and-drop zone, file and folder pickers, selected photos, transfer results and a prominent Send button. The footer shows task progress. After a batch, **Retry failures** acts only on photos still in the queue: failed copies are retried; failed scan requests are repeated without re-uploading. Switching to a different watch blocks retry of the previous batch.
 
 ## Pairing guidance
 
@@ -16,7 +16,7 @@ JavaFX 27 + AtlantaFX 3; dark initial theme, low-noise surfaces, clear hierarchy
 
 ## Accessible behavior
 
-Every action must be keyboard-accessible and state should be textually represented, not only colored. Long-running actions show progress and offer cancellation that interrupts the running ADB subprocess; failure messages tell users what they can fix. Never say Gallery definitely displays a photo simply because the scan request succeeded.
+Every action must be keyboard-accessible and state should be textually represented, not only colored. Long-running actions show progress and offer cancellation that interrupts the running ADB subprocess. Send/retry remain disabled until the worker actually stops; failure messages tell users what they can fix. Never say Gallery definitely displays a photo simply because the scan request succeeded.
 
 ## Future screens
 

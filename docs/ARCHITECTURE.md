@@ -18,7 +18,7 @@ Direct dependency edges may also skip an intermediate module where a consumer ne
 
 ## Data flow
 
-Select a destination ADB serial. Ensure that exact serial is connected and authorized. Create the watch folder `/sdcard/DCIM/Camera`, generate a collision-resistant ASCII filename, push via `adb -s SERIAL`, then request `android.intent.action.MEDIA_SCANNER_SCAN_FILE` for the pushed file URI. Emit a separate result for each file; a scan failure must not be confused with a copy failure.
+Select a destination ADB serial. Ensure that exact serial is connected and authorized. Create the watch folder `/sdcard/DCIM/Camera`, generate a collision-resistant ASCII filename, push via `adb -s SERIAL`, then request `android.intent.action.MEDIA_SCANNER_SCAN_FILE` for the pushed file URI. Emit a separate result for each file; a scan failure must not be confused with a copy failure. A `TransferUpdate` carries the generated remote filename only once upload is confirmed. A retry of `FAILED` performs a new upload; a retry of `COPIED_SCAN_FAILED` reuses that remote filename for **scan-only** retry. A retry must target the same watch serial as the original batch. Uncertain ADB timeouts cannot prove whether a partially copied remote file exists.
 
 The broadcast is a legacy Android API known to work on the reference Watch 4 Classic. Keep it encapsulated in the ADB adapter for future replacement.
 

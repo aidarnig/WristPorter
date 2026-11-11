@@ -6,7 +6,7 @@ This file is the single source for **tests and release gates**. Execution schedu
 
 - Domain: supported types, unsafe input and unique remote filenames.
 - ADB: parsing authorized/offline devices, command arguments, subprocess timeouts and secret handling.
-- Core: progress callbacks, transfer ordering, batch partial failures and interruption.
+- Core: progress callbacks, transfer ordering, batch partial failures and interruption. Fake-ADB regression tests ensure a scan-only retry never repeats a successful push.
 - Desktop: non-blocking operations and UI state as test infrastructure becomes available.
 
 Use a fake ADB executable for integration tests; real hardware must not be necessary for pull request CI.
