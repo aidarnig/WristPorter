@@ -25,11 +25,11 @@ On Windows, run `./ci/package-windows.ps1` in PowerShell from the project root. 
 
 ```text
 dist/
-  WristPorter-1.0.0-windows-x64.zip
-  WristPorter-1.0.0-windows-x64.zip.sha256
+  WristPorter-1.1.0-windows-x64.zip
+  WristPorter-1.1.0-windows-x64.zip.sha256
 ```
 
-The GitHub [Windows portable workflow](../.github/workflows/windows-portable.yml) does the same. It runs manually or when packaging scripts change; ordinary Java edits do not trigger an expensive Windows build. After successful packaging, a lightweight Ubuntu job verifies SHA-256 and publishes the versioned ZIP at [GitHub Releases](https://github.com/aidarnig/WristPorter/releases). A stable channel publishes `v1.0.0`; future preview builds can use distinct prerelease tags. Release decisions and supported claims follow [Quality](QUALITY.md).
+The GitHub [Windows portable workflow](../.github/workflows/windows-portable.yml) does the same. It runs manually or when packaging scripts change; ordinary Java edits do not trigger an expensive Windows build. After successful packaging, a lightweight Ubuntu job verifies SHA-256 and publishes the versioned ZIP at [GitHub Releases](https://github.com/aidarnig/WristPorter/releases). A stable channel publishes `v1.1.0`; future preview builds can use distinct prerelease tags. Release decisions and supported claims follow [Quality](QUALITY.md).
 
 To use the ZIP: extract **the entire folder** and run `WristPorter/WristPorter.exe`. Keep `runtime/`, `app/`, and `platform-tools/` alongside it; moving only the EXE will not work. No administrative installation or separate ADB download is required for the packaged version.
 
@@ -39,4 +39,4 @@ ADB can be overridden through the advanced UI field or `WRISTPORTER_ADB` environ
 
 Use focused `feat/<scope>` or `fix/<scope>` branches and Conventional Commit-style messages. Track acceptance in GitHub Issues; update only the document that owns the relevant decision. Do not commit photographs, pairing secrets, ADB keys, build artifacts or private device identifiers.
 
-The stable 1.0 package has the accepted Watch 4 Classic scenario but is not certified on other watches or network conditions. See the release notes and [Quality](QUALITY.md) for verification boundaries.
+The 1.1.0 package has the accepted Watch 4 Classic scenario but is not certified on other watches or network conditions. See the release notes and [Quality](QUALITY.md) for verification boundaries.

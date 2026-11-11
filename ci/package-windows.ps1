@@ -6,7 +6,7 @@ $desktop = Join-Path $root "watch-desktop"
 $inputDir = Join-Path $desktop "target\jpackage-input"
 $dist = Join-Path $root "dist"
 $appName = "WristPorter"
-$version = "1.0.0"
+$version = "1.1.0"
 [xml]$projectPom = Get-Content -LiteralPath (Join-Path $root "pom.xml")
 if ($projectPom.project.version -ne $version) { throw "Package version must match Maven version." }
 
@@ -32,7 +32,7 @@ try {
     $appImage = Join-Path $dist $appName
     if (Test-Path $appImage) { Remove-Item $appImage -Recurse -Force }
 
-    & (Join-Path $env:JAVA_HOME "bin\jpackage.exe") --type app-image --name $appName --input $inputDir --main-jar $mainJar --main-class io.github.aidarnig.wgs.desktop.DesktopLauncher --app-version $version --dest $dist --java-options "-Dfile.encoding=UTF-8"
+    & (Join-Path $env:JAVA_HOME "bin\jpackage.exe") --type app-image --icon (Join-Path $root "docs\assets\wristporter.ico") --name $appName --input $inputDir --main-jar $mainJar --main-class io.github.aidarnig.wgs.desktop.DesktopLauncher --app-version $version --dest $dist --java-options "-Dfile.encoding=UTF-8"
     if ($LASTEXITCODE -ne 0) { throw "jpackage failed." }
 
     foreach ($entry in @("$appName.exe", "runtime", "app")) {

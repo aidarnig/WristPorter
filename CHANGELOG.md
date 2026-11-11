@@ -1,29 +1,24 @@
-# WristPorter 1.0.0
+# WristPorter releases
 
-**First stable Windows x64 portable release**
+## 1.1.0 — Branding and bilingual interface
 
-## Included
+- Added the selected WP-on-watch identity with full wordmark adapting to light and dark mode.
+- Added the watch-only icon to the native Windows EXE and application window.
+- Added an **English / Русский** switch in the application header, saved between launches.
+- Translated pairing, connection, photo selection, gallery status, batch progress and error messages.
+- Added bilingual README pages and localized, privacy-safe interface illustrations.
+- Prepared a GitHub Social Preview image at 1280×640 and a reproducible asset-generation workflow.
+- No changes to the core ADB push / media scanner protocol verified on Galaxy Watch 4 Classic.
 
-- Native JavaFX desktop interface with light and dark themes and automatic ADB detection
-- Built-in Java Runtime, ADB executable and required DLL files; unzip and launch without an installer
-- Pairing and reconnecting to Galaxy Watch 4 Classic over local Wi-Fi debugging
-- JPEG/PNG file and folder import with an adaptive photo gallery
-- Enlarged progress indicator and detailed transfer results
-- Safe ADB photo copy and automatic Samsung Gallery media scanning
-- Cancel and retry controls; scan-only retry avoids uploading a copied photo twice
+**Installation:** Under [Releases](https://github.com/aidarnig/WristPorter/releases), download `WristPorter-1.1.0-windows-x64.zip` from **Assets**. Extract the entire folder and launch `WristPorter.exe`; Java and ADB are already included. The separate `.zip.sha256` file allows integrity verification.
 
-## Verification
+**Validation:** The 1.0 photo-transfer scenario was confirmed on Galaxy Watch 4 Classic, including in-app pairing and immediate Gallery visibility for 8/8 photos. Version 1.1.0 additionally requires green Java tests and Windows portable packaging checks. New localization and branding have not yet been independently tested on the user's PC; other watch models are not certified.
 
-The product owner confirmed successful in-app pairing, discovery after restart, and **8 of 8 PNGs** transferring with immediate appearance in Galaxy Watch 4 Classic's Samsung Gallery. Automated Java and fake-ADB checks cover transport, retries and core behavior. The stable artifact is released only if the full Windows packaging/test workflow succeeds.
+## 1.0.0 — First stable portable release
 
-## Installation
+- JavaFX desktop interface, bundled Java Runtime and ADB.
+- Wireless ADB pairing, discovery, selection and reconnect.
+- Multi-photo JPEG/PNG transfer and automatic Samsung Gallery scanning.
+- Batch progress, cancel, retry, light/dark themes and responsive thumbnail grid.
+- Real device acceptance: Galaxy Watch 4 Classic, eight photos successfully transferred.
 
-1. Under **Assets**, download `WristPorter-1.0.0-windows-x64.zip` (not GitHub's automatically generated source archives).
-2. Extract the ZIP completely.
-3. Run `WristPorter/WristPorter.exe`.
-
-The package contains Java, ADB and license notices. The separate SHA-256 asset can be used to verify integrity.
-
-## Scope and limitations
-
-Officially tested scenario: **Samsung Galaxy Watch 4 Classic, Windows desktop, Wi-Fi ADB, JPEG/PNG**. Windows 10 clean-machine launch, other Wear OS models, 100-image stress batches, network failures and manual cancellation/retry stress are not independently verified. Wireless debugging must be enabled on the watch; disable it after use. This independent app is not affiliated with Samsung or Google.
