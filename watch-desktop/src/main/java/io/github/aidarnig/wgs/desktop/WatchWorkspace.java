@@ -141,6 +141,7 @@ public final class WatchWorkspace extends BorderPane {
         HBox queueHeader = new HBox(14, queueTitle, count);
         queueHeader.setAlignment(Pos.CENTER_LEFT);
         files.setPlaceholder(new Label("Здесь появятся выбранные изображения"));
+        files.setCellFactory(view -> new PhotoPreviewCell());
         files.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         files.getItems().addListener((javafx.collections.ListChangeListener<Path>) change -> updateCount());
         VBox.setVgrow(files, Priority.ALWAYS);
