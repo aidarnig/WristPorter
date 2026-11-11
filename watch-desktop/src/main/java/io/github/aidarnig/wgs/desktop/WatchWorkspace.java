@@ -2,6 +2,7 @@ package io.github.aidarnig.wgs.desktop;
 
 import atlantafx.base.theme.PrimerDark;
 import atlantafx.base.theme.PrimerLight;
+import io.github.aidarnig.wgs.adb.AdbExecutableLocator;
 import io.github.aidarnig.wgs.adb.WatchDevice;
 import io.github.aidarnig.wgs.adb.WatchEndpoint;
 import io.github.aidarnig.wgs.core.TransferUpdate;
@@ -36,7 +37,7 @@ import java.util.prefs.Preferences;
 public final class WatchWorkspace extends BorderPane {
     private final WatchTransferService service;
     private final ExecutorService worker;
-    private final TextField adbPath = new TextField(defaultAdb());
+    private final TextField adbPath = new TextField(AdbExecutableLocator.detect());
     private final TextField pairEndpoint = new TextField();
     private final PasswordField pairCode = new PasswordField();
     private final TextField connectionEndpoint = new TextField();
@@ -117,6 +118,14 @@ public final class WatchWorkspace extends BorderPane {
             if (result != null) adbPath.setText(result.getAbsolutePath());
         });
 
+        VBox advancedFields = new VBox(8, label("Путь к adb.exe"), adbPath, browse);
+        TitledPane advancedAdb = new TitledPane("Дополнительно: настройки ADB", advancedFields);
+        advancedAdb.setExpanded(false);
+        advancedAdb.setMaxWidth(Double.MAX_VALUE);
+        Label adbInfo = note(Files.isRegularFile(Path.of(adbPath.getText()))
+                ? "ADB найден автоматически — дополнительная установка не нужна."
+                : "ADB будет найден через PATH. При необходимости выберите его вручную.");
+
         Label pairing = new Label("1  Первое сопряжение");
         pairing.getStyleClass().add("section-heading");
         pairEndpoint.setPromptText("IP:порт сопряжения");
@@ -173,7 +182,7 @@ public final class WatchWorkspace extends BorderPane {
         deviceStatus.getStyleClass().add("connection-state");
         deviceStatus.setWrapText(true);
         VBox box = new VBox(10,
-                title, guidance, label("Путь к ADB"), adbPath, browse,
+                title, guidance, adbInfo, advancedAdb,
                 new Separator(), pairing, pairEndpoint, pairCode, pair,
                 new Separator(), connecting, connectionEndpoint, connect, discover, watchPicker,
                 deviceStatus, note("Порт сопряжения и порт подключения на часах различаются."));
@@ -473,22 +482,6 @@ public final class WatchWorkspace extends BorderPane {
         label.setWrapText(true);
         label.getStyleClass().add("muted");
         return label;
-    }
-
-    private static String defaultAdb() {
-        String env = System.getenv("WRISTPORTER_ADB");
-        if (env == null || env.isBlank()) env = System.getenv("WGS_ADB");
-        if (env != null && !env.isBlank()) return env;
-        String name = System.getProperty("os.name", "").toLowerCase().contains("win") ? "adb.exe" : "adb";
-        // In a jpackage app image, java.home points inside the bundled runtime.
-        // A Platform-Tools folder alongside runtime/ is a portable, install-free option.
-        Path imageRoot = Path.of(System.getProperty("java.home")).toAbsolutePath().getParent();
-        if (imageRoot != null) {
-            Path bundledTools = imageRoot.resolve("platform-tools").resolve(name);
-            if (Files.isRegularFile(bundledTools)) return bundledTools.toString();
-        }
-        Path documentsTools = Path.of(System.getProperty("user.home"), "Documents", "platform-tools", name);
-        return Files.isRegularFile(documentsTools) ? documentsTools.toString() : name;
     }
 
     @FunctionalInterface
