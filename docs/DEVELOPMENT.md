@@ -31,4 +31,6 @@ The separately triggered `Windows portable build (manual)` workflow runs the ful
 
 On Windows with JDK 25 and Maven in PATH, run `./ci/package-windows.ps1` in PowerShell. The output is `dist/WatchGallerySync-windows-x64.zip` and a SHA-256 checksum. Extract the whole directory and start `WatchGallerySync.exe`. Java is bundled; Android Platform-Tools remain external.
 
-This is an **unverified portable prototype**, not a Windows installer or a stable release. The non-modular JavaFX app uses a plain-Java `DesktopLauncher` entry point.
+The **portable ZIP is the primary release format**; no MSI/EXE installer is planned for v1. After a successful manual GitHub Actions run, open its artifact, download the ZIP, extract the complete `WatchGallerySync` folder (including `runtime/` and `app/`), and launch `WatchGallerySync.exe`. Do not launch the exe from inside a ZIP viewer or move it out of its directory. The non-modular JavaFX app uses a plain-Java `DesktopLauncher` entry point.
+
+**Current limitation:** the portable ZIP bundles Java but **not** Android Platform-Tools. ADB must be available via `WGS_ADB`, the program's ADB selector, `~/Documents/platform-tools`, or PATH. A copy of Platform-Tools can be kept in a user directory without running an installer. Packaging on Windows and actual clean-machine/Watch 4 operation are still unverified; do not describe this as a published release.

@@ -17,6 +17,6 @@ Reference device: Galaxy Watch 4 Classic with wireless debugging on a shared Wi-
 
 ## Release gate
 
-Require green full Maven verification, Windows installer launched on a clean PC without JDK, successful real-watch tests, no known data-loss bugs and checksums for release artifacts. Do not publish v1.0 based only on mocked integration tests.
+Require green full Maven verification, a Windows x64 portable ZIP that launches from an extracted folder on a clean PC without JDK or administrator privileges, successful real-watch tests, no known data-loss bugs and checksums for release artifacts. Check the executable's launcher dependencies and bundled runtime before declaring the ZIP usable. Do not publish v1.0 based only on mocked integration tests.
 
 **Current state:** source baseline is committed; successful complete build, packaging and hardware acceptance still need verification.

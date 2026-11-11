@@ -15,7 +15,7 @@ Someone with an already configured Galaxy Watch 4 Classic, Windows laptop and no
 - Transfer runs without freezing the interface; failed files do not prevent unrelated files from transferring.
 - Images are visible in Samsung Gallery after media scanning, confirmed through a real-watch acceptance test.
 - Local image bytes are not modified, existing watch files are not intentionally overwritten.
-- A Windows 10/11 installer includes a Java runtime and does not demand preinstalled JDK.
+- A Windows 10/11 x64 **portable ZIP** runs after extraction via `WatchGallerySync.exe`, bundling the necessary Java runtime; no installation, administrator privileges or separate JDK is required. ADB remains an external tool until an approved bundling strategy is implemented.
 
 ## Boundaries
 

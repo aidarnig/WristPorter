@@ -10,6 +10,6 @@ This document defines only the **milestone sequence**. Actionable work and compl
 | M3: Transfer | Batch copy, media scan, progress, retries and cancellation |
 | M4: UX | Themes, RU/EN, preferences and accessible messaging |
 | M5: QA | Simulated ADB tests, real-watch verification, Windows testing |
-| M6: 1.0 | Signed/verified distributable, docs, tagged release |
+| M6: 1.0 | Verified Windows x64 portable ZIP (no installer), docs, checksums, tagged release |
 
 Only a hardware-tested build can be called 1.0. Other Wear OS devices are best-effort until verified.

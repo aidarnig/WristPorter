@@ -2,7 +2,7 @@
 
 Open-source Java desktop application for transferring photos directly from Windows to Samsung Galaxy Watch 4 Classic (and potentially other Wear OS watches) via wireless ADB, without an Android smartphone or Galaxy Wearable.
 
-> **Early development / 0.1.0-SNAPSHOT:** not yet a hardware-verified release or installer.
+> **Early development / 0.1.0-SNAPSHOT:** not yet a hardware-verified portable release.
 
 ## Current capabilities
 
@@ -33,7 +33,7 @@ The UI can select `adb.exe`. Set `WGS_ADB` to override the default path.
 - [Roadmap](docs/ROADMAP.md): milestone sequence.
 - [Quality](docs/QUALITY.md): test strategy and release gates.
 - [Development](docs/DEVELOPMENT.md): setup, commands and contribution workflow.
-- [Windows portable build](.github/workflows/windows-portable.yml): manually triggered packaging workflow (prototype only).
+- [Windows portable build](.github/workflows/windows-portable.yml): manually triggered packaging workflow (prototype only); usage details are in [Development](docs/DEVELOPMENT.md).
 - [CI](docs/CI.md): affected-module test policy and build cost.
 - [Issues](https://github.com/aidarnig/watch-gallery-sync/issues): individual tasks and implementation progress.
 
