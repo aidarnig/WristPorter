@@ -117,10 +117,6 @@ public final class AdbClient {
     }
 
     private static void validateEndpoint(String address) {
-        if (address == null || !address.matches("[A-Za-z0-9.\\-]+:[0-9]{1,5}")) {
-            throw new IllegalArgumentException("Use IP:port, e.g. 192.168.1.101:38267");
-        }
-        int port = Integer.parseInt(address.substring(address.lastIndexOf(':') + 1));
-        if (port < 1 || port > 65535) throw new IllegalArgumentException("Invalid port");
+        WatchEndpoint.parse(address);
     }
 }
