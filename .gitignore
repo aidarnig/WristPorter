@@ -17,3 +17,6 @@ Thumbs.db
 *.adbkey.pub
 local-secrets/
 photos-test/
+
+# Local portable packages
+dist/

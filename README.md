@@ -33,6 +33,7 @@ The UI can select `adb.exe`. Set `WGS_ADB` to override the default path.
 - [Roadmap](docs/ROADMAP.md): milestone sequence.
 - [Quality](docs/QUALITY.md): test strategy and release gates.
 - [Development](docs/DEVELOPMENT.md): setup, commands and contribution workflow.
+- [Windows portable build](.github/workflows/windows-portable.yml): manually triggered packaging workflow (prototype only).
 - [CI](docs/CI.md): affected-module test policy and build cost.
 - [Issues](https://github.com/aidarnig/watch-gallery-sync/issues): individual tasks and implementation progress.
 
