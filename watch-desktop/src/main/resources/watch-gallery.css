@@ -1,0 +1,45 @@
+.app-shell {
+    -fx-background-color: #10151f;
+    -fx-font-family: "Segoe UI", "Inter", sans-serif;
+    -fx-font-size: 13px;
+}
+.app-header {
+    -fx-background-color: #161e2b;
+    -fx-border-color: transparent transparent #2b3443 transparent;
+}
+.brand {
+    -fx-text-fill: #f3f7ff;
+    -fx-font-weight: 800;
+    -fx-font-size: 18px;
+}
+.muted { -fx-text-fill: #9aa9bd; }
+.side-panel {
+    -fx-background-color: #151d2a;
+    -fx-border-color: transparent #2b3443 transparent transparent;
+}
+.panel-heading { -fx-font-size: 19px; -fx-font-weight: bold; -fx-text-fill: #eef5ff; }
+.page-heading { -fx-font-size: 25px; -fx-font-weight: bold; -fx-text-fill: #eef5ff; }
+.section-heading { -fx-font-weight: 700; -fx-text-fill: #e6eef9; }
+.workspace { -fx-background-color: transparent; }
+.drop-zone {
+    -fx-background-color: #1a2433;
+    -fx-background-radius: 14px;
+    -fx-border-color: #55728f;
+    -fx-border-style: segments(5, 5);
+    -fx-border-radius: 14px;
+}
+.drop-icon { -fx-font-size: 38px; -fx-text-fill: #8dbfff; }
+.accent-button {
+    -fx-background-color: #287bd8;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8px;
+}
+.accent-button:hover { -fx-background-color: #4198f0; }
+.connection-state { -fx-text-fill: #9bdab6; -fx-font-weight: 700; }
+.app-footer {
+    -fx-background-color: #151d2a;
+    -fx-border-color: #2b3443 transparent transparent transparent;
+}
+.list-view { -fx-background-radius: 10px; }
+.text-field, .password-field { -fx-background-radius: 7px; }
