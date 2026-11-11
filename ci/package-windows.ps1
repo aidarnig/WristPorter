@@ -38,6 +38,9 @@ try {
     foreach ($entry in @("$appName.exe", "runtime", "app")) {
         if (!(Test-Path (Join-Path $appImage $entry))) { throw "App image missing $entry" }
     }
+    # Check the generated EXE really uses the WP watch icon, not jpackage's default.
+    & (Join-Path $PSScriptRoot "check-windows-icon.ps1") -Exe (Join-Path $appImage "$appName.exe") -ExpectedIcon (Join-Path $root "docs\assets\wristporter.ico")
+
 
     # Download ADB only at packaging time; end users need no separate installation.
     & (Join-Path $PSScriptRoot "bundle-adb.ps1") -Destination (Join-Path $appImage "platform-tools")
