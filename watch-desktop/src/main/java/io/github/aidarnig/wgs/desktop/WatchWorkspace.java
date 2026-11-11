@@ -42,23 +42,24 @@ public final class WatchWorkspace extends BorderPane {
     private final PasswordField pairCode = new PasswordField();
     private final TextField connectionEndpoint = new TextField();
     private final ComboBox<String> watchPicker = new ComboBox<>();
-    private final Label deviceStatus = new Label("Нет соединения");
-    private final Label activity = new Label("Добавьте фотографии и подключите часы");
-    private final Label count = new Label("0 файлов");
+    private final Label deviceStatus = new Label(I18n.t("connect.no.connection"));
+    private final Label activity = new Label(I18n.t("progress.ready"));
+    private final Label count = new Label(I18n.t("files.count", 0));
     private final ProgressBar progress = new ProgressBar(0);
-    private final Label progressHeadline = new Label("Передача фотографий");
+    private final Label progressHeadline = new Label(I18n.t("progress.title"));
     private final Label progressNumbers = new Label("0 / 0");
-    private final Label progressDetails = new Label("0 успешно · 0 ошибок");
+    private final Label progressDetails = new Label(I18n.t("progress.details", 0, 0));
     private final PhotoQueueView files = new PhotoQueueView();
     private final ListView<String> history = new ListView<>();
-    private final Button send = new Button("Передать на часы");
-    private final Button cancelTransfer = new Button("Отменить");
-    private final Button retryFailed = new Button("Повторить ошибки");
+    private final Button send = new Button(I18n.t("progress.send"));
+    private final Button cancelTransfer = new Button(I18n.t("progress.cancel.button"));
+    private final Button retryFailed = new Button(I18n.t("progress.retry.button"));
     private final Map<Path, TransferUpdate> latestResults = new LinkedHashMap<>();
     private Task<Void> activeTransfer;
     private String previousDevice;
     private boolean transferring;
     private final Preferences preferences = Preferences.userNodeForPackage(WatchWorkspace.class);
+    private boolean hasCompletedTransfer;
     private boolean lightTheme = preferences.getBoolean("appearance.light", false);
 
     public WatchWorkspace(WatchTransferService service, ExecutorService worker) {
@@ -67,6 +68,7 @@ public final class WatchWorkspace extends BorderPane {
         getStyleClass().add("app-shell");
         applyTheme();
         setTop(header());
+        files.getItems().addListener((javafx.collections.ListChangeListener<Path>) change -> updateCount());
         ScrollPane connectionScroll = new ScrollPane(connectionPanel());
         connectionScroll.setFitToWidth(true);
         connectionScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -78,19 +80,26 @@ public final class WatchWorkspace extends BorderPane {
     }
 
     private HBox header() {
-        Label brand = new Label("WRISTPORTER");
-        brand.getStyleClass().add("brand");
-        Label subtitle = new Label("Файлы на часах — без Android-смартфона");
+        BrandLogo brand = new BrandLogo(lightTheme);
+        Label subtitle = new Label(I18n.t("header.subtitle"));
         subtitle.getStyleClass().add("muted");
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        Button theme = new Button(lightTheme ? "Тёмная тема" : "Светлая тема");
+        Button theme = new Button(lightTheme ? I18n.t("header.theme.dark") : I18n.t("header.theme.light"));
         theme.setOnAction(event -> {
             lightTheme = !lightTheme;
             applyTheme();
-            theme.setText(lightTheme ? "Тёмная тема" : "Светлая тема");
+            setTop(header());
         });
-        HBox box = new HBox(20, brand, subtitle, spacer, theme);
+        ComboBox<String> language = new ComboBox<>();
+        language.getItems().addAll("Русский", "English");
+        language.setValue(I18n.language().equals("ru") ? "Русский" : "English");
+        language.setTooltip(new Tooltip(I18n.t("header.language")));
+        language.setOnAction(event -> {
+            String code = "Русский".equals(language.getValue()) ? "ru" : "en";
+            if (!code.equals(I18n.language())) changeLanguage(code);
+        });
+        HBox box = new HBox(14, brand, subtitle, spacer, language, theme);
         box.setAlignment(Pos.CENTER_LEFT);
         box.setPadding(new Insets(19, 26, 19, 26));
         box.getStyleClass().add("app-header");
@@ -106,24 +115,63 @@ public final class WatchWorkspace extends BorderPane {
         preferences.putBoolean("appearance.light", lightTheme);
     }
 
+    private void changeLanguage(String code) {
+        if (transferring) return;
+        I18n.setLanguage(code);
+        // Preserve watch endpoints, device picker, queue, results, and theme.
+        setTop(null);
+        setLeft(null);
+        setCenter(null);
+        setTop(header());
+        ScrollPane sidebar = new ScrollPane(connectionPanel());
+        sidebar.setFitToWidth(true);
+        sidebar.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        sidebar.getStyleClass().add("connection-scroll");
+        setLeft(sidebar);
+        files.refreshLanguage();
+        setCenter(imagesPanel());
+        BorderPane.setMargin(getCenter(), new Insets(20, 24, 20, 24));
+        if (watchPicker.getValue() != null) {
+            deviceStatus.setText(I18n.t("connect.found", watchPicker.getValue()));
+        } else {
+            deviceStatus.setText(I18n.t("connect.no.connection"));
+        }
+        history.getItems().setAll(latestResults.values().stream()
+                .map(update -> update.source().getFileName() + " — " + resultText(update))
+                .toList());
+        activity.setText(hasCompletedTransfer
+                ? I18n.t("progress.completed.details") : I18n.t("progress.ready"));
+        progressHeadline.setText(I18n.t(hasCompletedTransfer
+                ? "progress.completed" : "progress.title"));
+        updateCount();
+    }
+
+    private String resultText(TransferUpdate update) {
+        return switch (update.status()) {
+            case COPIED_SCAN_REQUESTED -> I18n.t("progress.copied");
+            case COPIED_SCAN_FAILED -> I18n.t("progress.scan.failed");
+            case FAILED -> I18n.t("progress.copy.failed");
+        };
+    }
+
     private VBox connectionPanel() {
-        Label title = new Label("Подключение");
+        Label title = new Label(I18n.t("connection.title"));
         title.getStyleClass().add("panel-heading");
-        Label guidance = note("Часы и компьютер должны быть в одной сети Wi-Fi. Включите беспроводную отладку на часах.");
-        adbPath.setPromptText("adb.exe или путь к Platform-Tools");
-        Button browse = new Button("Указать adb.exe");
+        Label guidance = note(I18n.t("connection.help"));
+        adbPath.setPromptText(I18n.t("adb.path.hint"));
+        Button browse = new Button(I18n.t("adb.browse"));
         browse.setMaxWidth(Double.MAX_VALUE);
         browse.setOnAction(event -> {
             FileChooser chooser = new FileChooser();
-            chooser.setTitle("Укажите adb.exe");
+            chooser.setTitle(I18n.t("adb.browse.title"));
             File result = chooser.showOpenDialog(getScene().getWindow());
             if (result != null) adbPath.setText(result.getAbsolutePath());
         });
 
-        VBox advancedFields = new VBox(8, label("Путь к adb.exe"), adbPath, browse);
+        VBox advancedFields = new VBox(8, label(I18n.t("adb.path")), adbPath, browse);
         advancedFields.setVisible(false);
         advancedFields.setManaged(false);
-        Button advancedAdb = new Button("Дополнительно: настройки ADB");
+        Button advancedAdb = new Button(I18n.t("adb.advanced"));
         advancedAdb.setMaxWidth(Double.MAX_VALUE);
         advancedAdb.setOnAction(event -> {
             boolean expanded = !advancedFields.isVisible();
@@ -131,14 +179,14 @@ public final class WatchWorkspace extends BorderPane {
             advancedFields.setManaged(expanded);
         });
         Label adbInfo = note(Files.isRegularFile(Path.of(adbPath.getText()))
-                ? "ADB найден автоматически — дополнительная установка не нужна."
-                : "ADB будет найден через PATH. При необходимости выберите его вручную.");
+                ? I18n.t("adb.found")
+                : I18n.t("adb.fallback"));
 
-        Label pairing = new Label("1  Первое сопряжение");
+        Label pairing = new Label(I18n.t("pair.title"));
         pairing.getStyleClass().add("section-heading");
-        pairEndpoint.setPromptText("IP:порт сопряжения");
-        pairCode.setPromptText("Шестизначный код");
-        Button pair = new Button("Сопрячь часы");
+        pairEndpoint.setPromptText(I18n.t("pair.address"));
+        pairCode.setPromptText(I18n.t("pair.code"));
+        Button pair = new Button(I18n.t("pair.button"));
         pair.setMaxWidth(Double.MAX_VALUE);
         pair.setOnAction(event -> {
             String endpoint = pairEndpoint.getText().strip();
@@ -147,29 +195,29 @@ public final class WatchWorkspace extends BorderPane {
             try {
                 WatchEndpoint.parse(endpoint);
             } catch (IllegalArgumentException exception) {
-                activity.setText(exception.getMessage());
+                activity.setText(I18n.t("connect.invalid.endpoint"));
                 return;
             }
             if (!code.matches("[0-9]{6}")) {
-                activity.setText("Введите шестизначный код с экрана часов.");
+                activity.setText(I18n.t("pair.invalid.code"));
                 return;
             }
-            runOperation("Сопрягаем часы…", () -> service.pair(adb, endpoint, code), () -> {
+            runOperation(I18n.t("pair.in.progress"), () -> service.pair(adb, endpoint, code), () -> {
                 pairCode.clear();
-                deviceStatus.setText("Сопряжено. Теперь укажите порт отладки.");
+                deviceStatus.setText(I18n.t("pair.success"));
             });
         });
 
-        Label connecting = new Label("2  Подключение");
+        Label connecting = new Label(I18n.t("connect.title"));
         connecting.getStyleClass().add("section-heading");
-        connectionEndpoint.setPromptText("IP:порт отладки (другой порт)");
-        watchPicker.setPromptText("Выберите найденные часы");
+        connectionEndpoint.setPromptText(I18n.t("connect.address"));
+        watchPicker.setPromptText(I18n.t("connect.select"));
         watchPicker.setMaxWidth(Double.MAX_VALUE);
         watchPicker.setDisable(true);
         watchPicker.setOnAction(event -> {
             if (watchPicker.getValue() != null) connectionEndpoint.setText(watchPicker.getValue());
         });
-        Button connect = new Button("Подключиться");
+        Button connect = new Button(I18n.t("connect.button"));
         connect.getStyleClass().add("accent-button");
         connect.setMaxWidth(Double.MAX_VALUE);
         connect.setOnAction(event -> {
@@ -178,13 +226,13 @@ public final class WatchWorkspace extends BorderPane {
             try {
                 WatchEndpoint.parse(target);
             } catch (IllegalArgumentException exception) {
-                activity.setText(exception.getMessage());
+                activity.setText(I18n.t("connect.invalid.endpoint"));
                 return;
             }
-            runOperation("Подключение…", () -> service.connect(adb, target),
-                    () -> deviceStatus.setText("Подключено: " + target));
+            runOperation(I18n.t("connect.in.progress"), () -> service.connect(adb, target),
+                    () -> deviceStatus.setText(I18n.t("connect.success", target)));
         });
-        Button discover = new Button("Обнаружить устройства");
+        Button discover = new Button(I18n.t("connect.detect"));
         discover.setMaxWidth(Double.MAX_VALUE);
         discover.setOnAction(event -> discoverDevices());
         deviceStatus.getStyleClass().add("connection-state");
@@ -193,7 +241,7 @@ public final class WatchWorkspace extends BorderPane {
                 title, guidance, adbInfo, advancedAdb, advancedFields,
                 new Separator(), pairing, pairEndpoint, pairCode, pair,
                 new Separator(), connecting, connectionEndpoint, connect, discover, watchPicker,
-                deviceStatus, note("Порт сопряжения и порт подключения на часах различаются."));
+                deviceStatus, note(I18n.t("connect.port.note")));
         box.getStyleClass().add("side-panel");
         box.setPadding(new Insets(24));
         box.setPrefWidth(330);
@@ -202,38 +250,37 @@ public final class WatchWorkspace extends BorderPane {
     }
 
     private VBox imagesPanel() {
-        Label title = new Label("Мои фотографии");
+        Label title = new Label(I18n.t("files.title"));
         title.getStyleClass().add("page-heading");
-        Label explanation = note("Выберите JPG или PNG. После копирования фотографии добавляются в Samsung Gallery.");
+        Label explanation = note(I18n.t("files.description"));
         VBox drop = dropZone();
-        Button add = new Button("Добавить файлы");
+        Button add = new Button(I18n.t("files.add"));
         add.getStyleClass().add("accent-button");
         add.setOnAction(event -> chooseFiles());
-        Button folder = new Button("Добавить папку");
+        Button folder = new Button(I18n.t("files.folder"));
         folder.setOnAction(event -> chooseFolder());
-        Button remove = new Button("Убрать выбранные");
+        Button remove = new Button(I18n.t("files.remove"));
         remove.setOnAction(event -> {
             if (!transferring) files.removeSelected();
         });
-        Button clear = new Button("Очистить очередь");
+        Button clear = new Button(I18n.t("files.clear"));
         clear.setOnAction(event -> {
             if (!transferring) files.getItems().clear();
         });
         HBox actions = new HBox(8, add, folder, remove, clear);
         actions.setAlignment(Pos.CENTER_LEFT);
 
-        Label queueTitle = new Label("Очередь передачи");
+        Label queueTitle = new Label(I18n.t("files.queue"));
         queueTitle.getStyleClass().add("section-heading");
         count.getStyleClass().add("muted");
         HBox queueHeader = new HBox(14, queueTitle, count);
         queueHeader.setAlignment(Pos.CENTER_LEFT);
         files.setMinHeight(150);
-        files.getItems().addListener((javafx.collections.ListChangeListener<Path>) change -> updateCount());
 
-        Label historyTitle = new Label("Журнал передачи");
+        Label historyTitle = new Label(I18n.t("history.title"));
         historyTitle.getStyleClass().add("section-heading");
         history.setMinHeight(95);
-        history.setPlaceholder(new Label("Здесь появятся результаты отправки"));
+        history.setPlaceholder(new Label(I18n.t("history.empty")));
         VBox resultsPanel = new VBox(8, historyTitle, history);
         VBox.setVgrow(history, Priority.ALWAYS);
         resultsPanel.setMinHeight(125);
@@ -251,7 +298,7 @@ public final class WatchWorkspace extends BorderPane {
         cancelTransfer.setOnAction(event -> {
             if (activeTransfer != null) {
                 cancelTransfer.setDisable(true);
-                activity.setText("Отменяем передачу…");
+                activity.setText(I18n.t("progress.cancel.message"));
                 activeTransfer.cancel(true);
             }
         });
@@ -292,9 +339,9 @@ public final class WatchWorkspace extends BorderPane {
         private VBox dropZone() {
         Label icon = new Label("＋");
         icon.getStyleClass().add("drop-icon");
-        Label title = new Label("Перетащите фотографии сюда");
+        Label title = new Label(I18n.t("files.drop"));
         title.getStyleClass().add("section-heading");
-        VBox box = new VBox(8, icon, title, note("JPEG, PNG или папка с изображениями"));
+        VBox box = new VBox(8, icon, title, note(I18n.t("files.drop.note")));
         box.getStyleClass().add("drop-zone");
         box.setPadding(new Insets(24));
         box.setAlignment(Pos.CENTER);
@@ -315,7 +362,7 @@ public final class WatchWorkspace extends BorderPane {
 
     private void discoverDevices() {
         String executable = adbPath.getText().strip();
-        activity.setText("Поиск ADB-устройств…");
+        activity.setText(I18n.t("connect.searching"));
         Task<List<WatchDevice>> task = new Task<>() {
             @Override protected List<WatchDevice> call() throws Exception {
                 return service.devices(executable);
@@ -329,16 +376,16 @@ public final class WatchWorkspace extends BorderPane {
             if (serials.size() == 1) {
                 watchPicker.getSelectionModel().selectFirst();
                 connectionEndpoint.setText(serials.getFirst());
-                deviceStatus.setText("Найдено: " + serials.getFirst());
+                deviceStatus.setText(I18n.t("connect.found", serials.getFirst()));
             } else if (serials.isEmpty()) {
-                deviceStatus.setText("Часы не обнаружены. Проверьте Wi-Fi и беспроводную отладку.");
+                deviceStatus.setText(I18n.t("connect.none"));
             } else {
                 connectionEndpoint.clear();
-                deviceStatus.setText("Найдено " + serials.size() + " устройств. Выберите нужные часы.");
+                deviceStatus.setText(I18n.t("connect.multiple", serials.size()));
             }
-            activity.setText("Поиск завершён");
+            activity.setText(I18n.t("connect.search.complete"));
         });
-        task.setOnFailed(event -> failure("Ошибка поиска", task.getException()));
+        task.setOnFailed(event -> failure(I18n.t("connect.search.error"), task.getException()));
         worker.submit(task);
     }
 
@@ -351,7 +398,7 @@ public final class WatchWorkspace extends BorderPane {
         if (transferring) return;
         String serial = connectionEndpoint.getText().strip();
         if (previousDevice == null || !previousDevice.equals(serial)) {
-            activity.setText("Для повтора выберите те же часы, что использовались при отправке.");
+            activity.setText(I18n.t("progress.retry.device"));
             return;
         }
         List<TransferUpdate> pending = latestResults.values().stream()
@@ -365,12 +412,13 @@ public final class WatchWorkspace extends BorderPane {
         String executable = adbPath.getText().strip();
         String serial = connectionEndpoint.getText().strip();
         if (serial.isBlank()) {
-            activity.setText("Сначала подключите часы и укажите порт отладки.");
+            activity.setText(I18n.t("progress.no.connection"));
             return;
         }
         boolean isRetry = retryRequests != null;
         int total = isRetry ? retryRequests.size() : selected.size();
         if (total == 0) return;
+        hasCompletedTransfer = false;
         if (!isRetry) {
             latestResults.clear();
             files.resetStatuses();
@@ -382,10 +430,10 @@ public final class WatchWorkspace extends BorderPane {
         updateCount();
         history.getItems().clear();
         progress.setProgress(0);
-        progressHeadline.setText(isRetry ? "Повтор ошибок" : "Передача фотографий");
+        progressHeadline.setText(isRetry ? "Повтор ошибок" : I18n.t("progress.title"));
         progressNumbers.setText("0 / " + total);
-        progressDetails.setText("0 успешно · 0 ошибок");
-        activity.setText("Подготавливаем передачу на часы…");
+        progressDetails.setText(I18n.t("progress.details", 0, 0));
+        activity.setText(I18n.t("progress.started"));
         AtomicInteger errors = new AtomicInteger();
 
         Task<Void> task = new Task<>() {
@@ -399,15 +447,10 @@ public final class WatchWorkspace extends BorderPane {
                         files.showOutcome(update);
                         progress.setProgress((double) update.position() / update.total());
                         progressNumbers.setText(update.position() + " / " + update.total());
-                        progressDetails.setText((update.position() - errors.get())
-                                + " успешно · " + errors.get() + " ошибок");
-                        String result = switch (update.status()) {
-                            case COPIED_SCAN_REQUESTED -> "Скопировано, индексация запрошена";
-                            case COPIED_SCAN_FAILED -> "Скопировано, ошибка индексации";
-                            case FAILED -> "Не удалось скопировать";
-                        };
+                        progressDetails.setText(I18n.t("progress.details", update.position() - errors.get(), errors.get()));
+                        String result = resultText(update);
                         history.getItems().add(update.source().getFileName() + " — " + result);
-                        activity.setText(update.position() + "/" + update.total() + " · " + result);
+                        activity.setText(I18n.t("progress.current", update.position(), update.total(), result));
                         updateCount();
                     });
                 };
@@ -418,18 +461,19 @@ public final class WatchWorkspace extends BorderPane {
         };
         task.setOnSucceeded(event -> {
             finishTransfer();
-            activity.setText("Передача завершена. Проверить фото можно в Галерее часов.");
-            progressHeadline.setText("Передача завершена");
+            hasCompletedTransfer = true;
+            activity.setText(I18n.t("progress.completed.details"));
+            progressHeadline.setText(I18n.t("progress.completed"));
             progressNumbers.setText(total + " / " + total);
-            progressDetails.setText((total - errors.get()) + " успешно · " + errors.get() + " ошибок");
+            progressDetails.setText(I18n.t("progress.details", total - errors.get(), errors.get()));
         });
         task.setOnFailed(event -> {
             finishTransfer();
-            failure("Передача прервана", task.getException());
+            failure(I18n.t("operation.transfer.error"), task.getException());
         });
         task.setOnCancelled(event -> {
             cancelTransfer.setDisable(true);
-            activity.setText("Отмена запрошена. Завершаем ADB-процесс…");
+            activity.setText(I18n.t("progress.cancelling"));
         });
         activeTransfer = task;
         // A canceled JavaFX Task can emit onCancelled before its subprocess exits.
@@ -441,8 +485,8 @@ public final class WatchWorkspace extends BorderPane {
                 Platform.runLater(() -> {
                     if (activeTransfer == task && transferring) finishTransfer();
                     if (task.isCancelled()) {
-                        progressHeadline.setText("Передача остановлена");
-                        activity.setText("Передача остановлена");
+                        progressHeadline.setText(I18n.t("progress.stopped"));
+                        activity.setText(I18n.t("progress.stopped"));
                     }
                 });
             }
@@ -454,16 +498,16 @@ public final class WatchWorkspace extends BorderPane {
         Task<Void> task = new Task<>() {
             @Override protected Void call() throws Exception { operation.run(); return null; }
         };
-        task.setOnSucceeded(event -> { success.run(); activity.setText("Готово"); });
-        task.setOnFailed(event -> failure("Ошибка ADB", task.getException()));
+        task.setOnSucceeded(event -> { success.run(); activity.setText(I18n.t("operation.done")); });
+        task.setOnFailed(event -> failure(I18n.t("operation.adb.error"), task.getException()));
         worker.submit(task);
     }
 
     private void chooseFiles() {
         FileChooser chooser = new FileChooser();
-        chooser.setTitle("Выберите фотографии");
+        chooser.setTitle(I18n.t("files.dialog"));
         chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(
-                "JPEG и PNG", "*.jpg", "*.jpeg", "*.png", "*.JPG", "*.JPEG", "*.PNG"));
+                I18n.t("files.filetypes"), "*.jpg", "*.jpeg", "*.png", "*.JPG", "*.JPEG", "*.PNG"));
         List<File> result = chooser.showOpenMultipleDialog(getScene().getWindow());
         if (result != null && !transferring) {
             files.addImages(result.stream().map(File::toPath)
@@ -473,7 +517,7 @@ public final class WatchWorkspace extends BorderPane {
 
     private void chooseFolder() {
         DirectoryChooser chooser = new DirectoryChooser();
-        chooser.setTitle("Выберите папку");
+        chooser.setTitle(I18n.t("files.folder.dialog"));
         File result = chooser.showDialog(getScene().getWindow());
         if (result != null && !transferring) importPath(result.toPath());
     }
@@ -484,7 +528,7 @@ public final class WatchWorkspace extends BorderPane {
             addImage(path);
             return;
         }
-        activity.setText("Ищем фотографии в папке…");
+        activity.setText(I18n.t("files.scanning"));
         Task<List<Path>> scan = new Task<>() {
             @Override protected List<Path> call() throws Exception {
                 return PhotoCollector.collect(path);
@@ -493,9 +537,9 @@ public final class WatchWorkspace extends BorderPane {
         scan.setOnSucceeded(event -> {
             int before = files.getItems().size();
             files.addImages(scan.getValue());
-            activity.setText("Добавлено " + (files.getItems().size() - before) + " фотографий");
+            activity.setText(I18n.t("files.added", files.getItems().size() - before));
         });
-        scan.setOnFailed(event -> failure("Не удалось прочитать папку", scan.getException()));
+        scan.setOnFailed(event -> failure(I18n.t("files.folder.error"), scan.getException()));
         worker.submit(scan);
     }
 
@@ -506,7 +550,7 @@ public final class WatchWorkspace extends BorderPane {
     }
 
     private void updateCount() {
-        count.setText(files.getItems().size() + " файлов");
+        count.setText(I18n.t("files.count", files.getItems().size()));
         send.setDisable(transferring || files.getItems().isEmpty());
         retryFailed.setDisable(transferring || previousDevice == null
                 || latestResults.values().stream().noneMatch(update ->
@@ -521,7 +565,7 @@ public final class WatchWorkspace extends BorderPane {
     }
 
     private void failure(String label, Throwable cause) {
-        activity.setText(label + ": " + (cause == null ? "Неизвестная ошибка" : cause.getMessage()));
+        activity.setText(label + ": " + (cause == null ? I18n.t("operation.unknown") : cause.getMessage()));
     }
 
     private static Label label(String text) {

@@ -15,7 +15,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.TextAlignment;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -57,6 +56,8 @@ public final class PhotoQueueView extends ScrollPane {
         refresh();
     }
 
+    public void refreshLanguage() { refresh(); }
+
     public ObservableList<Path> getItems() {
         return items;
     }
@@ -96,7 +97,7 @@ public final class PhotoQueueView extends ScrollPane {
     private void refresh() {
         tiles.getChildren().clear();
         if (items.isEmpty()) {
-            Label empty = new Label("Добавьте изображения — миниатюры появятся здесь");
+            Label empty = new Label(I18n.t("files.empty"));
             empty.getStyleClass().add("muted");
             tiles.getChildren().add(empty);
             return;
@@ -137,7 +138,7 @@ public final class PhotoQueueView extends ScrollPane {
         button.getStyleClass().add("photo-card");
         button.setSelected(selection.contains(photo));
         button.setAccessibleRole(AccessibleRole.TOGGLE_BUTTON);
-        button.setAccessibleText("Выбрать фотографию " + photo.getFileName());
+        button.setAccessibleText(I18n.t("files.select", photo.getFileName()));
         button.selectedProperty().addListener((observable, before, selected) -> {
             if (selected) selection.add(photo);
             else selection.remove(photo);
@@ -148,20 +149,20 @@ public final class PhotoQueueView extends ScrollPane {
     private static void applyStatus(Label label, TransferUpdate update) {
         label.getStyleClass().removeAll("photo-card-success", "photo-card-error", "photo-card-warn");
         if (update == null) {
-            label.setText("Готово к отправке");
+            label.setText(I18n.t("files.ready"));
             return;
         }
         switch (update.status()) {
             case COPIED_SCAN_REQUESTED -> {
-                label.setText("✓ Отправлено");
+                label.setText(I18n.t("files.sent"));
                 label.getStyleClass().add("photo-card-success");
             }
             case COPIED_SCAN_FAILED -> {
-                label.setText("! Нужна индексация");
+                label.setText(I18n.t("files.scan.failed"));
                 label.getStyleClass().add("photo-card-warn");
             }
             case FAILED -> {
-                label.setText("✕ Ошибка передачи");
+                label.setText(I18n.t("files.push.failed"));
                 label.getStyleClass().add("photo-card-error");
             }
         }
