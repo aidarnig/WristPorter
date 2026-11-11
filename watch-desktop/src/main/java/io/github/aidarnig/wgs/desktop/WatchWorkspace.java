@@ -21,8 +21,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 /** Functional first iteration. Preview thumbnails and settings are tracked for M2/M4. */
 public final class WatchWorkspace extends BorderPane {
@@ -41,7 +44,10 @@ public final class WatchWorkspace extends BorderPane {
     private final ListView<String> history = new ListView<>();
     private final Button send = new Button("Передать на часы");
     private final Button cancelTransfer = new Button("Отменить");
+    private final Button retryFailed = new Button("Повторить ошибки");
+    private final Map<Path, TransferUpdate> latestResults = new LinkedHashMap<>();
     private Task<Void> activeTransfer;
+    private String previousDevice;
     private boolean transferring;
 
     public WatchWorkspace(WatchTransferService service, ExecutorService worker) {
@@ -166,9 +172,15 @@ public final class WatchWorkspace extends BorderPane {
         send.setPrefWidth(200);
         cancelTransfer.setDisable(true);
         cancelTransfer.setOnAction(event -> {
-            if (activeTransfer != null) activeTransfer.cancel(true);
+            if (activeTransfer != null) {
+                cancelTransfer.setDisable(true);
+                activity.setText("Отменяем передачу…");
+                activeTransfer.cancel(true);
+            }
         });
-        HBox bottom = new HBox(10, cancelTransfer, send);
+        retryFailed.setDisable(true);
+        retryFailed.setOnAction(event -> retryFailures());
+        HBox bottom = new HBox(10, retryFailed, cancelTransfer, send);
         bottom.setAlignment(Pos.CENTER_RIGHT);
         VBox box = new VBox(12, title, explanation, drop, actions, queueHeader, files,
                 label("Результаты"), history, bottom);
@@ -243,12 +255,36 @@ public final class WatchWorkspace extends BorderPane {
 
     private void sendImages() {
         if (transferring || files.getItems().isEmpty()) return;
-        List<Path> selected = List.copyOf(files.getItems());
+        transfer(List.copyOf(files.getItems()), null);
+    }
+
+    private void retryFailures() {
+        if (transferring) return;
+        String serial = connectionEndpoint.getText().strip();
+        if (previousDevice == null || !previousDevice.equals(serial)) {
+            activity.setText("Для повтора выберите те же часы, что использовались при отправке.");
+            return;
+        }
+        List<TransferUpdate> pending = latestResults.values().stream()
+                .filter(TransferUpdate::retryable)
+                .filter(update -> files.getItems().contains(update.source()))
+                .toList();
+        if (!pending.isEmpty()) transfer(List.of(), pending);
+    }
+
+    private void transfer(List<Path> selected, List<TransferUpdate> retryRequests) {
         String executable = adbPath.getText().strip();
         String serial = connectionEndpoint.getText().strip();
         if (serial.isBlank()) {
             activity.setText("Сначала подключите часы и укажите порт отладки.");
             return;
+        }
+        boolean isRetry = retryRequests != null;
+        int total = isRetry ? retryRequests.size() : selected.size();
+        if (total == 0) return;
+        if (!isRetry) {
+            latestResults.clear();
+            previousDevice = serial;
         }
         transferring = true;
         activeTransfer = null;
@@ -257,11 +293,15 @@ public final class WatchWorkspace extends BorderPane {
         history.getItems().clear();
         progress.setProgress(0);
         AtomicInteger errors = new AtomicInteger();
+
         Task<Void> task = new Task<>() {
             @Override protected Void call() throws Exception {
-                service.send(executable, serial, selected, update -> {
-                    if (update.status() != TransferUpdate.Status.COPIED_SCAN_REQUESTED) errors.incrementAndGet();
+                Consumer<TransferUpdate> report = update -> {
+                    if (update.status() != TransferUpdate.Status.COPIED_SCAN_REQUESTED) {
+                        errors.incrementAndGet();
+                    }
                     Platform.runLater(() -> {
+                        latestResults.put(update.source(), update);
                         progress.setProgress((double) update.position() / update.total());
                         String result = switch (update.status()) {
                             case COPIED_SCAN_REQUESTED -> "Скопировано, индексация запрошена";
@@ -270,14 +310,17 @@ public final class WatchWorkspace extends BorderPane {
                         };
                         history.getItems().add(update.source().getFileName() + " — " + result);
                         activity.setText(update.position() + "/" + update.total() + " · " + result);
+                        updateCount();
                     });
-                });
+                };
+                if (isRetry) service.retry(executable, serial, retryRequests, report);
+                else service.send(executable, serial, selected, report);
                 return null;
             }
         };
         task.setOnSucceeded(event -> {
             finishTransfer();
-            activity.setText("Передача завершена: " + (selected.size() - errors.get())
+            activity.setText("Передача завершена: " + (total - errors.get())
                     + " успешно, " + errors.get() + " с ошибками");
         });
         task.setOnFailed(event -> {
@@ -285,11 +328,22 @@ public final class WatchWorkspace extends BorderPane {
             failure("Передача прервана", task.getException());
         });
         task.setOnCancelled(event -> {
-            finishTransfer();
-            activity.setText("Передача отменена пользователем");
+            cancelTransfer.setDisable(true);
+            activity.setText("Отмена запрошена. Завершаем ADB-процесс…");
         });
         activeTransfer = task;
-        worker.submit(task);
+        // A canceled JavaFX Task can emit onCancelled before its subprocess exits.
+        // Keep the UI locked until the actual worker has returned.
+        worker.submit(() -> {
+            try {
+                task.run();
+            } finally {
+                Platform.runLater(() -> {
+                    if (activeTransfer == task && transferring) finishTransfer();
+                    if (task.isCancelled()) activity.setText("Передача остановлена");
+                });
+            }
+        });
     }
 
     private void runOperation(String message, Operation operation, Runnable success) {
@@ -347,6 +401,9 @@ public final class WatchWorkspace extends BorderPane {
     private void updateCount() {
         count.setText(files.getItems().size() + " файлов");
         send.setDisable(transferring || files.getItems().isEmpty());
+        retryFailed.setDisable(transferring || previousDevice == null
+                || latestResults.values().stream().noneMatch(update ->
+                        update.retryable() && files.getItems().contains(update.source())));
     }
 
     private void finishTransfer() {
