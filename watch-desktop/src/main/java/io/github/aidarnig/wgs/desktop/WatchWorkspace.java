@@ -1,6 +1,7 @@
 package io.github.aidarnig.wgs.desktop;
 
 import io.github.aidarnig.wgs.adb.WatchDevice;
+import io.github.aidarnig.wgs.adb.WatchEndpoint;
 import io.github.aidarnig.wgs.core.TransferUpdate;
 import io.github.aidarnig.wgs.core.WatchTransferService;
 import io.github.aidarnig.wgs.domain.PhotoFiles;
@@ -98,12 +99,25 @@ public final class WatchWorkspace extends BorderPane {
         pairCode.setPromptText("Шестизначный код");
         Button pair = new Button("Сопрячь часы");
         pair.setMaxWidth(Double.MAX_VALUE);
-        pair.setOnAction(event -> runOperation("Сопрягаем часы…", () ->
-                service.pair(adbPath.getText().strip(), pairEndpoint.getText().strip(), pairCode.getText().strip()),
-                () -> {
-                    pairCode.clear();
-                    deviceStatus.setText("Сопряжено. Теперь укажите порт отладки.");
-                }));
+        pair.setOnAction(event -> {
+            String endpoint = pairEndpoint.getText().strip();
+            String code = pairCode.getText().strip();
+            String adb = adbPath.getText().strip();
+            try {
+                WatchEndpoint.parse(endpoint);
+            } catch (IllegalArgumentException exception) {
+                activity.setText(exception.getMessage());
+                return;
+            }
+            if (!code.matches("[0-9]{6}")) {
+                activity.setText("Введите шестизначный код с экрана часов.");
+                return;
+            }
+            runOperation("Сопрягаем часы…", () -> service.pair(adb, endpoint, code), () -> {
+                pairCode.clear();
+                deviceStatus.setText("Сопряжено. Теперь укажите порт отладки.");
+            });
+        });
 
         Label connecting = new Label("2  Подключение");
         connecting.getStyleClass().add("section-heading");
@@ -119,7 +133,14 @@ public final class WatchWorkspace extends BorderPane {
         connect.setMaxWidth(Double.MAX_VALUE);
         connect.setOnAction(event -> {
             String target = connectionEndpoint.getText().strip();
-            runOperation("Подключение…", () -> service.connect(adbPath.getText().strip(), target),
+            String adb = adbPath.getText().strip();
+            try {
+                WatchEndpoint.parse(target);
+            } catch (IllegalArgumentException exception) {
+                activity.setText(exception.getMessage());
+                return;
+            }
+            runOperation("Подключение…", () -> service.connect(adb, target),
                     () -> deviceStatus.setText("Подключено: " + target));
         });
         Button discover = new Button("Обнаружить устройства");
