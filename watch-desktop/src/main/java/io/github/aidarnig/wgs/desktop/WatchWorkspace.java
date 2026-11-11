@@ -430,7 +430,7 @@ public final class WatchWorkspace extends BorderPane {
         updateCount();
         history.getItems().clear();
         progress.setProgress(0);
-        progressHeadline.setText(isRetry ? "Повтор ошибок" : I18n.t("progress.title"));
+        progressHeadline.setText(I18n.t(isRetry ? "progress.retry" : "progress.title"));
         progressNumbers.setText("0 / " + total);
         progressDetails.setText(I18n.t("progress.details", 0, 0));
         activity.setText(I18n.t("progress.started"));
