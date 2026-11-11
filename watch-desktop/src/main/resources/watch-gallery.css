@@ -43,3 +43,9 @@
 }
 .list-view { -fx-background-radius: 10px; }
 .text-field, .password-field { -fx-background-radius: 7px; }
+
+/* Bounded, asynchronous previews for the image queue. */
+.photo-preview { -fx-spacing: 14px; -fx-alignment: center-left; }
+.photo-name { -fx-font-weight: bold; -fx-text-fill: #e7f0fb; }
+.photo-extension { -fx-text-fill: #9aa9bd; -fx-font-size: 11px; }
+.photo-thumbnail { -fx-background-color: #263244; -fx-background-radius: 8px; }
