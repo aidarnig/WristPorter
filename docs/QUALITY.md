@@ -51,3 +51,14 @@ Observed and confirmed in screenshots and user feedback:
 **Stable 1.0 release decision (2026-11-11):** The product owner accepts the verified portable Windows launch, successful in-app pairing/re-discovery and real Watch 4 Classic eight-photo transfer, plus passing automated tests for other key workflows. The separate 100-photo and induced-cancellation/retry tests are **not required** for 1.0. Stable publication requires a green full Maven reactor, successful Windows app-image packaging, verified ADB/Java runtime and SHA-256 release assets. Limit the compatibility claim to the tested Watch 4 Classic scenario and disclose unverified clean-PC/Windows 10 conditions. Third-party license/provenance files must remain bundled; additional legal/trademark review is tracked separately before broader promotion.
 
 **Current state (2026-11-11):** The stable [WristPorter 1.0.0](https://github.com/aidarnig/WristPorter/releases/tag/v1.0.0) release was published after [successful full Windows verification and checksum validation](https://github.com/aidarnig/WristPorter/actions/runs/43060788068). The prior reference Watch 4 Classic photo-transfer/pairing tests passed; the redesigned 1.0 UI has compiled successfully but has not yet been visually rechecked by the user. See the release notes for device and test-scope limits.
+
+
+## 2026-11-11 — WristPorter 1.1.0 release verification
+
+- [Release v1.1.0](https://github.com/aidarnig/WristPorter/releases/tag/v1.1.0) published as a stable Windows x64 ZIP.
+- [GitHub Actions run 43065389395](https://github.com/aidarnig/WristPorter/actions/runs/43065389395) completed full Java verification, Windows app-image packaging with the branded `.ico`, bundled ADB validation, portable ZIP creation and SHA-256 verification.
+- The English/Russian resource bundles have parity tests, and live localization plus the theme-aware logo compile in [selective Java CI](https://github.com/aidarnig/WristPorter/actions/runs/43065389440).
+- Release branding includes 1280×640 `docs/assets/social-preview.png`; it must still be selected manually in GitHub repository Social preview settings.
+- The README illustration files are **mockups**, clearly labeled and free from personal/device data. They are not evidence that the newly localized 1.1.0 interface was independently tested on a physical Windows PC.
+- The photo-transfer protocol is unchanged from the hardware-accepted Galaxy Watch 4 Classic scenario. Other watches and new language/theme interactions are not independently hardware/GUI-verified.
+
