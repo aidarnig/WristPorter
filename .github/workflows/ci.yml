@@ -49,25 +49,25 @@ jobs:
               - 'watch-domain/**'
               - 'pom.xml'
               - 'ci/verify-changed.sh'
-      - 'ci/test-verify-changed.sh'
+              - 'ci/test-verify-changed.sh'
               - '.github/workflows/ci.yml'
             adb:
               - 'watch-adb/**'
               - 'pom.xml'
               - 'ci/verify-changed.sh'
-      - 'ci/test-verify-changed.sh'
+              - 'ci/test-verify-changed.sh'
               - '.github/workflows/ci.yml'
             core:
               - 'watch-core/**'
               - 'pom.xml'
               - 'ci/verify-changed.sh'
-      - 'ci/test-verify-changed.sh'
+              - 'ci/test-verify-changed.sh'
               - '.github/workflows/ci.yml'
             desktop:
               - 'watch-desktop/**'
               - 'pom.xml'
               - 'ci/verify-changed.sh'
-      - 'ci/test-verify-changed.sh'
+              - 'ci/test-verify-changed.sh'
               - '.github/workflows/ci.yml'
 
   verify:
