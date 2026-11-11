@@ -35,7 +35,7 @@ GitHub's repository Social Preview is not set by merely committing an image. The
 
 ## Screenshots in README
 
-GitHub Markdown supports images directly, using repository-relative paths. The intended final assets for the public README are `docs/assets/ui-screenshot-en.png` and `docs/assets/ui-screenshot-ru.png`, taken from the actual 1.1.2 application (not illustrations). Screenshots provided by the product owner on 2026-11-11 confirm RU/EN rendering and the corrected WP logo. Before publishing the screenshot binaries, mask the visible private IP address and debugging port while preserving the rest of the application window. Until those screenshot files are committed, the README must continue using the existing illustration links rather than broken paths. Keep photo names, pairing codes and other private material out of public images.
+The README now displays **real user-supplied 1.1.2 application screenshots**, with an observed 9/9 successful photo batch. English: `docs/assets/ui-screenshot-en.webp`; Russian: `docs/assets/ui-screenshot-ru.webp`. Images are optimized WebP exports for fast GitHub rendering at 1600×860. The watch's private IP address and debugging port were masked before publication. Original user screenshots are not committed. Keep pairing codes, local IPs and unrelated private photographs out of public documentation. The older SVG/PNG UI illustrations remain as design examples and are not linked from either README.
 
 ## Windows Explorer icon troubleshooting
 

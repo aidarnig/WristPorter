@@ -94,4 +94,4 @@ Confirmed on the user's Windows desktop:
 - The queue, device controls, connection status, log and prominent transfer-progress panel display in both language versions.
 - Previous in-app pairing, discovery and photo-transfer acceptance remains unchanged.
 
-This is visual acceptance, not a repeat of the hardware transfer test. The original screenshots contain a local watch IP address and debugging port; any publicly committed version should redact only those identifiers. The current README still links to the earlier illustrations until the real image binaries are added.
+The latest user-supplied screenshots additionally show a completed **9/9 transfer with 0 reported errors**, in both language modes. This confirms the application's reported result, not a fresh independent observation of Samsung Gallery. The earlier real-watch Gallery confirmation remains recorded separately. The public README now uses optimized screenshots with the private watch IP and debugging port masked; original images have not been committed.

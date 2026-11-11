@@ -23,11 +23,11 @@ Choose `WristPorter-1.1.2-windows-x64.zip` under **Assets** — not the auto-gen
 - Retry failed copies and rescan already copied photos without duplicating uploads.
 - Switch **English / Русский** and **light / dark** appearance without restarting. Both preferences are saved.
 
-## Interface
+## Real screenshot
 
-![English user interface illustration](docs/assets/ui-preview-en.png)
+![WristPorter English interface — nine photos transferred successfully](docs/assets/ui-screenshot-en.webp)
 
-*Illustration of the 1.1.2 interface, not a real screenshot. Real device and connection details are intentionally omitted.*
+*WristPorter 1.1.2 on Windows, English interface: **9 of 9 images sent, 0 errors**. Actual screenshot with the local watch address redacted.*
 
 ## How it works
 
@@ -39,9 +39,7 @@ Choose `WristPorter-1.1.2-windows-x64.zip` under **Assets** — not the auto-gen
 
 For the detailed pairing steps, [see the Quick Start guide](docs/QUICK_START.md).
 
-## First-time connection
-
-On the watch, enable Developer options and **Wireless debugging**. Use **Pair device with pairing code**, enter its pairing port and six-digit code in WristPorter, then connect using the **different debugging port** shown on the watch. For details, see [Quick start](docs/QUICK_START.md). Turn wireless debugging off when finished.
+Turn **Wireless debugging** off after transferring your photos.
 
 > **SmartScreen:** the current Windows EXE is unsigned by a trusted publisher. Verify the download source and SHA-256. [Details](docs/SECURITY.md).
 
