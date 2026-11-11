@@ -1,0 +1,19 @@
+# Maven
+**/target/
+*.class
+*.log
+# IDEs
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+# OS
+.DS_Store
+Thumbs.db
+# Watch/user secrets
+*.adbkey
+*.adbkey.pub
+local-secrets/
+photos-test/
