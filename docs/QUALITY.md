@@ -62,3 +62,7 @@ Observed and confirmed in screenshots and user feedback:
 - The README illustration files are **mockups**, clearly labeled and free from personal/device data. They are not evidence that the newly localized 1.1.0 interface was independently tested on a physical Windows PC.
 - The photo-transfer protocol is unchanged from the hardware-accepted Galaxy Watch 4 Classic scenario. Other watches and new language/theme interactions are not independently hardware/GUI-verified.
 
+
+## 2026-11-11 — 1.1.1 regression scope
+
+User screenshots of v1.1.0 revealed a missing smartwatch symbol in the header, incorrectly rendered runtime/taskbar icon and a tagline alignment issue. A red SmartScreen Unknown publisher warning also appeared; the unsigned executable requires genuine trusted signing to mitigate it. The 1.1.1 fix uses bundled logo PNGs for the JavaFX header/window, checks the embedded EXE icon, and includes bilingual portable guides. Manual Windows visual retesting and future code signing remain outstanding.

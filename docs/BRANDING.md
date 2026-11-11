@@ -23,3 +23,7 @@ GitHub's repository Social Preview is not set by merely committing an image. The
 ## Screenshots in README
 
 GitHub Markdown supports images directly: `![Description](docs/assets/ui-preview-en.png)`. Each language README uses its own localized illustration. Replace these mockups with sanitized, up-to-date screenshots from the *released* UI when available; never commit real device IP addresses, personal photo thumbnails or pairing codes.
+
+## Runtime icon regression (1.1.1)
+
+The UI now reads logo-light.png, logo-dark.png and watch-icon.png directly from packaged classpath resources. The prior runtime vector snapshot was responsible for the incorrect window/taskbar appearance. Windows packaging checks the extracted EXE resource with ci/check-windows-icon.ps1; manual Windows UI verification still applies.

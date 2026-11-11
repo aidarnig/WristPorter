@@ -1,5 +1,17 @@
 # WristPorter releases
 
+## 1.1.1 — Branded window and bilingual quick-start fix
+
+- Fixed the header by showing the full approved WP-on-watch logo from theme-specific PNG resources instead of the former custom JavaFX vector group.
+- Aligned the tagline vertically with the logo.
+- Replaced the runtime window/taskbar icon with the standalone WP watch PNG. The Windows EXE retains the existing watch icon; Windows packaging now explicitly validates that embedded icon.
+- Added Russian and English quick-start guides to the portable ZIP.
+- Documented the Windows SmartScreen Unknown publisher warning accurately: WristPorter is currently unsigned, and icon changes alone cannot remove that warning. Signing remains a separate security task.
+- Added resource-loading regression tests; the ADB transfer protocol is unchanged.
+
+**Verification:** Java tests ensure image resources load; Windows packaging verifies the embedded WP icon. The redesigned visual header still needs a user's Windows screenshot check.
+
+
 ## 1.1.0 — Branding and bilingual interface
 
 - Added the selected WP-on-watch identity with full wordmark adapting to light and dark mode.

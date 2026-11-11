@@ -10,7 +10,7 @@
 
 **[Download the latest Windows portable ZIP from Releases](https://github.com/aidarnig/WristPorter/releases/latest)**
 
-Choose `WristPorter-1.1.0-windows-x64.zip` under **Assets** — not the auto-generated **Source code** ZIP. Extract the complete archive and double-click `WristPorter.exe` inside the `WristPorter` directory. Java, JavaFX and ADB (including Windows DLLs) are already bundled. No installer, phone companion or Android Studio is needed after the watch has been set up.
+Choose `WristPorter-1.1.1-windows-x64.zip` under **Assets** — not the auto-generated **Source code** ZIP. Extract the complete archive and double-click `WristPorter.exe` inside the `WristPorter` directory. Java, JavaFX and ADB (including Windows DLLs) are already bundled. No installer, phone companion or Android Studio is needed after the watch has been set up.
 
 ## What it does
 
@@ -25,7 +25,7 @@ Choose `WristPorter-1.1.0-windows-x64.zip` under **Assets** — not the auto-gen
 
 ![English user interface illustration](docs/assets/ui-preview-en.png)
 
-*Illustration of the 1.1.0 interface, not a real screenshot. Real device and connection details are intentionally omitted.*
+*Illustration of the 1.1.1 interface, not a real screenshot. Real device and connection details are intentionally omitted.*
 
 ## First-time connection
 

@@ -6,7 +6,7 @@ $desktop = Join-Path $root "watch-desktop"
 $inputDir = Join-Path $desktop "target\jpackage-input"
 $dist = Join-Path $root "dist"
 $appName = "WristPorter"
-$version = "1.1.0"
+$version = "1.1.1"
 [xml]$projectPom = Get-Content -LiteralPath (Join-Path $root "pom.xml")
 if ($projectPom.project.version -ne $version) { throw "Package version must match Maven version." }
 
@@ -50,7 +50,21 @@ try {
         if (!(Test-Path -LiteralPath $componentPath)) { throw "Bundled ADB component missing: $component" }
     }
     Copy-Item -LiteralPath (Join-Path $root "LICENSE") -Destination (Join-Path $appImage "LICENSE.txt") -Force
-    Copy-Item -LiteralPath (Join-Path $root "docs\QUICK_START.md") -Destination (Join-Path $appImage "START_HERE.md") -Force
+    Copy-Item -LiteralPath (Join-Path $root "docs\QUICK_START.md") -Destination (Join-Path $appImage "QUICK_START.md") -Force
+    Copy-Item -LiteralPath (Join-Path $root "docs\QUICK_START.ru.md") -Destination (Join-Path $appImage "QUICK_START.ru.md") -Force
+    @'
+WristPorter / Choose language / Выберите язык:
+
+English:  QUICK_START.md
+Русский:  QUICK_START.ru.md
+
+The EXE, Java runtime and ADB are already in this folder.
+'@ | Set-Content -LiteralPath (Join-Path $appImage "START_HERE.txt") -Encoding utf8
+    foreach ($guide in @("QUICK_START.md", "QUICK_START.ru.md", "START_HERE.txt")) {
+        if (!(Test-Path -LiteralPath (Join-Path $appImage $guide))) {
+            throw "Missing portable quick-start guide: $guide"
+        }
+    }
     Copy-Item -LiteralPath (Join-Path $root "CHANGELOG.md") -Destination (Join-Path $appImage "RELEASE_NOTES.md") -Force
 
     $filename = "$appName-$version-windows-x64.zip"
