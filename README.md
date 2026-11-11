@@ -1,10 +1,12 @@
-# WristPorter
+# WristPorter — Photo transfer for Wear OS watches
+
+[![Windows release](https://img.shields.io/github/v/release/aidarnig/WristPorter?label=Windows%20portable)](https://github.com/aidarnig/WristPorter/releases/latest) [![Build](https://github.com/aidarnig/WristPorter/actions/workflows/ci.yml/badge.svg)](https://github.com/aidarnig/WristPorter/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 [**English**](README.md) · [Русский](README.ru.md)
 
 ![WristPorter banner](docs/assets/social-preview.png)
 
-**Transfer photos to your smartwatch without an Android phone.** WristPorter is an independent open-source JavaFX desktop utility for Windows and compatible Wear OS watches. The reference device is Samsung Galaxy Watch 4 Classic.
+**Wireless ADB photo transfer from Windows to Wear OS smartwatches — no Android phone required after initial watch setup.** WristPorter is an independent open-source JavaFX desktop utility for Windows and compatible Wear OS watches. The reference device is Samsung Galaxy Watch 4 Classic.
 
 ## Download
 

@@ -1,10 +1,12 @@
-# WristPorter
+# WristPorter — передача фотографий на Wear OS
+
+[![Версия](https://img.shields.io/github/v/release/aidarnig/WristPorter?label=Windows%20portable)](https://github.com/aidarnig/WristPorter/releases/latest) [![Сборка](https://github.com/aidarnig/WristPorter/actions/workflows/ci.yml/badge.svg)](https://github.com/aidarnig/WristPorter/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 [English](README.md) · [**Русский**](README.ru.md)
 
 ![WristPorter — логотип](docs/assets/social-preview.png)
 
-**Передавайте фотографии на умные часы напрямую с компьютера, без Android-смартфона.** WristPorter — бесплатное приложение с открытым исходным кодом для Windows и совместимых часов Wear OS. Основная проверенная модель — Samsung Galaxy Watch 4 Classic.
+**Передавайте JPG и PNG на часы Wear OS с Windows через беспроводной ADB — без Android-смартфона после первоначальной настройки часов.** WristPorter — бесплатное приложение с открытым исходным кодом для Windows и совместимых часов Wear OS. Основная проверенная модель — Samsung Galaxy Watch 4 Classic.
 
 ## Скачать
 

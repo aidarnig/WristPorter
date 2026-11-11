@@ -35,6 +35,7 @@ The unsigned EXE may display an **Unknown publisher** SmartScreen warning. Verif
 
 - **No watch found:** Confirm that wireless debugging is active, both devices share Wi-Fi, and the currently displayed debugging port is correct.
 - **Pairing fails:** Pairing and connection use different ports. Codes expire; generate a new code on the watch.
+- **Wrong Java icon in Explorer:** Windows may cache a previously seen icon for the same EXE path. Extract the latest ZIP into a *new directory*, refresh Explorer, and check the icon again. The EXE icon is verified during packaging; see [Branding](BRANDING.md).
 - **ADB missing:** The portable ZIP normally includes `platform-tools/adb.exe` and two DLL files. Do not move the EXE outside the extracted directory. Advanced settings can select a custom ADB executable.
 - **Photo not visible:** A successful scan request is not proof that Samsung Gallery displayed the image. Close and reopen Gallery and check the operation result.
 

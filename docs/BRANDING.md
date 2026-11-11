@@ -16,6 +16,19 @@ The brand uses a blue-to-cyan smartwatch mark with a **WP** monogram and photo s
 
 The `Generate branding assets` workflow regenerates and commits binary exports only when their SVG sources or generator change. The Windows portable packaging uses `docs/assets/wristporter.ico`.
 
+## Repository About — search and discovery
+
+The repository is public, but its About **Description** field is currently empty.
+The GitHub connector can change repository contents but does not expose an administrator action to edit the About description, website, or topics. The owner should open the [repository homepage](https://github.com/aidarnig/WristPorter) and click the gear next to **About**.
+
+Recommended values (the actual product is limited to JPEG/PNG on the reference watch):
+
+- **Description:** `Transfer JPEG/PNG photos from Windows to Wear OS watches via Wi-Fi ADB. No Android phone, installer or SDK needed.`
+- **Website:** `https://github.com/aidarnig/WristPorter/releases/latest`
+- **Topics:** `wear-os`, `galaxy-watch`, `smartwatch`, `adb`, `wireless-adb`, `photo-transfer`, `windows`, `javafx`, `java`, `portable-app`, `open-source`
+
+Preserve existing relevant topics when editing. Search engines may index the About metadata and README on their own schedule; the change does not guarantee an immediate Google ranking.
+
 ## Set GitHub Social Preview
 
 GitHub's repository Social Preview is not set by merely committing an image. The repository owner must go to **Settings → General → Social preview → Edit → Upload image** and upload the existing **[1280×640 social-preview.png](assets/social-preview.png)** file. This GitHub setting currently cannot be changed by the connected repository-content integration.
@@ -23,6 +36,10 @@ GitHub's repository Social Preview is not set by merely committing an image. The
 ## Screenshots in README
 
 GitHub Markdown supports images directly: `![Description](docs/assets/ui-preview-en.png)`. Each language README uses its own localized illustration. Replace these mockups with sanitized, up-to-date screenshots from the *released* UI when available; never commit real device IP addresses, personal photo thumbnails or pairing codes.
+
+## Windows Explorer icon troubleshooting
+
+The Windows package already embeds the branded blue WP watch icon in `WristPorter.exe`. The packaging test extracts the icon and confirms that it matches the expected art. If Explorer displays an older Java icon while the window and taskbar show WP, Windows may be serving a cached icon for the same executable name/path. For diagnosis, **extract a fresh release into an entirely new directory**, then refresh Explorer; do not overwrite an older extraction. If a new folder still shows Java, report a screenshot and the release version. A separate Windows icon-cache rebuild may resolve a persistent stale shell image, but it is not an automatic action performed by WristPorter.
 
 ## Runtime icon regression (1.1.1)
 
