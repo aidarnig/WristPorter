@@ -19,4 +19,21 @@ class BrandResourcesTest {
             }
         }
     }
+
+    @Test void logoHasSafeTransparentRightMargin() throws Exception {
+        for (String name : new String[] {"logo-light.png", "logo-dark.png"}) {
+            try (var input = Objects.requireNonNull(
+                    BrandLogo.class.getResourceAsStream("/branding/" + name))) {
+                var image = ImageIO.read(input);
+                assertEquals(1380, image.getWidth(), "Unexpected SVG export width");
+                for (int y = 0; y < image.getHeight(); y++) {
+                    for (int x = image.getWidth() - 24; x < image.getWidth(); x++) {
+                        assertEquals(0, (image.getRGB(x, y) >>> 24),
+                                "Brand text touches the right margin: " + name);
+                    }
+                }
+            }
+        }
+    }
+
 }

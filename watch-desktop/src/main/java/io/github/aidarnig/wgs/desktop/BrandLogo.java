@@ -21,7 +21,9 @@ public final class BrandLogo extends HBox {
     public BrandLogo(boolean lightTheme) {
         setAlignment(Pos.CENTER_LEFT);
         getStyleClass().add("brand-logo");
-        wordmark.setFitWidth(252);
+        // Keep the original 77px visual height after the SVG canvas was widened.
+        // The art now has safe trailing space so the final 'r' is never clipped.
+        wordmark.setFitWidth(285);
         wordmark.setPreserveRatio(true);
         wordmark.setSmooth(true);
         wordmark.setMouseTransparent(true);
