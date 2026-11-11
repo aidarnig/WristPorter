@@ -82,7 +82,10 @@ public final class WatchWorkspace extends BorderPane {
     private HBox header() {
         BrandLogo brand = new BrandLogo(lightTheme);
         Label subtitle = new Label(I18n.t("header.subtitle"));
-        subtitle.getStyleClass().add("muted");
+        subtitle.getStyleClass().add("header-subtitle");
+        subtitle.setAlignment(Pos.CENTER_LEFT);
+        subtitle.setMaxWidth(390);
+        subtitle.setWrapText(true);
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
         Button theme = new Button(lightTheme ? I18n.t("header.theme.dark") : I18n.t("header.theme.light"));
@@ -99,7 +102,7 @@ public final class WatchWorkspace extends BorderPane {
             String code = "Русский".equals(language.getValue()) ? "ru" : "en";
             if (!code.equals(I18n.language())) changeLanguage(code);
         });
-        HBox box = new HBox(14, brand, subtitle, spacer, language, theme);
+        HBox box = new HBox(18, brand, subtitle, spacer, language, theme);
         box.setAlignment(Pos.CENTER_LEFT);
         box.setPadding(new Insets(19, 26, 19, 26));
         box.getStyleClass().add("app-header");

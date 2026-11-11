@@ -130,3 +130,7 @@
 .transfer-progress { -fx-accent: -wgs-accent; }
 .transfer-progress > .bar { -fx-background-radius: 7px; -fx-background-insets: 0; -fx-padding: 7px; }
 .transfer-progress > .track { -fx-background-radius: 7px; -fx-background-insets: 0; }
+
+/* Keep the descriptive tagline vertically centered against the full wordmark. */
+.brand-logo { -fx-alignment: center-left; }
+.header-subtitle { -fx-text-fill: -wgs-muted; -fx-font-size: 12px; -fx-alignment: center-left; }
