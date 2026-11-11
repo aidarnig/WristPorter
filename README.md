@@ -1,40 +1,46 @@
 # WristPorter
 
-**Your files, one wrist away.**
+[**English**](README.md) · [Русский](README.ru.md)
 
-WristPorter is an open-source Java desktop application that transfers photos from Windows directly to compatible Wear OS watches over local Wi-Fi ADB. It does not require a nearby Android phone once the watch is configured. The current feature set targets **JPEG/PNG** transfers to Samsung Gallery on the Galaxy Watch 4 Classic.
+![WristPorter banner](docs/assets/social-preview.png)
 
-> **1.0.0 (Windows x64):** The core photo-transfer workflow was verified on Galaxy Watch 4 Classic. Other watch models and unusual network conditions remain best-effort.
+**Transfer photos to your smartwatch without an Android phone.** WristPorter is an independent open-source JavaFX desktop utility for Windows and compatible Wear OS watches. The reference device is Samsung Galaxy Watch 4 Classic.
 
-## Portable Windows edition
+## Download
 
-**[Download WristPorter from GitHub Releases](https://github.com/aidarnig/WristPorter/releases)**. Open the latest stable release and, under **Assets**, download `WristPorter-1.0.0-windows-x64.zip` — **not** the automatically generated "Source code" archive. Extract it fully, then launch `WristPorter/WristPorter.exe`.
+**[Download the latest Windows portable ZIP from Releases](https://github.com/aidarnig/WristPorter/releases/latest)**
 
-The application folder already includes the Java runtime and a verified `adb.exe` with its required DLL files. No installer, separate Java installation, or manual Android Platform-Tools setup is needed. The application supports manual ADB overrides for advanced users.
+Choose `WristPorter-1.1.0-windows-x64.zip` under **Assets** — not the auto-generated **Source code** ZIP. Extract the complete archive and double-click `WristPorter.exe` inside the `WristPorter` directory. Java, JavaFX and ADB (including Windows DLLs) are already bundled. No installer, phone companion or Android Studio is needed after the watch has been set up.
 
-See [Development](docs/DEVELOPMENT.md) for build instructions; see [Quality](docs/QUALITY.md) for acceptance requirements before a public release.
+## What it does
 
-## Current capabilities
+- Pair and connect to your watch via wireless ADB, with automatic watch discovery.
+- Select JPEG/PNG files, entire folders, or drag and drop photos onto the queue.
+- Preview thumbnails in an adaptive multi-column gallery.
+- Transfer batches with a prominent progress bar and per-photo results; automatically ask Samsung Gallery to scan copied files.
+- Retry failed copies and rescan already copied photos without duplicating uploads.
+- Switch **English / Русский** and **light / dark** appearance without restarting. Both preferences are saved.
 
-- JavaFX + AtlantaFX light/dark UI, Spring Boot non-web services
-- Wireless ADB pairing and device selection, without PowerShell
-- Batch JPEG/PNG import via file picker, folders or drag-and-drop, with responsive thumbnail grid
-- Prominent transfer progress, per-photo outcome status, and Samsung Gallery media scan requests
-- Retry failed copies or re-scan already copied files, without duplicate upload
-- No accounts, cloud storage or telemetry
+## Interface
 
-## Documentation
+![English user interface illustration](docs/assets/ui-preview-en.png)
 
-Each document has a distinct responsibility:
+*Illustration of the 1.1.0 interface, not a real screenshot. Real device and connection details are intentionally omitted.*
 
-- [Quick start](docs/QUICK_START.md): end-user pairing, photo transfer and troubleshooting
-- [Product](docs/PRODUCT.md): supported user scenarios and acceptance criteria
-- [Architecture](docs/ARCHITECTURE.md): modules, transport and dependency security
-- [UX](docs/UX.md): visual and interaction behavior
-- [Roadmap](docs/ROADMAP.md): milestone sequence
-- [Quality](docs/QUALITY.md): testing and release gates
-- [Development](docs/DEVELOPMENT.md): building, packaging and contributing
-- [CI](docs/CI.md): affected-module verification and cost controls
-- [GitHub Issues](https://github.com/aidarnig/WristPorter/issues): concrete implementation tasks
+## First-time connection
 
-MIT licensed; see [LICENSE](LICENSE). This is an independent project, not affiliated with Samsung or Google.
+On the watch, enable Developer options and **Wireless debugging**. Use **Pair device with pairing code**, enter its pairing port and six-digit code in WristPorter, then connect using the **different debugging port** shown on the watch. For details, see [Quick start](docs/QUICK_START.md). Turn wireless debugging off when finished.
+
+## Development
+
+Requires JDK 25 and Maven 3.9+ to build from source:
+
+```bash
+mvn -B -ntp verify
+mvn -B -ntp -pl watch-desktop -am install
+mvn -pl watch-desktop javafx:run
+```
+
+Technical decisions: [Architecture](docs/ARCHITECTURE.md) · [UX](docs/UX.md) · [Quality](docs/QUALITY.md) · [Development](docs/DEVELOPMENT.md) · [CI](docs/CI.md) · [Roadmap](docs/ROADMAP.md) · [Branding](docs/BRANDING.md) · [Issues](https://github.com/aidarnig/WristPorter/issues).
+
+MIT licensed. Not affiliated with Samsung or Google. The user-confirmed Galaxy Watch 4 Classic photo-transfer scenario is supported; other watches and network conditions have not all been verified.

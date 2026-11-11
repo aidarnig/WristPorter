@@ -12,7 +12,7 @@ The device finder displays connected ADB devices and requires explicit selection
 
 ## Visual system
 
-JavaFX 27 + AtlantaFX 3; light/dark theme switcher with the selected preference stored locally, low-noise surfaces, clear hierarchy, rounded interactive elements and status colors with adequate contrast. RU/EN resource bundles are planned. The gallery uses asynchronous bounded thumbnails; cards wrap to use available width and display per-file transfer outcomes. Recursive folder import runs outside the UI thread.
+JavaFX 27 + AtlantaFX 3; light/dark theme switcher with the selected preference stored locally, low-noise surfaces, clear hierarchy, rounded interactive elements and status colors with adequate contrast. The UI ships with RU/EN resource bundles and persists the selected language, switching without a restart. Full header branding responds to light/dark theme changes. The gallery uses asynchronous bounded thumbnails; cards wrap to use available width and display per-file transfer outcomes. Recursive folder import runs outside the UI thread.
 
 ## Accessible behavior
 
@@ -20,4 +20,4 @@ Every action must be keyboard-accessible and state should be textually represent
 
 ## Future screens
 
-Improved localization and extended activity history remain future enhancements; the initial screen includes a grid and explicit multi-device picker.
+Additional languages, native accessibility testing and extended activity history remain future enhancements.
