@@ -70,3 +70,15 @@ User screenshots of v1.1.0 revealed a missing smartwatch symbol in the header, i
 ### Verified 1.1.1 release build
 
 [WristPorter v1.1.1](https://github.com/aidarnig/WristPorter/releases/tag/v1.1.1) is published. [Windows release workflow](https://github.com/aidarnig/WristPorter/actions/runs/43068975192) succeeded: Java/resource tests, bundled ADB, icon comparison (354 blue pixels in both source ICO and embedded EXE icon), bilingual quick-start file checks, ZIP checksum verification and GitHub Release upload. The main window's new PNG-based logo is not yet visually verified by the user on Windows; SmartScreen remains an expected possibility until trusted code signing/reputation requirements are met (tracked in issue #9).
+
+
+## 2026-11-11 — 1.1.2 logo and Windows icon validation
+
+The [v1.1.2 stable release](https://github.com/aidarnig/WristPorter/releases/tag/v1.1.2) was published after [full Windows packaging and SHA-256 checks](https://github.com/aidarnig/WristPorter/actions/runs/43072311593), alongside green [selective Java tests](https://github.com/aidarnig/WristPorter/actions/runs/43072311571).
+
+- Canonical light/dark SVG logos use a wider 1380-pixel canvas so the trailing "r" of WristPorter remains within the image. The export script checks transparent padding along the right edge; Java resource tests verify that PNGs have a safe right margin.
+- `ci/render-brand.py` verifies that the Windows ICO contains sizes 16, 32, 48 and 256 px. Windows packaging also checks that the generated EXE embeds the blue WP watch icon.
+- The portable EXE now has explicit description/vendor metadata. This is not a trusted Authenticode signature and does not remove SmartScreen publisher warnings.
+- Windows Explorer may display a stale previously cached Java icon for the same EXE path. Users should check a *new extraction directory* before treating it as a packaging regression.
+- **Remaining manual acceptance:** user confirmation of the complete title wordmark and Explorer's icon on their desktop. CI verifies resources and EXE packaging but cannot assert the user's local icon-cache state.
+
