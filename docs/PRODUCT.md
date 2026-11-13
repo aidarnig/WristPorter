@@ -4,7 +4,9 @@ This file defines **observable user requirements**. Architecture choices belong 
 
 ## Identity and scope
 
-**WristPorter** is a local desktop companion for transferring files to compatible smartwatches. The initial release handles JPEG and PNG photos; additional file types require explicit product design and validation. The app is independent of Samsung and Google.
+**WristPorter is an independent local-first ecosystem for people who own Wear OS watches and have moved from Android to iPhone.** Its mission is to restore useful watch functionality without giving up privacy or the already-working Windows tools. WristPorter is not an official Galaxy Wearable replacement and cannot initially configure unsupported iPhone/watch pairing.
+
+The ecosystem has two complementary pillars: **WristPorter Bridge** (planned Kotlin Wear OS app: direct iPhone ↔ watch Bluetooth ANCS/AMS, without Windows or an iOS app) and **WristPorter Desktop** (shipped Windows app: local ADB photos; planned local browser upload for iPhone Safari; planned APK install/updates and diagnostics). Each part remains independently usable. **As of v1.1.2, only Windows → Wear OS JPEG/PNG transfer is shipped.**
 
 ## Primary scenario
 
@@ -42,3 +44,19 @@ A user with an **already configured Wear OS watch** wants iPhone notifications a
 **Boundaries:** no iOS companion, iPhone-to-watch photo transfer, contacts/Health sync, arbitrary text replies, remote call audio, Galaxy Wearable replacement, factory-reset watch setup, cloud accounts or Internet relay in this program. Optional battery/device/time services require device discovery, not assumption.
 
 **Acceptance:** evidence from an actual Galaxy Watch4 Classic/iPhone pairing before calling BLE features supported. No Bridge features have yet been implemented or hardware-verified in WristPorter. Detailed [feature matrix](BRIDGE_CAPABILITIES.md), [W0–W12 roadmap](ROADMAP.md), [device verification ledger](VERIFICATION.md) and [ADR-0001](adr/0001-independent-wearos-bridge.md).
+
+
+## Planned ecosystem experience (NOT SHIPPED)
+
+A user who moved from Android to iPhone wants useful Wear OS watch functions without an installed iOS companion:
+
+- **Watch:** optional WristPorter Bridge connects directly to iPhone through Apple ANCS/AMS for shared notifications and supported media controls. Windows is not required after provisioning.
+- **Windows:** one WristPorter Desktop portable application contains the existing photo transfer plus a future **on-demand LAN Web Upload**, optional APK installation/updates and diagnostics.
+- **iPhone browser:** Safari opens the **Windows-hosted local page** from QR/URL over private Wi-Fi, authorizes a temporary session, selects photos, and sends them through Windows → ADB → a selected watch. **The PC must remain on and reachable.** This is not direct iPhone-to-watch Bluetooth image transfer and no native iOS app is installed.
+- **Future research only:** a watch-hosted local web uploader might remove Windows dependency, but requires a separate watch battery/security/protocol feasibility decision.
+
+**Web Upload v1 acceptance:** same Windows package, manually enabled local listener, mobile selection and upload of JPG/PNG, short-lived authorization, safe file validation and size/pixel quotas, temporary file cleanup, selected-watch-bound transfer through the existing engine, observable progress and scan-request results, Desktop-only regression PASS.
+
+**LAN security:** local-only does not mean encrypted. An HTTP session transmits images/credentials in plaintext. Require a clear trusted-private-network restriction and documented TLS strategy/risk acceptance before public release; no anonymous access, global/untrusted network binding, remote ADB admin, auto-start or Internet/cloud relay.
+
+**Detailed ownership:** [LOCAL_WEB_PORTAL.md](LOCAL_WEB_PORTAL.md) for implementation design; [ROADMAP.md](ROADMAP.md) W13–W16; [ADR-0004](adr/0004-one-desktop-optional-lan-portal.md) for one-Windows-app decision; [BRIDGE_CAPABILITIES.md](BRIDGE_CAPABILITIES.md) for independent direct Bluetooth features. HEIC/HEIF and Live Photos are planned investigations, not automatically supported by current JPEG/PNG engine.

@@ -16,13 +16,15 @@ The [docs index](docs/INDEX.md) assigns a unique owner to each type of informati
 
 ## Fixed decisions for the current program
 
-- **No iOS companion application for this program.** No iOS project, iOS app deployment, cloud relay, new account system or backend. Feasibility of other designs may be documented, but implementation requires a new explicit product decision.
+- **No iOS companion application for this program.** No installed iOS application, iOS app deployment, cloud/public backend or new account system. A **user-started local Windows-hosted browser Web Upload server** is explicitly in scope under [ADR-0004](docs/adr/0004-one-desktop-optional-lan-portal.md); it is not an Internet service or an installed iPhone app. Feasibility of other designs may be documented, but implementation requires a new explicit product decision.
+- **North star:** a local-first WristPorter ecosystem for Wear OS owners switching from Android to iPhone — independent Watch Bridge, Windows photo/gallery transfer, optional iPhone Safari→Windows→watch upload and Windows APK management; all planned features must be clearly labeled NOT SHIPPED until tested.
 - Preserve released **WristPorter Desktop v1.1.2**: Windows / Java 25 / Maven / JavaFX / bundled ADB / JPEG+PNG Gallery transfer. It remains useful *without* the watch bridge.
 - Build new **WristPorter Bridge** as an independent **Kotlin Wear OS APK**, with Bluetooth interaction directly between an already configured watch and iPhone.
+- **One Windows app, not two:** opt-in QR/PIN browser mode runs on Windows and routes selected iPhone photos to the watch via the existing Wi-Fi ADB transfer core. The PC must remain on. No public listener, anonymous upload, persistent server, remote ADB admin or untested HEIC support. See [Local Web Portal](docs/LOCAL_WEB_PORTAL.md).
 - Main target: **Samsung Galaxy Watch4 Classic**. Existing photo transfer is hardware-confirmed. **Bluetooth-to-iPhone is not yet confirmed on this model in WristPorter.**
 - Apple's **ANCS** / **AMS** are the proposed documented protocol surfaces; extra BLE services require real-device discovery. Never call untested hardware or iOS functionality supported.
 - No factory reset, destructive watch operations, silent APK installation, pairing without user consent, collection of private notifications in logs, telemetry or uncontrolled retry loops.
-- Public customer copy must not claim an iPhone watch setup/pairing replacement, full Galaxy Wearable replacement, Health sync, arbitrary replies or watch call audio.
+- Public customer copy must not claim an iPhone watch setup/pairing replacement, full Galaxy Wearable replacement, Health sync, arbitrary replies or watch call audio. **Direct** iPhone-to-watch photo transfer without PC is not included; **browser-assisted via running Windows** is a separate planned feature.
 - Wear OS `minSdk` is **not decided**: first inspect actual Watch4 Classic firmware/API in W0; do not silently inherit WeakBridge's API 33 requirement.
 - Respect third-party licenses. Reviewing external open-source code does **not** automatically authorize wholesale copying without attribution and license compliance.
 

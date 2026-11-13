@@ -110,3 +110,19 @@ Before accepting any Bridge beta:
 - Publish independent Wear APK version, actual checksums, known limitations and hardware-tested compatibility only after sign-off.
 
 This section supplements, **never rewrites**, historical Desktop v1.1.2 acceptance above. Bridge unit tests do not prove battery, Android background behavior or iPhone compatibility.
+
+## Planned local browser-upload acceptance (separate from Bluetooth Bridge)
+
+The **one-Windows-app** browser upload is PLANNED and **NOT TESTED** as of 2026-11-13. Requirements/risks are in [LOCAL_WEB_PORTAL.md](LOCAL_WEB_PORTAL.md), [ADR-0004](adr/0004-one-desktop-optional-lan-portal.md) and issues W13–W16 [#27–#30](ROADMAP.md).
+
+Before first stable Web Upload release, require:
+- Actual iPhone Safari photo-picker test, private-LAN connection and Windows-hosted page (PC running), followed by observed Galaxy Watch4 Classic Gallery display for real JPG/PNG.
+- Windows owner explicitly starts/stops listener and selects ADB watch; startup defaults remain offline/listener OFF.
+- Auth/CSRF/DNS rebinding/Host/rate-limit/timeouts tests, safe upload bounds and sanitizer tests, no arbitrary ADB operations or remote APK management.
+- **Clear transport-security decision:** HTTP on LAN is not encrypted; evaluate trusted TLS or make the security limitation/strict trusted-private-LAN scope an approved release-blocking decision. No blanket secure/private claim.
+- Failed upload, watch Wi-Fi loss, interrupted ADB, simultaneous desktop/browser jobs, expired authorization and temp cleanup have deterministic tests.
+- Desktop-only JavaFX/ADB photo flow and portable ZIP remain regression-tested; no Spring web runtime auto-start.
+- HEIC and Live Photos excluded unless actual image conversion and Gallery tests PASS.
+- Record exact OS/browser/firmware and all observed results in [VERIFICATION.md](VERIFICATION.md); commit no private photos/identifiers.
+
+This release can ship independently of Watch Bluetooth ANCS/AMS validation (W0–W12), provided the existing desktop path stays correct.

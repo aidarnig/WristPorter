@@ -90,3 +90,27 @@ Tester confirmation:
 ```
 
 Only add facts actually observed. Update status in linked Issues, not through optimistic roadmap text.
+
+## Planned iPhone Safari → Windows → Watch Web Upload tests (all NOT TESTED)
+
+The native Desktop photo-transfer result above **does not prove** any iPhone browser upload. These cases are separate from Watch ↔ iPhone ANCS/AMS tests and must be executed on real hardware.
+
+| ID | Scenario | Status | Acceptance evidence |
+| --- | --- | --- | --- |
+| WEB-00 | Windows vNext defaults to **no listening LAN port** | NOT TESTED | Listener/socket inspection, startup/shutdown |
+| WEB-01 | Start Web Upload on approved private network; QR opens Windows portal from iPhone Safari | NOT TESTED | Exact iOS/browser, Windows OS, network topology |
+| WEB-02 | Pairing code + session expiry + revoke/Stop | NOT TESTED | Accept/deny/rate-limit and manual stop results |
+| WEB-03 | Upload 1 JPEG and 10+ JPEG/PNG from iPhone Photos/Files | NOT TESTED | Per-file hashes/count/status and memory usage |
+| WEB-04 | Windows copies selected files over ADB to Watch4 and Gallery displays them | NOT TESTED | Real model/firmware and user-observed Gallery |
+| WEB-05 | Selected watch changes mid-session, browser cannot change device | NOT TESTED | Invalidation and wrong-device prevention |
+| WEB-06 | Network isolation / firewall / VPN / PC sleeps | NOT TESTED | Clear failure status without security bypass |
+| WEB-07 | Invalid HEIC, oversized/malformed images, path traversal, zip/executable disguised as JPG | NOT TESTED | Correct rejection, no persistence/resource exhaustion |
+| WEB-08 | Simultaneous Windows photo queue and browser jobs | NOT TESTED | Serialized transfers, correct cancel/retry and scan-only semantics |
+| WEB-09 | Invalid CSRF/Host/Origin, brute-force and forged browser origins | NOT TESTED | Unauthorized requests rejected |
+| WEB-10 | File/temp cleanup, staged photo privacy, stop/restart/crash recovery | NOT TESTED | No residual public access or old sessions |
+| WEB-11 | Actual iPhone photo selection: JPEG vs HEIC, Live Photo, rotation, iCloud, multi-select | NOT TESTED | Exact MIME+magic/format and expected UX |
+| WEB-12 | Existing Windows-only JPG/PNG Gallery transfer after Web Upload feature | NOT TESTED | Regression compared to v1.1.2 evidence |
+| WEB-13 | Local HTTP plaintext threat / proposed TLS onboarding | NOT TESTED | Security decision and user-facing warnings |
+| WEB-14 | Windows package with browser mode off | NOT TESTED | EXE opens, bundled ADB works, no web runtime dependency |
+
+**Testing instruction:** record local browser URL/IP, device address and PIN privately only. Public issue/PR may include non-sensitive Windows/iOS/watch versions and test status. Log detailed results using the sanitized template above. The strict W13–W16 gates live in [LOCAL_WEB_PORTAL.md](LOCAL_WEB_PORTAL.md) and [QUALITY.md](QUALITY.md).

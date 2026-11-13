@@ -1,6 +1,6 @@
 # WristPorter Bridge — maximum capability without an iOS application
 
-**Status: PLANNED, not implemented or verified by WristPorter.** This document is the normative feature feasibility and support-claim matrix. It covers communication directly between an **already configured Wear OS watch** and a stock iPhone, with **no iOS app, account, Wi-Fi relay, cloud or jailbreak**. Focus on legally documented native interfaces and observed behavior. User requirements live in [PRODUCT.md](PRODUCT.md).
+**Status: PLANNED, not implemented or verified by WristPorter.** This document is the normative feature feasibility and support-claim matrix. It covers communication directly between an **already configured Wear OS watch** and a stock iPhone, with **no installed iOS app, account, cloud or jailbreak**. This document only covers the **watch ↔ iPhone direct Bluetooth path**; a separate planned browser-to-Windows-to-watch Wi-Fi/ADB photo relay is specified in [LOCAL_WEB_PORTAL.md](LOCAL_WEB_PORTAL.md) and requires a running Windows PC. Focus on legally documented native interfaces and observed behavior. User requirements live in [PRODUCT.md](PRODUCT.md).
 
 ## Interpretation
 
@@ -60,13 +60,14 @@ AMS services or individual characteristics can be absent; remote command support
 | Bluetooth connection indicator, service status, last disconnect reason | **Watch-local** | High-value for troubleshooting; no raw address leakage |
 | App filters, low-power preferences, connection help, diagnostics | **Watch-local** | Provide robust user experience independently of BLE success |
 | Watch Tile, complication or quick launch | **Watch-local / platform-dependent** | Favor useful controls and connection state; validate battery impact |
-| Audio calls through watch, Apple Health, Samsung Health iPhone sync, contacts sync, find/ring iPhone, photo transfer from iPhone, general phone commands | **No dependable ANCS/AMS path** | OUT OF SCOPE for current no-iOS-app program, unless a documented independent mechanism with verified evidence is approved via ADR |
+| Audio calls through watch, Apple Health, Samsung Health iPhone sync, contacts sync, find/ring iPhone, general phone commands | **No dependable ANCS/AMS path** | OUT OF SCOPE for direct Bluetooth bridge without an iOS app, unless a documented independent mechanism with verified evidence is approved via ADR |
+| **iPhone Safari photo picker → running Windows → Wi-Fi ADB watch** | **Separate planned Web Upload pathway; not ANCS/AMS** | In scope via [ADR-0004](adr/0004-one-desktop-optional-lan-portal.md) / W13–W16; requires PC running, user authorization and private local network; **not currently implemented** |
 
 Bluetooth SIG standardized service names are not proof an iPhone actually publishes them. Reference: [Bluetooth SIG Assigned Numbers](https://www.bluetooth.com/specifications/assigned-numbers/). Device evidence belongs in [VERIFICATION.md](VERIFICATION.md).
 
 ## D. Strategic exclusions
 
-- **No iOS app or iOS code now.** Do not implement the earlier proposed companion, HealthKit sync, contact bridge or iPhone-side photo sharing in this program.
+- **No installed iOS app or native iOS code now.** Do not implement the earlier proposed companion, HealthKit sync or contact bridge. **Browser-based photo selection** is permitted as a separate Windows-hosted local upload mode per [ADR-0004](adr/0004-one-desktop-optional-lan-portal.md), not as a native iOS app or direct ANCS/AMS capability.
 - No factory-reset setup, no Galaxy Wearable replacement claim, no official Samsung/Google/Apple support claim.
 - No Internet relay, account, server, telemetry, paid SDK or third-party notification scraper.
 - Apple's newer [Accessory Notifications](https://developer.apple.com/documentation/AccessoryNotifications) requires an iOS companion/extension model and is region-restricted for customer installations; it is **not** our no-app mechanism.

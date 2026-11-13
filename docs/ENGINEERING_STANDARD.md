@@ -120,3 +120,16 @@ A new chat can restore project state **without asking the user to retell anythin
 ## Automated context integrity check
 
 Run `python ci/check-doc-links.py` after any documentation reorganization and before submitting a documentation PR. The dedicated [documentation integrity workflow](../.github/workflows/docs-check.yml) checks required source-of-truth files and relative Markdown links on PRs/main. This is separate from the future Android CI and current Java/Windows packaging workflows; green link checks do not imply protocol or hardware validation.
+
+## New ecosystem workstream: optional Windows Web Upload
+
+Web Upload is **PLANNED**, not part of Desktop v1.1.2. [ADR-0004](adr/0004-one-desktop-optional-lan-portal.md) fixes **one Windows app** with on-demand private-LAN web frontend; [LOCAL_WEB_PORTAL.md](LOCAL_WEB_PORTAL.md) owns web API, target binding, staging and threat model. Use W13–W16 [Issues #27–#30](ROADMAP.md).
+
+- Do not create a second distribution, native iOS companion, cloud app or always-on Java/Spring web server as a shortcut.
+- Both phone browser and desktop local photos must reuse the existing safe ADB transfer engine; extract testable selected-watch and job queue ownership before allowing concurrent inputs.
+- Develop HTTP code behind isolated interfaces, with explicit opt-in network listener, rate-limited short-lived authorization, CSRF/Host validation, input quotas, cleanup, and no remote ADB/admin endpoints.
+- Treat HTTP on LAN as **unencrypted** unless authenticated TLS actually exists; no "secure" marketing claim from PIN-only pairing. Escalate transport security acceptance in W13/W16.
+- New tests cover iPhone Safari picker behavior, HEIC failures, upload body/mime spoofing, pixel bombs, process crash, Windows firewall, wrong watch and previous desktop-gallery regression.
+- Preserve two independent release gates: Bluetooth Bridge beta (W12) and Web Upload desktop security/QA (W16). Do not mark one implemented just because the other passes.
+
+New-chat prompt remains exactly as before: open `AGENTS.md`, `STATE.md`, the task Issue and owners. Web Upload tasks should additionally read [LOCAL_WEB_PORTAL.md](LOCAL_WEB_PORTAL.md) and ADR-0004.

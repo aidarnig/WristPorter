@@ -110,3 +110,7 @@ Probe, don't presume, `Battery Service`, `Device Information` and `Current Time`
 - How the Galaxy Watch's built-in media UI and system notification UI behave.
 
 Create superseding ADRs when experimental evidence changes these assumptions.
+
+## Independence from the Windows-hosted Safari upload mode
+
+**This document applies to direct Bluetooth ANCS/AMS between iPhone and the Wear OS app.** The ecosystem separately plans an **on-demand Windows-hosted [Local Web Upload](LOCAL_WEB_PORTAL.md)** where Safari uploads a user-selected photo to the Windows PC and the PC pushes it to the selected watch via Wi-Fi ADB. That mode does **not** require the ANCS/AMS Bridge APK, and the Bridge does **not** require Windows running after setup. Both must preserve independent lifecycle, network trust, diagnostics and resource use. See [ADR-0004](adr/0004-one-desktop-optional-lan-portal.md).

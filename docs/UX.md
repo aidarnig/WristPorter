@@ -25,3 +25,13 @@ Additional languages, native accessibility testing and extended activity history
 ## Future independent WristPorter Bridge interface
 
 The current sections above describe **Desktop v1.1.2** only. The planned Wear OS app will have an independent round-screen UI for connection status, notifications, media, privacy settings and diagnostics, in RU/EN. Watch UI scope is tracked in [W6 #19](https://github.com/aidarnig/WristPorter/issues/19); platform behavior, lifecycle and privacy rules are documented in [BRIDGE_ARCHITECTURE.md](BRIDGE_ARCHITECTURE.md). No Wear UI has been built or verified yet.
+
+## Planned Windows Web Upload and iPhone browser UX (NOT SHIPPED)
+
+[ADR-0004](adr/0004-one-desktop-optional-lan-portal.md) approves a **single Windows application** with a new **Web Upload** tab/button, not a second edition. Windows owner must select the watch and explicitly activate LAN sharing. Show chosen private interface/network, QR with local URL (no bearer token), short-lived pairing code, expiry and a high-visibility **Stop sharing** control.
+
+iPhone browser is a small RU/EN, mobile-first user interface: code entry → Photos/Files selection → preview and count → upload progress → per-file ADB-copy/media-scan-request status, retry/cancel, clear explanation of unsupported HEIC and unavailable network/watch. Safari and iPhone photo selection behavior must be verified on real hardware. Browser cannot remotely change device, install APK, execute ADB or inspect Windows files.
+
+Accessible alternatives: text URL if QR scanning is unavailable, readable error messages, large touch targets and clear progress independent of color. Web mode remains OFF by default, stops when desktop closes, refuses untrusted/public-network setup (or displays approved risk gate), and shows that HTTP LAN transfer is **not encrypted** unless a trusted TLS solution is provided.
+
+[Detailed design](LOCAL_WEB_PORTAL.md); [issues #27–#30](ROADMAP.md).

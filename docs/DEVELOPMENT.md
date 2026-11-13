@@ -52,3 +52,9 @@ The repository's About metadata and Social Preview are managed in GitHub Setting
 Every new coding chat/agent must first read repository-root [AGENTS.md](../AGENTS.md), then [STATE.md](STATE.md), [ROADMAP.md](ROADMAP.md), [BRIDGE_CAPABILITIES.md](BRIDGE_CAPABILITIES.md), [ENGINEERING_STANDARD.md](ENGINEERING_STANDARD.md) and the actual GitHub Issue/PR. The normative document map is [INDEX.md](INDEX.md); substantive design changes use [ADRs](adr/README.md).
 
 **WristPorter Bridge is planned, not yet built.** New Kotlin/Gradle Wear OS tooling, watch app commands and separate CI workflow will be documented here *once implemented in W1*. Until then this page's JDK 25/Maven instructions apply only to Desktop. No Android SDK/Gradle dependency may be added to the desktop-only Maven build.
+
+## Future single-app Web Upload mode — not yet implemented
+
+A new on-demand Windows-hosted HTTP frontend for iPhone Safari is planned **inside the existing portable Windows app**, not in a separately distributed Windows server or installed iOS app. The first goal is JPG/PNG upload to the existing WatchTransferService via ADB after the user starts a private-network share session. Keep `WebApplicationType.NONE` on ordinary desktop startup. If W13 chooses a `watch-web` module, document its Maven/packaging wiring and real test commands here only after it exists.
+
+Follow [W13–W16 roadmap](ROADMAP.md), [design](LOCAL_WEB_PORTAL.md) and [ADR-0004](adr/0004-one-desktop-optional-lan-portal.md). Later signed releases need Desktop-only regression, Web Upload browser tests and explicit LAN transport security policy. No code / web server exists for this mode today.

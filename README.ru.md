@@ -6,11 +6,13 @@
 
 ![WristPorter](docs/assets/social-preview.png)
 
-**Передавайте фотографии JPG и PNG с компьютера Windows прямо на часы Wear OS по Wi-Fi.** На проверенных Galaxy Watch4 Classic фотографии появляются в Samsung Gallery. Для передачи не нужны кабель, облачный аккаунт или приложение на телефоне.
+**Сейчас:** передавайте фотографии JPG и PNG с компьютера Windows прямо на часы Wear OS по Wi-Fi. На проверенных Galaxy Watch4 Classic фотографии появляются в Samsung Gallery. Для передачи не нужны кабель, облачный аккаунт или приложение на телефоне.
 
 **[Скачать WristPorter для Windows](https://github.com/aidarnig/WristPorter/releases/latest)** · [Быстрый старт](docs/QUICK_START.ru.md) · [Совместимые часы](docs/COMPATIBILITY.ru.md)
 
 WristPorter — бесплатная программа с открытым исходным кодом. В portable-архив уже включены Java и ADB: устанавливать Android Studio и Java отдельно не нужно.
+
+**Будущее WristPorter:** локальная экосистема для владельцев часов Wear OS после перехода с Android на iPhone: отдельное приложение часов для уведомлений и музыки по Bluetooth, а в **одном приложении Windows** — фотографии, управление часами и планируемый **приём фотографий через браузер iPhone**. Всё это **планы, которых пока нет в версии 1.1.2**. [План развития](docs/ROADMAP.ru.md) · [Технический план Web Upload](docs/LOCAL_WEB_PORTAL.md).
 
 ## Скриншоты
 
