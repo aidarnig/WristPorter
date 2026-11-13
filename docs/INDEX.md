@@ -2,6 +2,11 @@
 
 **This index is normative for document ownership.** Start at [AGENTS.md](../AGENTS.md). A new chat must prefer current GitHub files, issues and commits over old chat summaries.
 
+## Issue-only routing
+
+**One GitHub Issue is enough to delegate an executor task.** Read `AGENTS.md` → `STATE.md` → assigned live Issue → `ROADMAP.md` → this index and `ENGINEERING_STANDARD.md` → task-specific owners/ADRs/verification → current code, tests and GitHub PR/commit state. The executor opens a branch-scoped PR, **does not merge without owner approval**, and records interim progress in its Issue/PR.
+
+**Writing order:** record evidence/status in Issue/PR first; update the canonical owner below only when facts/contracts change; add an ADR for approved consequential decisions; update `VERIFICATION.md` for real hardware proof; reconcile global `STATE.md` during approved integration, not through competing simultaneous chat edits. See the [detailed workflow](ENGINEERING_STANDARD.md).
 | Canonical source | Owns | Does not own |
 | --- | --- | --- |
 | [STATE.md](STATE.md) | Current truth, last planning/implementation state, next action, open risks, reusable chat handoff | Detailed technical design, historical completed milestones |
