@@ -29,7 +29,7 @@ I switched from a Samsung phone to an iPhone and lost the usual way to send phot
 3. Add JPG/PNG files or folders (drag and drop works too), then select **Send to watch**.
 4. Open Gallery on your watch. WristPorter requests media indexing after copying; Gallery visibility depends on your watch and its gallery app.
 
-[Follow the illustrated-by-steps quick-start instructions](docs/QUICK_START.md).
+[Step-by-step setup guide](docs/QUICK_START.md).
 
 ## Watch compatibility
 
