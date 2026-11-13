@@ -129,6 +129,6 @@ These milestones can begin alongside the Bluetooth path as a **separate task/cha
 
 M0 Foundation, M1 ADB connection, M2 photo import, M3 transfer, M4 desktop UX, M5 desktop QA and M6 initial stable releases were shipped and refined through Desktop **v1.1.2**. Historical acceptance and outstanding Windows QA limitations stay in [QUALITY.md](QUALITY.md) and existing Issues [#2](https://github.com/aidarnig/WristPorter/issues/2), [#4](https://github.com/aidarnig/WristPorter/issues/4), [#7](https://github.com/aidarnig/WristPorter/issues/7), [#8](https://github.com/aidarnig/WristPorter/issues/8), [#9](https://github.com/aidarnig/WristPorter/issues/9).
 
-**Deferred:** installed iOS companion, direct browser-to-watch with no Windows PC, and real video/GIF showcase [#10](https://github.com/aidarnig/WristPorter/issues/10). iOS app and direct iPhone photo transfer are **not part of this roadmap**. Do not reopen them casually in W-series implementation.
+**Deferred and outside current delivery:** native iOS companion and direct iPhone-to-watch image transfer **without** a Windows PC. Both would require separate feasibility/security approval. The real video/GIF showcase remains deferred under [issue #10](https://github.com/aidarnig/WristPorter/issues/10). **Browser-assisted iPhone → Windows → watch upload is explicitly in scope under W13–W16**, but not shipped yet.
 
 [Russian orientation](ROADMAP.ru.md) · [Engineering standard](ENGINEERING_STANDARD.md) · [Current handoff](STATE.md).
