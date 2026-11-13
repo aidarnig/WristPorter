@@ -1,0 +1,57 @@
+name: Implementation / investigation task
+description: Work on one scoped feature, proof-of-concept, test or engineering decision.
+title: "[Task] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Start at **AGENTS.md → docs/STATE.md → docs/ROADMAP.md**. Use a W0–W12 anchor Issue. One task/branch/PR at a time. Never include device identifiers, notification text or pairing codes.
+  - type: input
+    id: anchor
+    attributes:
+      label: Parent milestone Issue
+      placeholder: "#13 (W0)"
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Observable goal / user outcome
+      description: Say what should actually change for the user.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and non-goals
+      description: List both included and explicitly excluded behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies / relevant contracts
+      placeholder: "W0 firmware data, transport interface, ADR numbers, version constraints"
+    validations:
+      required: false
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance / proof required
+      description: Exact automated tests, real-device scenarios and what will be NOT TESTED.
+    validations:
+      required: true
+  - type: textarea
+    id: safety
+    attributes:
+      label: Security, privacy, battery and rollback
+      description: Risks or explicitly write "No identified new risks" with rationale.
+    validations:
+      required: true
+  - type: textarea
+    id: docs
+    attributes:
+      label: Canonical documentation to update
+      placeholder: "STATE.md, VERIFICATION.md, ADR-000x, etc."
+    validations:
+      required: false

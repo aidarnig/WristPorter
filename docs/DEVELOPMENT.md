@@ -46,3 +46,9 @@ The 1.1.2 package has the accepted Watch 4 Classic scenario but is not certified
 Keep technical changes in [CHANGELOG.md](../CHANGELOG.md). The short description for the current release is [docs/RELEASE_NOTES.md](RELEASE_NOTES.md), which is intended for the GitHub Releases page. For new releases, update the user-facing notes, version, release tag and asset names together. The Windows publication workflow uses the user-facing release-notes file rather than pasting the full multi-version changelog. Updating an existing release description (such as v1.1.2) still requires editing that release on GitHub: file changes only affect **future** published releases. Before each new release, update the release notes and the workflow's RELEASE_TAG, ZIP filename and version together.
 
 The repository's About metadata and Social Preview are managed in GitHub Settings, not by changing README files. See [Branding](BRANDING.md) and [Sharing guide](OUTREACH.md).
+
+## Development across separate chats (new program)
+
+Every new coding chat/agent must first read repository-root [AGENTS.md](../AGENTS.md), then [STATE.md](STATE.md), [ROADMAP.md](ROADMAP.md), [BRIDGE_CAPABILITIES.md](BRIDGE_CAPABILITIES.md), [ENGINEERING_STANDARD.md](ENGINEERING_STANDARD.md) and the actual GitHub Issue/PR. The normative document map is [INDEX.md](INDEX.md); substantive design changes use [ADRs](adr/README.md).
+
+**WristPorter Bridge is planned, not yet built.** New Kotlin/Gradle Wear OS tooling, watch app commands and separate CI workflow will be documented here *once implemented in W1*. Until then this page's JDK 25/Maven instructions apply only to Desktop. No Android SDK/Gradle dependency may be added to the desktop-only Maven build.

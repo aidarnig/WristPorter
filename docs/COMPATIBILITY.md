@@ -1,4 +1,6 @@
-# Watch compatibility
+# Watch compatibility — Windows photo transfer
+
+> This document covers **the shipped Windows ADB photo-transfer workflow only**. The proposed independent iPhone Bluetooth bridge has **no hardware test evidence yet**; see [Bridge capabilities](BRIDGE_CAPABILITIES.md) and [verification ledger](VERIFICATION.md).
 
 [**English**](COMPATIBILITY.md) · [Русский](COMPATIBILITY.ru.md) · [Back to README](../README.md)
 

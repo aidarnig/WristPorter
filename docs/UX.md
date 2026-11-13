@@ -21,3 +21,7 @@ Every action must be keyboard-accessible and state should be textually represent
 ## Future screens
 
 Additional languages, native accessibility testing and extended activity history remain future enhancements.
+
+## Future independent WristPorter Bridge interface
+
+The current sections above describe **Desktop v1.1.2** only. The planned Wear OS app will have an independent round-screen UI for connection status, notifications, media, privacy settings and diagnostics, in RU/EN. Watch UI scope is tracked in [W6 #19](https://github.com/aidarnig/WristPorter/issues/19); platform behavior, lifecycle and privacy rules are documented in [BRIDGE_ARCHITECTURE.md](BRIDGE_ARCHITECTURE.md). No Wear UI has been built or verified yet.

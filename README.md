@@ -69,5 +69,6 @@ The app runs locally, with no account or telemetry. When you're done, **turn off
 
 - [Build from source](docs/DEVELOPMENT.md) · [Architecture](docs/ARCHITECTURE.md) · [Quality and test scope](docs/QUALITY.md)
 - [Contributing](CONTRIBUTING.md) · [Issues](https://github.com/aidarnig/WristPorter/issues) · [Report watch compatibility](https://github.com/aidarnig/WristPorter/issues/new?template=watch-compatibility.yml)
+- **Planned (not released):** [WristPorter Bridge development roadmap](docs/ROADMAP.md) · [Watch ↔ iPhone feature feasibility](docs/BRIDGE_CAPABILITIES.md) · [Engineering standard](AGENTS.md)
 
 WristPorter is licensed under [MIT](LICENSE) and is not affiliated with Samsung, Google or any watch manufacturer.

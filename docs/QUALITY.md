@@ -95,3 +95,18 @@ Confirmed on the user's Windows desktop:
 - Previous in-app pairing, discovery and photo-transfer acceptance remains unchanged.
 
 The latest user-supplied screenshots additionally show a completed **9/9 transfer with 0 reported errors**, in both language modes. This confirms the application's reported result, not a fresh independent observation of Samsung Gallery. The earlier real-watch Gallery confirmation remains recorded separately. The public README now uses optimized screenshots with the private watch IP and debugging port masked; original images have not been committed.
+
+## Proposed Bridge quality policy — not a claim of existing implementation
+
+WristPorter Bridge is **PLANNED** only, with no Wear OS APK or confirmed iPhone BLE session in this repository. Dedicated [verification ledger](VERIFICATION.md) provides W0 discovery tests, reconnect/background matrix, battery-baseline method and sanitized evidence template. [Roadmap](ROADMAP.md) W7/W8/W9 cover reliability, power and security as acceptance workstreams.
+
+Before accepting any Bridge beta:
+- Confirm ANCS/AMS physical availability and pairing on the **named Watch4 Classic firmware and iPhone/iOS version**; list untested hardware as untested.
+- Run unit/parser/transport/fake-clock tests, watch build and lint; document actual CI run IDs and manual steps.
+- Demonstrate fresh notification and music controls, explicit disconnect, recovery from intermittent Bluetooth, service disappearance, screen-off and other relevant lifecycle scenarios on reference hardware.
+- Run repeatable battery tests against a recorded baseline. Thresholds are set only after measurement; no marketing battery percentage from a design claim.
+- Review notification privacy, malformed frame limits, package signature continuity, permissions and logs; verify no hidden cloud/account/Internet dependencies.
+- Verify existing Windows photo-transfer code is unaffected; if desktop ADB or packaging changed, run desktop regression and use a real watch.
+- Publish independent Wear APK version, actual checksums, known limitations and hardware-tested compatibility only after sign-off.
+
+This section supplements, **never rewrites**, historical Desktop v1.1.2 acceptance above. Bridge unit tests do not prove battery, Android background behavior or iPhone compatibility.
