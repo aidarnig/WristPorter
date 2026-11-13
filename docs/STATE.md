@@ -1,82 +1,43 @@
-# CURRENT PROJECT STATE — read first on every new chat
+# WristPorter — current project state
 
-**Snapshot date:** 2026-11-13. This is a documented planning baseline, **not** a claim that later GitHub commits/PRs do not exist. Check live `main`, open PRs and Issues before relying on it.
+**Snapshot: 2026-11-13.** This is a short cross-track orientation, not a task log or a guarantee that GitHub hasn't changed. Check live `main`, Issues and PRs. Task-specific progress belongs **in its Issue**; the [roadmap](ROADMAP.md) owns milestones and dependencies.
 
-## What the product actually ships
+## Shipped and verified
 
-- Public repository: https://github.com/aidarnig/WristPorter
-- Shipped stable: **WristPorter Desktop v1.1.2** — Windows x64 portable ZIP, Java 25/Maven/JavaFX, bundled Java runtime + ADB, wireless ADB pairing, JPEG/PNG import/preview/transfer and Samsung Gallery indexing requests, EN/RU and light/dark.
-- **Confirmed reference scenario:** Samsung Galaxy Watch4 Classic; Galaxy Gallery visibility of a real eight-photo batch has been confirmed. The desktop UI was later visually accepted in EN/RU with a 9/9 app-reported batch. Details: [QUALITY.md](QUALITY.md).
-- Desktop modules: `watch-domain`, `watch-adb`, `watch-core`, `watch-desktop`; no watch APK source exists at this baseline.
-- Current GitHub Social Preview is configured by the repository owner. GIF/video remains deferred in [issue #10](https://github.com/aidarnig/WristPorter/issues/10).
-- Windows SmartScreen: executable is not trusted-publisher-signed; see [SECURITY.md](SECURITY.md).
+- **Desktop v1.1.2**: portable Windows x64 app, Java 25/Maven/JavaFX, bundled runtime + ADB, Wi-Fi ADB pairing and JPEG/PNG upload to Wear OS Gallery, RU/EN and light/dark. Modules: `watch-domain`, `watch-adb`, `watch-core`, `watch-desktop`.
+- **Actual hardware evidence:** Samsung Galaxy Watch4 Classic showed an eight-PNG batch in Galaxy Gallery on 2026-11-11. Later 9/9 desktop UI-reported transfer and visual EN/RU acceptance were **not** a separate Gallery observation. Detailed proof and outstanding Desktop QA: [QUALITY.md](QUALITY.md).
+- No Wear OS Bridge APK, embedded Web Upload or Safari-to-watch transfer currently exists in the shipped app. SmartScreen code-signing remains an open risk: [SECURITY.md](SECURITY.md).
 
-## Updated ecosystem direction (PLANNED ONLY)
+## Approved direction (all new components PLANNED)
 
-**WristPorter is evolving into a local-first ecosystem for Wear OS owners who switched from Android to iPhone**, not only a desktop photo sender. Approved, independent future components: (1) Watch-side **Bluetooth ANCS/AMS Bridge**, requiring no PC after installation; (2) the same Windows Desktop app with existing photo transfer and future **Web Upload** through an iPhone Safari browser on the private LAN while Windows stays on; (3) Desktop-installed watch APK updates/diagnostics. **No native iOS app or public cloud service**. None of these new features ship in Desktop v1.1.2. [Product](PRODUCT.md) · [Local Web Upload design](LOCAL_WEB_PORTAL.md) · [ADR-0004](adr/0004-one-desktop-optional-lan-portal.md).
+WristPorter is a **local-first Wear OS ecosystem for owners switching from Android to iPhone**, with independent tracks:
 
-## Decision for the new Bridge program (PLANNED ONLY)
+- **WristPorter Bridge**: an independent Kotlin Wear OS APK using direct watch ↔ iPhone BLE, proposed ANCS notification and AMS media integration. No iOS app or continuously running Windows PC. Feasibility on the user's **Galaxy Watch4 Classic and iPhone has NOT BEEN TESTED**; don't infer it from another watch. See [BRIDGE_CAPABILITIES.md](BRIDGE_CAPABILITIES.md), [BRIDGE_ARCHITECTURE.md](BRIDGE_ARCHITECTURE.md), [roadmap](ROADMAP.md).
+- **WristPorter Desktop Web Upload**: **the same Windows app** optionally serves an on-demand private-LAN browser uploader. Safari → Windows → existing Wi-Fi ADB → watch, with QR + short-lived PIN, a user-selected watch and private staging; Windows must remain running. No native iOS app, cloud, anonymous upload, always-on listener or browser-accessible remote ADB administration. Approved direction: [ADR-0004](adr/0004-one-desktop-optional-lan-portal.md). Detailed security/implementation contract: [LOCAL_WEB_PORTAL.md](LOCAL_WEB_PORTAL.md).
+- **Windows APK management** belongs to Issue [#24](https://github.com/aidarnig/WristPorter/issues/24) after an installable Wear APK and version/signature contract exist.
 
-Build **WristPorter Bridge**, an independent Kotlin Wear OS app that talks to iPhone directly via its built-in Bluetooth **ANCS/AMS** services, without any iOS companion app. Aim for maximum **documented, observed** features with reliability, low battery impact, privacy and accessibility as first-class constraints.
+**Original-photo invariant:** accepted JPEG/PNG images keep original bytes, resolution and metadata; no silent compression, resizing or re-encoding. The existing Desktop sender is not being rewritten for this requirement. Browser upload must separately verify whether iOS Safari supplied the actual original representation. Owners: [PRODUCT.md](PRODUCT.md) and [LOCAL_WEB_PORTAL.md](LOCAL_WEB_PORTAL.md).
 
-- Reference watch: Samsung Galaxy Watch4 Classic; actual BLE ↔ iPhone ability **NOT TESTED BY WRISTPORTER**.
-- First task: **[W0 — hardware/protocol feasibility, #13](https://github.com/aidarnig/WristPorter/issues/13)**. Do not start wide implementation until W0 evidence exists.
-- Roadmap: [ROADMAP.md](ROADMAP.md), milestones W0–W16, [Bluetooth Issues #13–#25](https://github.com/aidarnig/WristPorter/issues) and [Web Upload Issues #27–#30](https://github.com/aidarnig/WristPorter/issues).
-- Feasibility and deliberate exclusions: [BRIDGE_CAPABILITIES.md](BRIDGE_CAPABILITIES.md).
-- Proposed architecture: [BRIDGE_ARCHITECTURE.md](BRIDGE_ARCHITECTURE.md); no approved minimum Android API until measured on reference watch.
-- No new Watch APK, iOS code, BLE test evidence, battery results or bridge releases yet. **Planning docs and issues are not implementation.**
+## Active coordination queue
 
-## Known risks and blocked assumptions
+Independent Issues that **may be assigned to separate chats** (read live Issue/PR before assuming work has started):
 
-1. We have no recorded Watch4 Classic ↔ iPhone ANCS/AMS connection from this project. WeakBridge's Galaxy Watch6 result is **not** Watch4 evidence.
-2. Watch4 firmware/API level, iPhone/iOS combination and system BLE behavior must be observed; never silently target API 33 and exclude older Watch4 firmware.
-3. Android OS background rules, Samsung power management, iOS ANCS consent and GATT role requirements can break long-running connectivity.
-4. Event-driven BLE design alone does not prove acceptable battery drain; collect baselines, paired cases and long-term measurements.
-5. ANCS actions, AMS extras, battery/device info are **conditional** on iPhone/active player/service; no arbitrary replies, phone call audio, Apple Health or phone photos via ANCS/AMS.
-6. External repo designs provide reference ideas, **not** proof of our implementation, security, ownership or third-party license compliance.
-7. Current desktop photo workflow must remain independently usable if the bridge is absent or disconnected.
-8. **LAN Web Upload is NOT IMPLEMENTED:** requires opt-in local Windows listener, device-target lock, temporary upload storage, short-lived authentication, and transparent warning that HTTP on Wi-Fi is unencrypted. Safari photo selection and HEIC behavior are NOT TESTED.
-9. Web Upload runs **through Windows**; it is neither direct Bluetooth photo transfer nor an iOS companion app. Watch-side Bluetooth reliability/battery work remains independent.
+- **[#13 — W0](https://github.com/aidarnig/WristPorter/issues/13):** non-destructive Watch4 ↔ iPhone BLE/ANCS/AMS feasibility. Cannot honestly pass W0 without real hardware and iOS/watch versions.
+- **[#27 — W13](https://github.com/aidarnig/WristPorter/issues/27):** private-LAN Web Upload architecture, browser feasibility and threat-model decision. Independent of W0.
+- **[#7 — CI](https://github.com/aidarnig/WristPorter/issues/7):** dependency-aware downstream build checks. Independent of W0/W13.
 
-## Current execution queue and photo-policy decision (2026-11-13)
+**Deferred in this wave:** a separate photo-quality audit/test project (already-working Desktop transfer is unchanged); issue [#2](https://github.com/aidarnig/WristPorter/issues/2) is a distinct, still-open photo-import/thumbnail backlog, not the quality task. Other W0–W16 dependencies remain in [ROADMAP.md](ROADMAP.md).
 
-- **Ready for independent executor chats, when assigned:** [#13 W0 BLE feasibility](https://github.com/aidarnig/WristPorter/issues/13), [#27 W13 LAN Web Upload feasibility](https://github.com/aidarnig/WristPorter/issues/27), and [#7 selective downstream CI](https://github.com/aidarnig/WristPorter/issues/7). "Ready" is not "in progress": check each live Issue and PR before starting.
-- **Deferred for this wave:** a separate photo-quality audit/regression-testing work package. Existing shipped Windows JPEG/PNG transfer is not being reworked merely to add a quality project. Issue [#2](https://github.com/aidarnig/WristPorter/issues/2) remains its own existing photo-import/preview backlog, **not** a newly assigned quality task.
-- **Binding image requirement for all future transfer paths:** accepted JPEG/PNG must keep original bytes, resolution and metadata; no compression, resizing or re-encoding. [PRODUCT.md](PRODUCT.md) owns the product rule; [LOCAL_WEB_PORTAL.md](LOCAL_WEB_PORTAL.md) owns the additional Safari representation caveat. This decision does **not** imply Web Upload or new original-quality tests were performed.
-- **Delegation/integration protocol:** an Issue link alone is sufficient. [AGENTS.md](../AGENTS.md) and [ENGINEERING_STANDARD.md](ENGINEERING_STANDARD.md) own read/write order, isolated branches, PR-only delivery and product-owner merge approval; while work is parallel, do not race edits to global STATE.
-## Canonical next action
+## Genuine blockers and acceptance
 
-**Two parallel starting points:** [#13 W0 Bluetooth feasibility](https://github.com/aidarnig/WristPorter/issues/13) and independently [#27 W13 LAN Web Upload architecture/security](https://github.com/aidarnig/WristPorter/issues/27). Do not prematurely implement either broad product. For Bridge, open [#13](https://github.com/aidarnig/WristPorter/issues/13), confirm the watch firmware/API and available iPhone, design a **non-destructive, opt-in BLE feasibility PoC**, use [ENGINEERING_STANDARD.md](ENGINEERING_STANDARD.md), and log all actual device observations in [VERIFICATION.md](VERIFICATION.md). No mandatory iOS application.
+- W0 requires real Watch4 firmware/API, selected iPhone model/iOS, permitted Bluetooth pairing and actual service/notification/media evidence; no factory reset. Log PASS/FAIL/BLOCKED/NOT TESTED **per scenario** in [VERIFICATION.md](VERIFICATION.md).
+- W13 must resolve HTTP-on-LAN threat and TLS/access restrictions before permitting production network exposure. Actual Safari/Windows/Watch4 behavior remains **NOT TESTED**.
+- Fake ADB tests, successful Maven, docs CI and experimental PoCs are **not** equivalent to real-device compatibility or battery acceptance. No signed release without [quality gates](QUALITY.md).
 
-## Required chat handoff (update this section in place)
+## Cross-chat handoff
 
-After each substantial completed task / merged PR, update `STATE.md` with:
-- **Task anchor**: issue number, objective, branch/PR link, merged commit SHA (from GitHub).
-- **Verified result**: code/tests actually executed, real hardware model/OS/version, PASS/FAIL/NOT TESTED; link to log.
-- **Changed boundaries**: architecture/API/contracts and ADRs; note any divergences.
-- **Remaining work**: concrete blockers, known issues, owner decisions required.
-- **Next exact step**: issue and small reproducible objective.
+New executor receives **only its GitHub Issue**. Mandatory read order, parallel branch ownership, autonomous safe PR merge, escalation, docs-writing and handoff rules live in [AGENTS.md](../AGENTS.md) and [ENGINEERING_STANDARD.md](ENGINEERING_STANDARD.md).
 
-At chat start, do *not* assume this snapshot is fresh: compare its last completed work with live `main` and open PRs. Update the file if stale rather than inventing a second handoff document.
+During parallel work, executors keep updates in Issues/PRs and avoid racing edits to this shared file. Update STATE **only** for major merged milestones, blocking findings, shipped behavior or changes to the cross-track next priority. Do not paste full PR histories here. Planning history is recoverable from [PR #26](https://github.com/aidarnig/WristPorter/pull/26) (Bridge plan) and [PR #31](https://github.com/aidarnig/WristPorter/pull/31) (one Windows app/Web Upload plan).
 
-### Latest planning handoff
-
-- **Action:** documentation/engineering standard and 13 W-series planning Issues created; no application code changed.
-- **Task anchor:** [PR #26](https://github.com/aidarnig/WristPorter/pull/26), merged into `main` as `447fe4b2d303bfd5a85914d9e92e99b33a1e3f1f`.
-- **Verification:** [documentation integrity CI #43462385660](https://github.com/aidarnig/WristPorter/actions/runs/43462385660) **PASS** (required context documents and local links); PR inspection confirmed no Java/application code changes. **Bridge BLE, physical Watch4+iPhone behavior, power and APK build: NOT TESTED.**
-- **Remaining work:** first verify Watch4 Android API/firmware and iPhone BLE ANCS/AMS availability, no factory reset; do not assume compatibility from other projects.
-- **Next issue:** [#13 — W0 feasibility](https://github.com/aidarnig/WristPorter/issues/13).
-
-## Context automation
-
-A lightweight [documentation CI workflow](../.github/workflows/docs-check.yml) and [local checker](../ci/check-doc-links.py) validate required handoff files and relative Markdown links. They cannot test physical BLE features or the accuracy of status claims.
-
-## Latest ecosystem planning handoff (2026-11-13)
-
-- **New decision:** one Windows app with **native Desktop photo mode** and **user-activated Web Upload** served over private LAN for iPhone Safari; no separate Windows edition, installed iOS companion or cloud. The existing transfer core will be shared, not copied. [ADR-0004](adr/0004-one-desktop-optional-lan-portal.md).
-- **New Issue anchors:** [#27 W13 security/design](https://github.com/aidarnig/WristPorter/issues/27), [#28 W14 JPG/PNG implementation](https://github.com/aidarnig/WristPorter/issues/28), [#29 W15 HEIC/format research](https://github.com/aidarnig/WristPorter/issues/29), [#30 W16 browser hardening/QA](https://github.com/aidarnig/WristPorter/issues/30). Desktop APK management remains [#24 W11](https://github.com/aidarnig/WristPorter/issues/24).
-- **Implementation & verification:** docs and GitHub planning tasks only. No web server, Safari upload, HEIC conversion or Bridge APK has been added/verified. Public release v1.1.2 stays photo-transfer-only.
-- **Next independent issues:** [#13](https://github.com/aidarnig/WristPorter/issues/13) (actual Watch4 ↔ iPhone BLE feasibility) **and** [#27](https://github.com/aidarnig/WristPorter/issues/27) (private-LAN browser design/PoC).
-- **Merged planning PR:** [#31](https://github.com/aidarnig/WristPorter/pull/31), merge commit `bc015fc393ab516da9e0707f3133f3ac16e55033`.
-- **Verification:** documentation integrity [GitHub Actions run 43466059468](https://github.com/aidarnig/WristPorter/actions/runs/43466059468) PASS; diff of 21 docs files only, **no Java/ADB code modified**. Browser uploader/HEIC conversion, physical end-to-end iPhone Safari and iPhone-to-watch BLE are all **NOT TESTED**.
-- **Next exact actions:** choose separate chats anchored to [#13 W0 BLE feasibility](https://github.com/aidarnig/WristPorter/issues/13) and [#27 W13 browser-upload design/security](https://github.com/aidarnig/WristPorter/issues/27). Review live main and pending PRs before starting.
+**Next exact step:** assign Issues #13, #27 and #7 to independent executors; each can work from its Issue alone and must report a concrete blocker only when it cannot safely proceed.
