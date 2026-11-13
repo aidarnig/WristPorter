@@ -49,9 +49,10 @@ At chat start, do *not* assume this snapshot is fresh: compare its last complete
 
 ### Latest planning handoff
 
-- **Action:** documentation and 13 W-series planning Issues created; no application logic has been changed.
-- **Task anchor:** roadmap/governance planning, branch `docs/bridge-roadmap-and-engineering-standard`; the PR/merge record is the live authoritative link once merged.
-- **Verification:** specification sources reviewed; no BLE/Android watch APK code built or physically verified.
+- **Action:** documentation/engineering standard and 13 W-series planning Issues created; no application code changed.
+- **Task anchor:** [PR #26](https://github.com/aidarnig/WristPorter/pull/26), merged into `main` as `447fe4b2d303bfd5a85914d9e92e99b33a1e3f1f`.
+- **Verification:** [documentation integrity CI #43462385660](https://github.com/aidarnig/WristPorter/actions/runs/43462385660) **PASS** (required context documents and local links); PR inspection confirmed no Java/application code changes. **Bridge BLE, physical Watch4+iPhone behavior, power and APK build: NOT TESTED.**
+- **Remaining work:** first verify Watch4 Android API/firmware and iPhone BLE ANCS/AMS availability, no factory reset; do not assume compatibility from other projects.
 - **Next issue:** [#13 — W0 feasibility](https://github.com/aidarnig/WristPorter/issues/13).
 
 ## Context automation
