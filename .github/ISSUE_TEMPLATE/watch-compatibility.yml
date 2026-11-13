@@ -1,0 +1,79 @@
+name: Watch compatibility report
+description: Tell us whether WristPorter works with your Wear OS watch.
+title: "[Watch] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing WristPorter on your watch! Please report **file transfer** and **Gallery visibility** separately.
+        Never include an IP address, serial number, pairing code, private photo or ADB key.
+        This report does not automatically mark a device as supported.
+  - type: input
+    id: watch-model
+    attributes:
+      label: Exact watch manufacturer and model
+      placeholder: e.g. Google Pixel Watch 2
+    validations:
+      required: true
+  - type: input
+    id: wear-os
+    attributes:
+      label: Wear OS / firmware version
+      description: If you don't know, enter "Unknown".
+      placeholder: e.g. Wear OS 4 / software version shown in Settings
+    validations:
+      required: true
+  - type: input
+    id: wristporter
+    attributes:
+      label: WristPorter version
+      placeholder: e.g. 1.1.2
+    validations:
+      required: true
+  - type: dropdown
+    id: pairing
+    attributes:
+      label: Wireless ADB pairing and connection
+      options:
+        - Succeeded
+        - Failed
+        - Not tried
+    validations:
+      required: true
+  - type: dropdown
+    id: transfer
+    attributes:
+      label: JPEG/PNG copy result in WristPorter
+      description: A reported successful copy isn't proof of Gallery visibility.
+      options:
+        - Successful
+        - Failed
+        - Not tried
+    validations:
+      required: true
+  - type: dropdown
+    id: gallery
+    attributes:
+      label: Did you actually see the transferred photos in the watch Gallery?
+      options:
+        - Yes, I opened Gallery and saw them
+        - No, I checked Gallery but did not see them
+        - No Gallery app available
+        - Not checked
+    validations:
+      required: true
+  - type: input
+    id: gallery-app
+    attributes:
+      label: Gallery app
+      placeholder: e.g. Samsung Gallery / Google Photos / other / none
+    validations:
+      required: false
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes (optional)
+      description: Explain failures or workarounds without including private device information.
+      placeholder: Connection steps, error message with sensitive details removed, etc.
+    validations:
+      required: false

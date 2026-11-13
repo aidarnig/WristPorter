@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Quick start / Быстрый старт
+    url: https://github.com/aidarnig/WristPorter/blob/main/docs/QUICK_START.md
+    about: Read the setup instructions before reporting a connection problem.
+  - name: Compatibility list / Совместимость
+    url: https://github.com/aidarnig/WristPorter/blob/main/docs/COMPATIBILITY.md
+    about: See confirmed and unverified Wear OS devices.

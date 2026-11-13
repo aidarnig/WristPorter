@@ -72,5 +72,5 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "WristPorter 1.1.2" \
-            --notes-file "$GITHUB_WORKSPACE/CHANGELOG.md" \
+            --notes-file "$GITHUB_WORKSPACE/docs/RELEASE_NOTES.md" \
             --latest

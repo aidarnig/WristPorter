@@ -2,7 +2,7 @@
 
 [English](QUICK_START.md) · [Русский](QUICK_START.ru.md)
 
-WristPorter sends JPEG and PNG photos from Windows to compatible Wear OS watches over Wi-Fi. It is a local utility: no cloud account, Android smartphone or extra app on the watch is required **after the watch's initial setup**.
+WristPorter sends JPEG and PNG photos from Windows to compatible Wear OS watches over Wi-Fi. It is a local utility: no cloud account or extra app is needed for transfers **after the watch's initial setup**. Some watches (including Galaxy Watch4) require a compatible Android phone for initial setup; WristPorter does **not** pair a watch with an iPhone. See [watch compatibility](COMPATIBILITY.md).
 
 ## Start on Windows
 
@@ -24,8 +24,8 @@ WristPorter sends JPEG and PNG photos from Windows to compatible Wear OS watches
 
 1. Drag JPEG/PNG files or folders into the app, or use the file/folder pickers.
 2. Check the photo list and click **Send to watch**.
-3. WristPorter copies each photo and requests Samsung Gallery media indexing.
-4. Open Gallery on the watch. If a copied photo was not indexed, use **Retry failures** to repeat its scan request without copying the file twice.
+3. WristPorter copies each photo and requests media indexing (confirmed with Samsung Gallery on Galaxy Watch4 Classic).
+4. Open Gallery on the watch. Gallery visibility on other Wear OS models isn't verified. If a copied photo's scan request failed, use **Retry failures** to repeat it without copying the file twice.
 
 ## Windows SmartScreen
 

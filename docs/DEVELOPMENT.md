@@ -40,3 +40,9 @@ ADB can be overridden through the advanced UI field or `WRISTPORTER_ADB` environ
 Use focused `feat/<scope>` or `fix/<scope>` branches and Conventional Commit-style messages. Track acceptance in GitHub Issues; update only the document that owns the relevant decision. Do not commit photographs, pairing secrets, ADB keys, build artifacts or private device identifiers.
 
 The 1.1.2 package has the accepted Watch 4 Classic scenario but is not certified on other watches or network conditions. See the release notes and [Quality](QUALITY.md) for verification boundaries.
+
+## Public-facing release notes
+
+Keep technical changes in [CHANGELOG.md](../CHANGELOG.md). The short description for the current release is [docs/RELEASE_NOTES.md](RELEASE_NOTES.md), which is intended for the GitHub Releases page. For new releases, update the user-facing notes, version, release tag and asset names together. The Windows publication workflow should use the user-facing release-notes file rather than pasting the full multi-version changelog.
+
+The repository's About metadata and Social Preview are managed in GitHub Settings, not by changing README files. See [Branding](BRANDING.md) and [Sharing guide](OUTREACH.md).

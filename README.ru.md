@@ -1,58 +1,73 @@
-# WristPorter — передача фотографий на Wear OS
+# WristPorter — фотографии с Windows на часы Wear OS
 
-[![Версия](https://img.shields.io/github/v/release/aidarnig/WristPorter?label=Windows%20portable)](https://github.com/aidarnig/WristPorter/releases/latest) [![Сборка](https://github.com/aidarnig/WristPorter/actions/workflows/ci.yml/badge.svg)](https://github.com/aidarnig/WristPorter/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![Версия для Windows](https://img.shields.io/github/v/release/aidarnig/WristPorter?label=Windows%20download)](https://github.com/aidarnig/WristPorter/releases/latest) [![Сборка](https://github.com/aidarnig/WristPorter/actions/workflows/ci.yml/badge.svg)](https://github.com/aidarnig/WristPorter/actions/workflows/ci.yml) [![Лицензия MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 [English](README.md) · [**Русский**](README.ru.md)
 
-![WristPorter — логотип](docs/assets/social-preview.png)
+![WristPorter](docs/assets/social-preview.png)
 
-**Передавайте JPG и PNG на часы Wear OS с Windows через беспроводной ADB — без Android-смартфона после первоначальной настройки часов.** WristPorter — бесплатное приложение с открытым исходным кодом для Windows и совместимых часов Wear OS. Основная проверенная модель — Samsung Galaxy Watch 4 Classic.
+**Передавайте фотографии JPG и PNG с компьютера Windows прямо на часы Wear OS по Wi-Fi.** На проверенных Galaxy Watch4 Classic фотографии появляются в Samsung Gallery. Для передачи не нужны кабель, облачный аккаунт или приложение на телефоне.
 
-## Скачать
+**[Скачать WristPorter для Windows](https://github.com/aidarnig/WristPorter/releases/latest)** · [Быстрый старт](docs/QUICK_START.ru.md) · [Совместимые часы](docs/COMPATIBILITY.ru.md)
 
-**[Скачать актуальную portable-версию из GitHub Releases](https://github.com/aidarnig/WristPorter/releases/latest)**
+WristPorter — бесплатная программа с открытым исходным кодом. В portable-архив уже включены Java и ADB: устанавливать Android Studio и Java отдельно не нужно.
 
-В разделе **Assets** выберите `WristPorter-1.1.2-windows-x64.zip`, а не автоматически созданный GitHub архив **Source code**. Полностью распакуйте ZIP и запустите `WristPorter.exe` из папки `WristPorter`. Java, JavaFX и ADB со всеми необходимыми DLL уже входят в комплект. Не нужны установщик, Android Studio или приложение на смартфоне после первоначальной настройки часов.
+## Скриншоты
 
-## Возможности
+![Интерфейс WristPorter в Windows](docs/assets/ui-screenshot-ru.webp)
 
-- Сопряжение и подключение часов по Wi-Fi через ADB, обнаружение устройств после перезапуска.
-- Выбор JPEG/PNG, целых папок и перетаскивание файлов.
-- Просмотр фотографий в адаптивной сетке миниатюр.
-- Отправка пачки изображений с крупным прогресс-баром и результатом по каждому файлу; автоматическое обновление Samsung Gallery.
-- Повтор неудачных операций без лишнего копирования уже загруженных изображений.
-- Переключение **Русский / English** и **светлой / тёмной темы** без перезапуска с сохранением настроек.
+## Почему я создал WristPorter
 
-## Реальный скриншот
+Когда я перешёл со смартфона Samsung на iPhone, то лишился привычного способа отправлять фотографии на Galaxy Watch. Но мне по-прежнему хотелось хранить снимки в галерее часов. Так появился WristPorter: выбираю фотографии на компьютере Windows, подключаю часы по Wi-Fi и отправляю их напрямую.
 
-![WristPorter на русском — успешно переданы девять фотографий](docs/assets/ui-screenshot-ru.webp)
-
-*WristPorter 1.1.2 в Windows, русский интерфейс: **9 из 9 фотографий отправлено, 0 ошибок**. Настоящий скриншот, адрес часов скрыт.*
+**Перешли на iPhone?** WristPorter поможет передавать фото на *уже настроенные* совместимые часы, даже если Android-телефона больше нет. Программа **не подключает Galaxy Watch к iPhone** и не заменяет Android-смартфон, необходимый для первоначальной настройки многих моделей Galaxy Watch.
 
 ## Как это работает
 
-1. Включите на часах параметры разработчика и **Беспроводную отладку**.
-2. Выполните сопряжение через **порт сопряжения** и шестизначный код.
-3. Подключитесь через **другой порт отладки**, отображаемый на часах.
-4. Добавьте JPG/PNG в очередь и нажмите **Передать на часы**.
-5. Откройте Samsung Gallery — программа автоматически запрашивает индексацию скопированных изображений.
+1. На часах включите **Параметры разработчика → Отладка по ADB → Беспроводная отладка**.
+2. Выполните сопряжение и подключение в WristPorter. **Порт сопряжения отличается от порта подключения**.
+3. Добавьте JPG/PNG или папку с фотографиями (можно перетащить файлы в окно) и нажмите **Передать на часы**.
+4. Откройте Галерею на часах. После копирования WristPorter запрашивает индексацию изображений; их появление зависит от прошивки и галереи конкретных часов.
 
-Подробная инструкция — [Быстрый старт](docs/QUICK_START.ru.md).
+[Пошаговая инструкция по подключению](docs/QUICK_START.ru.md).
 
-После передачи фотографий рекомендуется отключить **Беспроводную отладку** на часах.
+## Совместимость с часами
 
-> **SmartScreen:** текущий EXE не имеет доверенной подписи издателя. Сверяйте источник и SHA-256. [Подробнее](docs/SECURITY.md).
+WristPorter использует стандартный беспроводной ADB, а не закрытый способ передачи Samsung. Поэтому программа **потенциально** может работать и с другими Wear OS-часами с беспроводной отладкой. Однако полный сценарий от передачи до появления фото в галерее проверен только на одной модели.
 
-## Для разработчиков
+| Часы | Статус |
+| --- | --- |
+| **Samsung Galaxy Watch4 Classic** | **Проверено:** сопряжение, передача и появление фото в Samsung Gallery |
+| Другие Samsung Galaxy Watch на Wear OS | Потенциально совместимы — не проверены |
+| Google Pixel Watch, OnePlus Watch, Xiaomi Watch, TicWatch, OPPO Watch X и другие линейки Wear OS | Потенциально совместимы — не проверены |
 
-Для сборки из исходников потребуются JDK 25 и Maven 3.9+:
+Успешное подключение по ADB **не гарантирует** отображение фото в галерее на любых часах. Старые Samsung на Tizen, Apple Watch и часы на других ОС не поддерживаются.
 
-```bash
-mvn -B -ntp verify
-mvn -B -ntp -pl watch-desktop -am install
-mvn -pl watch-desktop javafx:run
-```
+Подробнее — [список моделей и требования](docs/COMPATIBILITY.ru.md). **Проверили WristPorter на других часах?** [Расскажите о результате](https://github.com/aidarnig/WristPorter/issues/new?template=watch-compatibility.yml).
 
-Технические документы: [Архитектура](docs/ARCHITECTURE.md) · [UX](docs/UX.md) · [Тестирование](docs/QUALITY.md) · [Разработка](docs/DEVELOPMENT.md) · [CI](docs/CI.md) · [План](docs/ROADMAP.md) · [Брендинг](docs/BRANDING.md) · [Задачи](https://github.com/aidarnig/WristPorter/issues).
+## Возможности
 
-Лицензия MIT. Проект независимый и не связан официально с Samsung или Google. Основной сценарий проверен на Galaxy Watch 4 Classic; работа на других часах и в нестандартных сетях не гарантируется.
+- Отправка нескольких JPG/PNG сразу и импорт целых папок.
+- Просмотр миниатюр до отправки.
+- Сопряжение и поиск часов прямо в программе, без командной строки.
+- Прогресс передачи, отмена и повтор неудачных операций.
+- Русский и английский языки, светлая и тёмная темы.
+
+## Скачивание и запуск
+
+1. Откройте [последний релиз](https://github.com/aidarnig/WristPorter/releases/latest) и скачайте **WristPorter-…-windows-x64.zip** в разделе **Assets** (не архив *Source code*).
+2. Распакуйте **весь архив**, откройте папку WristPorter и запустите **WristPorter.exe**.
+3. Подключите часы по [инструкции](docs/QUICK_START.ru.md).
+
+**Требования:** Windows x64, ранее настроенные часы Wear OS с беспроводной отладкой и сеть Wi-Fi, в которой компьютер может обращаться к часам. Работа проверена на Galaxy Watch4 Classic; остальные модели и чистые установки Windows пока не прошли полную проверку.
+
+Программа работает локально, без аккаунтов и сбора телеметрии. После передачи **отключайте беспроводную отладку** на часах.
+
+**Windows SmartScreen:** EXE пока не подписан сертификатом доверенного издателя. Скачивайте программу только из этого репозитория, сравнивайте SHA-256 с опубликованной контрольной суммой и прочитайте [информацию о безопасности](docs/SECURITY.md). Не отключайте защиту Windows.
+
+## Разработка и обратная связь
+
+- [Сборка из исходников](docs/DEVELOPMENT.md) · [Архитектура](docs/ARCHITECTURE.md) · [Тестирование](docs/QUALITY.md)
+- [Как помочь проекту](CONTRIBUTING.ru.md) · [Задачи и ошибки](https://github.com/aidarnig/WristPorter/issues) · [Сообщить о совместимости](https://github.com/aidarnig/WristPorter/issues/new?template=watch-compatibility.yml)
+
+Лицензия [MIT](LICENSE). Проект независимый и не связан официально с Samsung, Google или производителями часов.
