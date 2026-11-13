@@ -31,4 +31,3 @@ This Windows EXE is **not yet signed by a trusted publisher**. Windows SmartScre
 
 Full technical history: [CHANGELOG.md](https://github.com/aidarnig/WristPorter/blob/main/CHANGELOG.md).
 
-**Maintainer note:** This is the human-readable release description to use for v1.1.2. The existing published GitHub release is immutable to repository-file edits; updating its description requires editing that release. When preparing a newer version, update this file and the workflow's RELEASE_TAG, ZIP filename and version consistently.
