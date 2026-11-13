@@ -2,17 +2,17 @@
 
 This file is the durable operating contract for **every new chat, AI coding agent and human contributor**. GitHub `main` and its Issues/PRs are the source of truth; previous chat histories are not. Read this before writing code, creating branches or reporting progress.
 
-## Read in this order
+## Issue-first onboarding: mandatory reading order
 
-1. [Current state / chat handoff](docs/STATE.md) — what exists **now**, next task, known risks.
-2. [Roadmap](docs/ROADMAP.md) — versioned milestones, scope, dependencies and issue links.
-3. [Feature feasibility](docs/BRIDGE_CAPABILITIES.md) — what works in principle without an iOS app, what requires device testing, what is unsupported.
-4. [Architecture](docs/ARCHITECTURE.md) and [Bridge design](docs/BRIDGE_ARCHITECTURE.md) — existing Java vs new Kotlin Wear OS boundaries.
-5. [Engineering standard](docs/ENGINEERING_STANDARD.md) — branch, change, verification, documentation and review requirements.
-6. [Verification ledger](docs/VERIFICATION.md) and [Quality gates](docs/QUALITY.md) — never substitute speculation or unit tests for physical hardware.
-7. [Architecture decisions](docs/adr/README.md) and the GitHub **Issue for your task**.
+A new executor chat receives only a repository Issue URL/number (and repository name if it is not already in the workspace). **The Issue is the assignment; the repository is the context.** Do not ask the user to restate chat history or paste full documentation. Retrieve current GitHub data yourself.
 
-The [docs index](docs/INDEX.md) assigns a unique owner to each type of information. Check actual files, live issues, open PRs and latest commits on GitHub **before** acting. Do not assume a missing tool or access without attempting connector discovery.
+1. Read this `AGENTS.md` first, then [current shared state](docs/STATE.md). Treat the state snapshot as provisional until checked against GitHub.
+2. Read the **assigned live Issue** (goal, scope, exclusions, dependencies, acceptance, deliverables), then [ROADMAP.md](docs/ROADMAP.md) for dependency gates.
+3. Read [INDEX.md](docs/INDEX.md) and [ENGINEERING_STANDARD.md](docs/ENGINEERING_STANDARD.md) for document ownership and the execution/PR contract.
+4. Read only **task-relevant** product, feasibility, architecture, security, verification, quality and ADR sources. For Bridge start with [BRIDGE_CAPABILITIES.md](docs/BRIDGE_CAPABILITIES.md) and [BRIDGE_ARCHITECTURE.md](docs/BRIDGE_ARCHITECTURE.md); for browser transfer with [LOCAL_WEB_PORTAL.md](docs/LOCAL_WEB_PORTAL.md) and ADR-0004. Follow links from the Issue; inspect actual code and tests.
+5. Verify latest `main`, existing branches/PRs and dependency results **before editing**. Check connected GitHub tool availability rather than claiming access is impossible without trying.
+
+If a blocking hardware fact, required owner decision, unclear issue acceptance or conflicting contract prevents safe progress, record the specific blocker in the Issue and request a decision. Otherwise execute the defined task without repeatedly asking for background.
 
 ## Fixed decisions for the current program
 
@@ -31,17 +31,19 @@ The [docs index](docs/INDEX.md) assigns a unique owner to each type of informati
 ## One issue, one branch, one verification story
 
 - Select one [W-series milestone](docs/ROADMAP.md) and an Issue/task; inspect live state and dependencies.
-- Work in `feat/<scope>`, `fix/<scope>`, `docs/<scope>` or `test/<scope>`. Do not mix unrelated requirements; link the Issue in PR.
+- Work in a **fresh issue-scoped branch from current `main`**, using `feat/<scope>`, `fix/<scope>`, `docs/<scope>`, `test/<scope>` or `ci/<scope>`. Never share a working branch between executor chats; link the Issue in PR.
 - State goals, non-goals, risks and acceptance checks **before** implementation. Keep existing desktop behavior intact.
 - Add tests for protocol and state behavior; apply [Quality](docs/QUALITY.md) and [Verification](docs/VERIFICATION.md). Say **NOT RUN** or **NOT TESTED** when applicable.
 - Update only the canonical docs that changed. Add an ADR for any substantial scope/technology/security/lifecycle decision.
-- Each PR must contain: Issue, summary, changed components, tests executed/results, physical-device evidence or **not tested**, risk/rollback, docs changed.
-- After merge, update [STATE.md](docs/STATE.md) and the relevant Issue/verification ledger **in the same PR or a clearly linked follow-up**; verify `main`. A merged PR is not hardware acceptance.
+- Each PR must contain: Issue, summary, changed components, tests executed/results, physical-device evidence or **NOT TESTED**, risk/rollback, docs changed and any requested product-owner decision. **Do not merge or publish releases without explicit owner approval.**
+- During parallel work, record in-progress status and evidence in the **Issue/PR**, not competing rewrites of [STATE.md](docs/STATE.md). At integration, refresh STATE and the verification ledger **in the approved PR or a clearly linked follow-up**; confirm `main`. A merged PR is not hardware acceptance.
 - Never commit pairing codes, Bluetooth MACs, IP addresses, ADB keys, personal messages/photos, passwords, build outputs or signing keys.
 
-## Starting a fresh conversation
+## Starting a fresh executor conversation
 
-Paste only a **task/Issue number** and the repository URL if convenient. Instruct the new agent to read **`AGENTS.md` and `docs/STATE.md` on GitHub first**, then the linked owners, inspect the actual branch and continue that Issue. Do not rely on a chat-generated handoff alone. The required end-of-task handoff format is in [STATE.md](docs/STATE.md).
+**Minimum handoff:** `https://github.com/aidarnig/WristPorter/issues/NN` (or `WristPorter Issue #NN` if the repository is already connected). This contract is automatic: read the files above, verify live state, work within the Issue, run accessible tests, open a focused PR and report its URL and untested hardware steps. **Do not assume permission to merge.**
+
+The [engineering standard](docs/ENGINEERING_STANDARD.md) defines exact startup, parallel branch ownership, documentation writing order and finish criteria. The [state handoff](docs/STATE.md) is a global snapshot, **not** a replacement for the Issue or PR.
 
 **Canonical repository:** https://github.com/aidarnig/WristPorter
 
