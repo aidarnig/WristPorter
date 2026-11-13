@@ -13,7 +13,7 @@
 WristPorter is a **local-first Wear OS ecosystem for owners switching from Android to iPhone**, with independent tracks:
 
 - **WristPorter Bridge**: an independent Kotlin Wear OS APK using direct watch ↔ iPhone BLE, proposed ANCS notification and AMS media integration. No iOS app or continuously running Windows PC. Feasibility on the user's **Galaxy Watch4 Classic and iPhone has NOT BEEN TESTED**; don't infer it from another watch. See [BRIDGE_CAPABILITIES.md](BRIDGE_CAPABILITIES.md), [BRIDGE_ARCHITECTURE.md](BRIDGE_ARCHITECTURE.md), [roadmap](ROADMAP.md).
-- **WristPorter Desktop Web Upload**: **the same Windows app** optionally serves an on-demand private-LAN browser uploader. Safari → Windows → existing Wi-Fi ADB → watch, with QR + short-lived PIN, a user-selected watch and private staging; Windows must remain running. No native iOS app, cloud, anonymous upload, always-on listener or browser-accessible remote ADB administration. Approved direction: [ADR-0004](adr/0004-one-desktop-optional-lan-portal.md). Detailed security/implementation contract: [LOCAL_WEB_PORTAL.md](LOCAL_WEB_PORTAL.md).
+- **WristPorter Desktop Web Upload**: **the same Windows app** optionally serves an on-demand private-LAN browser uploader. Safari → Windows → existing Wi-Fi ADB → watch, with QR + short-lived PIN, a user-selected watch and private staging; Windows must remain running. No native iOS app, cloud, anonymous upload, always-on listener or browser-accessible remote ADB administration. The product owner approved an **opt-in HTTP-only beta boundary strictly for trusted private LANs**, with an explicit unencrypted-transfer warning; this is **not** a release or physical-compatibility sign-off. Architecture: [ADR-0004](adr/0004-one-desktop-optional-lan-portal.md), [ADR-0005](adr/0005-on-demand-http-upload-transport.md); contract: [LOCAL_WEB_PORTAL.md](LOCAL_WEB_PORTAL.md).
 - **Windows APK management** belongs to Issue [#24](https://github.com/aidarnig/WristPorter/issues/24) after an installable Wear APK and version/signature contract exist.
 
 **Original-photo invariant:** accepted JPEG/PNG images keep original bytes, resolution and metadata; no silent compression, resizing or re-encoding. The existing Desktop sender is not being rewritten for this requirement. Browser upload must separately verify whether iOS Safari supplied the actual original representation. Owners: [PRODUCT.md](PRODUCT.md) and [LOCAL_WEB_PORTAL.md](LOCAL_WEB_PORTAL.md).
@@ -31,7 +31,7 @@ Independent Issues that **may be assigned to separate chats** (read live Issue/P
 ## Genuine blockers and acceptance
 
 - W0 requires real Watch4 firmware/API, selected iPhone model/iOS, permitted Bluetooth pairing and actual service/notification/media evidence; no factory reset. Log PASS/FAIL/BLOCKED/NOT TESTED **per scenario** in [VERIFICATION.md](VERIFICATION.md).
-- W13 must resolve HTTP-on-LAN threat and TLS/access restrictions before permitting production network exposure. Actual Safari/Windows/Watch4 behavior remains **NOT TESTED**.
+- W13 HTTP-on-trusted-private-LAN plaintext risk is **explicitly accepted for W14 development and controlled tests** (2026-11-13). All security controls, real Safari/Windows/Watch4 behavior and release acceptance remain **NOT TESTED**; never infer that a private IP encrypts photos or that the feature is shipped.
 - Fake ADB tests, successful Maven, docs CI and experimental PoCs are **not** equivalent to real-device compatibility or battery acceptance. No signed release without [quality gates](QUALITY.md).
 
 ## Cross-chat handoff
