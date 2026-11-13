@@ -33,3 +33,10 @@ jobs:
           gradle-version: '8.11.1'
       - name: Unit tests and APK compilation (not physical Bluetooth proof)
         run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug
+      - name: Upload experimental debug APK (not a release)
+        uses: actions/upload-artifact@v4
+        with:
+          name: wristporter-w0-probe-debug-apk
+          path: experiments/w0-ble-probe/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
