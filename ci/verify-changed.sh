@@ -18,7 +18,9 @@ if (( ${#modules[@]} == 0 )); then
 fi
 
 selected=$(IFS=,; echo "${modules[*]}")
-echo "Building changed modules and required upstream dependencies: $selected"
-mvn -B -ntp -pl "$selected" -am -DskipTests install
+echo "Compiling changed modules, required upstream dependencies and downstream consumers: $selected"
+# -am includes prerequisites; -amd adds dependents. Compile downstream test
+# sources, but run unit tests only for the modules that actually changed.
+mvn -B -ntp -pl "$selected" -am -amd -DskipTests install
 echo "Testing only changed modules: $selected"
 exec mvn -B -ntp -pl "$selected" test

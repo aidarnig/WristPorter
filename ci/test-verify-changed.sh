@@ -19,20 +19,24 @@ run_case() {
         bash "$here/verify-changed.sh"
 }
 
+assert_selected() {
+    local modules="$1"
+    [[ "$(wc -l < "$WGS_CI_MVN_LOG")" -eq 2 ]]
+    grep -Fx -- "-B -ntp -pl $modules -am -amd -DskipTests install" "$WGS_CI_MVN_LOG"
+    grep -Fx -- "-B -ntp -pl $modules test" "$WGS_CI_MVN_LOG"
+}
+
 run_case DOMAIN_CHANGED=true
-[[ "$(wc -l < "$WGS_CI_MVN_LOG")" -eq 2 ]]
-grep -Fx -- '-B -ntp -pl watch-domain -am -DskipTests install' "$WGS_CI_MVN_LOG"
-grep -Fx -- '-B -ntp -pl watch-domain test' "$WGS_CI_MVN_LOG"
-
+assert_selected watch-domain
 run_case ADB_CHANGED=true DESKTOP_CHANGED=true
-[[ "$(wc -l < "$WGS_CI_MVN_LOG")" -eq 2 ]]
-grep -Fx -- '-B -ntp -pl watch-adb,watch-desktop -am -DskipTests install' "$WGS_CI_MVN_LOG"
-grep -Fx -- '-B -ntp -pl watch-adb,watch-desktop test' "$WGS_CI_MVN_LOG"
-
+assert_selected watch-adb,watch-desktop
+run_case CORE_CHANGED=true
+assert_selected watch-core
+run_case DESKTOP_CHANGED=true
+assert_selected watch-desktop
 run_case FULL_REACTOR=true
 [[ "$(wc -l < "$WGS_CI_MVN_LOG")" -eq 1 ]]
 grep -Fx -- '-B -ntp verify' "$WGS_CI_MVN_LOG"
-
 run_case
 [[ ! -s "$WGS_CI_MVN_LOG" ]]
 echo "Selective CI module-selection checks passed"
