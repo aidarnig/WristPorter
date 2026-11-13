@@ -18,8 +18,9 @@ The `Generate branding assets` workflow regenerates and commits binary exports o
 
 ## Repository About — search and discovery
 
-The repository is public, but its About **Description** field is currently empty.
-The GitHub connector can change repository contents but does not expose an administrator action to edit the About description, website, or topics. The owner should open the [repository homepage](https://github.com/aidarnig/WristPorter) and click the gear next to **About**.
+The repository's **About description, website and 11 search topics have been set** (checked 2026-11-13). These metadata fields must be reviewed from the GitHub repository UI if product positioning changes; editing this document alone does not update GitHub settings.
+
+To review them, open the [repository homepage](https://github.com/aidarnig/WristPorter) and click the gear next to **About**.
 
 Recommended values (the actual product is limited to JPEG/PNG on the reference watch):
 
@@ -31,11 +32,11 @@ Preserve existing relevant topics when editing. Search engines may index the Abo
 
 ## Set GitHub Social Preview
 
-GitHub's repository Social Preview is not set by merely committing an image. The repository owner must go to **Settings → General → Social preview → Edit → Upload image** and upload the existing **[1280×640 social-preview.png](assets/social-preview.png)** file. This GitHub setting currently cannot be changed by the connected repository-content integration.
+GitHub's repository Social Preview is not set by merely committing an image. The repository owner should verify this setting under **Settings → General → Social preview** and, if the preview is missing, use **Edit → Upload image** for the existing **[1280×640 social-preview.png](assets/social-preview.png)** file. This GitHub setting currently cannot be changed by the connected repository-content integration.
 
 ## Screenshots in README
 
-The README now displays **real user-supplied 1.1.2 application screenshots**, with an observed 9/9 successful photo batch. English: `docs/assets/ui-screenshot-en.webp`; Russian: `docs/assets/ui-screenshot-ru.webp`. Images are optimized WebP exports for fast GitHub rendering at 1600×860. The watch's private IP address and debugging port were masked before publication. Original user screenshots are not committed. Keep pairing codes, local IPs and unrelated private photographs out of public documentation. The older SVG/PNG UI illustrations remain as design examples and are not linked from either README.
+The README displays user-supplied 1.1.2 application screenshots. Evidence and transfer outcomes are recorded in [QUALITY.md](QUALITY.md), not in marketing captions. English: `docs/assets/ui-screenshot-en.webp`; Russian: `docs/assets/ui-screenshot-ru.webp`. Images are optimized WebP exports for fast GitHub rendering at 1600×860. The watch's private IP address and debugging port were masked before publication. Original user screenshots are not committed. Keep pairing codes, local IPs and unrelated private photographs out of public documentation. The older SVG/PNG UI illustrations remain as design examples and are not linked from either README.
 
 ## Windows Explorer icon troubleshooting
 

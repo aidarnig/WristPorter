@@ -1,58 +1,73 @@
-# WristPorter — Photo transfer for Wear OS watches
+# WristPorter — Send photos from Windows to Wear OS
 
-[![Windows release](https://img.shields.io/github/v/release/aidarnig/WristPorter?label=Windows%20portable)](https://github.com/aidarnig/WristPorter/releases/latest) [![Build](https://github.com/aidarnig/WristPorter/actions/workflows/ci.yml/badge.svg)](https://github.com/aidarnig/WristPorter/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![Latest Windows release](https://img.shields.io/github/v/release/aidarnig/WristPorter?label=Windows%20download)](https://github.com/aidarnig/WristPorter/releases/latest) [![Build](https://github.com/aidarnig/WristPorter/actions/workflows/ci.yml/badge.svg)](https://github.com/aidarnig/WristPorter/actions/workflows/ci.yml) [![MIT License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 [**English**](README.md) · [Русский](README.ru.md)
 
-![WristPorter banner](docs/assets/social-preview.png)
+![WristPorter](docs/assets/social-preview.png)
 
-**Wireless ADB photo transfer from Windows to Wear OS smartwatches — no Android phone required after initial watch setup.** WristPorter is an independent open-source JavaFX desktop utility for Windows and compatible Wear OS watches. The reference device is Samsung Galaxy Watch 4 Classic.
+**Send JPEG and PNG photos from your Windows PC directly to your Wear OS watch over Wi-Fi.** On the tested Galaxy Watch4 Classic, the photos appear in Samsung Gallery. No cable, cloud account or phone app is needed for the transfer.
 
-## Download
+**[Download WristPorter for Windows](https://github.com/aidarnig/WristPorter/releases/latest)** · [Quick start](docs/QUICK_START.md) · [Compatible watches](docs/COMPATIBILITY.md)
 
-**[Download the latest Windows portable ZIP from Releases](https://github.com/aidarnig/WristPorter/releases/latest)**
+The app is free and open source. The Windows portable ZIP includes Java and ADB, so you don't need to install Android Studio or a separate Java runtime.
 
-Choose `WristPorter-1.1.2-windows-x64.zip` under **Assets** — not the auto-generated **Source code** ZIP. Extract the complete archive and double-click `WristPorter.exe` inside the `WristPorter` directory. Java, JavaFX and ADB (including Windows DLLs) are already bundled. No installer, phone companion or Android Studio is needed after the watch has been set up.
+## Screenshots
 
-## What it does
+![WristPorter interface on Windows](docs/assets/ui-screenshot-en.webp)
 
-- Pair and connect to your watch via wireless ADB, with automatic watch discovery.
-- Select JPEG/PNG files, entire folders, or drag and drop photos onto the queue.
-- Preview thumbnails in an adaptive multi-column gallery.
-- Transfer batches with a prominent progress bar and per-photo results; automatically ask Samsung Gallery to scan copied files.
-- Retry failed copies and rescan already copied photos without duplicating uploads.
-- Switch **English / Русский** and **light / dark** appearance without restarting. Both preferences are saved.
+## Why I made it
 
-## Real screenshot
+I switched from a Samsung phone to an iPhone and lost the usual way to send photos to my Galaxy Watch. I still wanted those pictures in the watch's Gallery. WristPorter was my solution: choose photos on my Windows PC, connect to the watch over Wi-Fi, and send them.
 
-![WristPorter English interface — nine photos transferred successfully](docs/assets/ui-screenshot-en.webp)
-
-*WristPorter 1.1.2 on Windows, English interface: **9 of 9 images sent, 0 errors**. Actual screenshot with the local watch address redacted.*
+**Have an iPhone now?** You can use WristPorter for transfers to an *already set-up* compatible watch, even if you no longer use an Android phone. It does **not** pair a Galaxy Watch with an iPhone or replace the Android phone required for initial setup on many Galaxy Watch models.
 
 ## How it works
 
-1. Enable Developer options and **Wireless debugging** on the watch.
-2. Pair WristPorter using the displayed **pairing port** and six-digit code.
-3. Connect using the **different debugging port** shown on the watch.
-4. Select or drag JPEG/PNG images into the queue and click **Send to watch**.
-5. Open Samsung Gallery; copied images are automatically submitted for media indexing.
+1. Enable **Developer options → ADB debugging → Wireless debugging** on your watch.
+2. Pair and connect from WristPorter using the watch's Wi-Fi address and ports. Pairing and connection ports are different.
+3. Add JPG/PNG files or folders (drag and drop works too), then select **Send to watch**.
+4. Open Gallery on your watch. WristPorter requests media indexing after copying; Gallery visibility depends on your watch and its gallery app.
 
-For the detailed pairing steps, [see the Quick Start guide](docs/QUICK_START.md).
+[Step-by-step setup guide](docs/QUICK_START.md).
 
-Turn **Wireless debugging** off after transferring your photos.
+## Watch compatibility
 
-> **SmartScreen:** the current Windows EXE is unsigned by a trusted publisher. Verify the download source and SHA-256. [Details](docs/SECURITY.md).
+WristPorter uses Android's wireless ADB rather than a Samsung-only transfer protocol. Other Wear OS watches **may** work if they provide wireless debugging, but the full photo-to-Gallery workflow has only been tested on the reference device.
 
-## Development
+| Watches | Status |
+| --- | --- |
+| **Samsung Galaxy Watch4 Classic** | **Tested:** pairing, transfer and photos visible in Samsung Gallery |
+| Other Samsung Galaxy Watch models running Wear OS | Potential compatibility — not tested |
+| Google Pixel Watch, OnePlus Watch, Xiaomi Watch, TicWatch, OPPO Watch X and other Wear OS families | Potential compatibility — not tested |
 
-Requires JDK 25 and Maven 3.9+ to build from source:
+Wireless ADB connectivity does **not** guarantee that a particular Gallery app will display transferred images. Older Samsung watches running Tizen, Apple Watch and watches on non-Wear OS platforms are not supported.
 
-```bash
-mvn -B -ntp verify
-mvn -B -ntp -pl watch-desktop -am install
-mvn -pl watch-desktop javafx:run
-```
+See [the compatibility list and requirements](docs/COMPATIBILITY.md). **Tried WristPorter on a different watch?** [Share your result](https://github.com/aidarnig/WristPorter/issues/new?template=watch-compatibility.yml).
 
-Technical decisions: [Architecture](docs/ARCHITECTURE.md) · [UX](docs/UX.md) · [Quality](docs/QUALITY.md) · [Development](docs/DEVELOPMENT.md) · [CI](docs/CI.md) · [Roadmap](docs/ROADMAP.md) · [Branding](docs/BRANDING.md) · [Issues](https://github.com/aidarnig/WristPorter/issues).
+## Features
 
-MIT licensed. Not affiliated with Samsung or Google. The user-confirmed Galaxy Watch 4 Classic photo-transfer scenario is supported; other watches and network conditions have not all been verified.
+- Send multiple JPG/PNG photos at once, or import a whole folder.
+- Preview images before sending them.
+- Pair and discover devices in the app; no terminal commands required.
+- Track each transfer, cancel a batch and retry failed operations.
+- Switch between English and Russian, light and dark mode.
+
+## Download and setup
+
+1. Go to [the latest release](https://github.com/aidarnig/WristPorter/releases/latest) and download the **WristPorter-…-windows-x64.zip** file under **Assets** (not GitHub's *Source code* ZIP).
+2. Extract the **entire archive**. Open the WristPorter folder and run **WristPorter.exe**.
+3. Follow the [Quick start](docs/QUICK_START.md) to connect your watch.
+
+**Requirements:** Windows x64, a previously configured Wear OS watch with wireless ADB enabled, and a Wi-Fi network that allows your PC and watch to reach each other. The working reference setup is Windows and Galaxy Watch4 Classic; other hardware and clean Windows installations have not all been verified.
+
+The app runs locally, with no account or telemetry. When you're done, **turn off wireless debugging** on the watch.
+
+**Windows SmartScreen:** WristPorter is not yet signed with a trusted publisher certificate. Download only from this repository, verify the ZIP's SHA-256 against the supplied checksum and read the [security notes](docs/SECURITY.md). Do not disable Windows security features to run it.
+
+## Development and feedback
+
+- [Build from source](docs/DEVELOPMENT.md) · [Architecture](docs/ARCHITECTURE.md) · [Quality and test scope](docs/QUALITY.md)
+- [Contributing](CONTRIBUTING.md) · [Issues](https://github.com/aidarnig/WristPorter/issues) · [Report watch compatibility](https://github.com/aidarnig/WristPorter/issues/new?template=watch-compatibility.yml)
+
+WristPorter is licensed under [MIT](LICENSE) and is not affiliated with Samsung, Google or any watch manufacturer.

@@ -8,7 +8,9 @@ This file defines **observable user requirements**. Architecture choices belong 
 
 ## Primary scenario
 
-A Windows user with an already-configured Galaxy Watch 4 Classic, without an Android smartphone nearby, selects photos and sends them directly to Samsung Gallery.
+A Windows user with an already-configured Galaxy Watch4 Classic wants pictures in Samsung Gallery after moving from an Android/Samsung phone to an iPhone. They select JPEG/PNG on the PC and transfer it to the watch over Wi-Fi without relying on a phone for the transfer. WristPorter does not pair the watch with an iPhone or replace initial watch setup.
+
+Wear OS support beyond the reference device is a testable possibility, **not** a confirmed promise; keep the [compatibility matrix](COMPATIBILITY.md) updated only with verified device results.
 
 ## v1 acceptance criteria
 
