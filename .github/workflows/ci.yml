@@ -9,6 +9,7 @@ on:
       - 'watch-*/src/**'
       - 'ci/verify-changed.sh'
       - 'ci/test-verify-changed.sh'
+      - 'ci/test-ci-triggers.py'
       - '.github/workflows/ci.yml'
   pull_request:
     paths:
@@ -17,6 +18,7 @@ on:
       - 'watch-*/src/**'
       - 'ci/verify-changed.sh'
       - 'ci/test-verify-changed.sh'
+      - 'ci/test-ci-triggers.py'
       - '.github/workflows/ci.yml'
   workflow_dispatch:
 
@@ -50,24 +52,28 @@ jobs:
               - 'pom.xml'
               - 'ci/verify-changed.sh'
               - 'ci/test-verify-changed.sh'
+              - 'ci/test-ci-triggers.py'
               - '.github/workflows/ci.yml'
             adb:
               - 'watch-adb/**'
               - 'pom.xml'
               - 'ci/verify-changed.sh'
               - 'ci/test-verify-changed.sh'
+              - 'ci/test-ci-triggers.py'
               - '.github/workflows/ci.yml'
             core:
               - 'watch-core/**'
               - 'pom.xml'
               - 'ci/verify-changed.sh'
               - 'ci/test-verify-changed.sh'
+              - 'ci/test-ci-triggers.py'
               - '.github/workflows/ci.yml'
             desktop:
               - 'watch-desktop/**'
               - 'pom.xml'
               - 'ci/verify-changed.sh'
               - 'ci/test-verify-changed.sh'
+              - 'ci/test-ci-triggers.py'
               - '.github/workflows/ci.yml'
 
   verify:
@@ -84,6 +90,8 @@ jobs:
           cache: maven
       - name: Validate module selection policy
         run: bash ci/test-verify-changed.sh
+      - name: Validate CI trigger policy
+        run: python3 ci/test-ci-triggers.py
       - name: Verify selected modules
         env:
           DOMAIN_CHANGED: ${{ needs.detect.outputs.domain }}
