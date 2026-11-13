@@ -1,48 +1,31 @@
-# WristPorter — mandatory agent/developer entry point
+# WristPorter — agent entry point
 
-This file is the durable operating contract for **every new chat, AI coding agent and human contributor**. GitHub `main` and its Issues/PRs are the source of truth; previous chat histories are not. Read this before writing code, creating branches or reporting progress.
+**Single-task handoff:** in a WristPorter-connected chat, give the executor only `Issue #N` or its GitHub URL. The Issue is the assignment, GitHub is the shared memory, and [this repository](https://github.com/aidarnig/WristPorter) is the source of truth. Do not ask the owner to paste prior chats or duplicate the task description.
 
-## Read in this order
+## Start in this order
 
-1. [Current state / chat handoff](docs/STATE.md) — what exists **now**, next task, known risks.
-2. [Roadmap](docs/ROADMAP.md) — versioned milestones, scope, dependencies and issue links.
-3. [Feature feasibility](docs/BRIDGE_CAPABILITIES.md) — what works in principle without an iOS app, what requires device testing, what is unsupported.
-4. [Architecture](docs/ARCHITECTURE.md) and [Bridge design](docs/BRIDGE_ARCHITECTURE.md) — existing Java vs new Kotlin Wear OS boundaries.
-5. [Engineering standard](docs/ENGINEERING_STANDARD.md) — branch, change, verification, documentation and review requirements.
-6. [Verification ledger](docs/VERIFICATION.md) and [Quality gates](docs/QUALITY.md) — never substitute speculation or unit tests for physical hardware.
-7. [Architecture decisions](docs/adr/README.md) and the GitHub **Issue for your task**.
+1. **This `AGENTS.md`**, then the **live assigned GitHub Issue**, including its linked PRs and blockers.
+2. [Current state](docs/STATE.md) — short snapshot; confirm it against live `main`.
+3. [Documentation index](docs/INDEX.md) and [engineering workflow](docs/ENGINEERING_STANDARD.md).
+4. [Roadmap](docs/ROADMAP.md) for dependency gates, **only the task-relevant** product/architecture/security/ADR/verification documents from the index and Issue, and the actual code/tests.
+5. Check current `main`, open PRs and relevant prior commits. Verify available GitHub tools before claiming access is unavailable.
 
-The [docs index](docs/INDEX.md) assigns a unique owner to each type of information. Check actual files, live issues, open PRs and latest commits on GitHub **before** acting. Do not assume a missing tool or access without attempting connector discovery.
+If the Issue lacks a routine implementation detail, investigate and choose a reasonable approach; update its acceptance checklist if needed. Ask the owner **only** for a material product/security decision, a genuine hardware action or another blocker that cannot be resolved safely from the repository.
 
-## Fixed decisions for the current program
+## Product invariants
 
-- **No iOS companion application for this program.** No installed iOS application, iOS app deployment, cloud/public backend or new account system. A **user-started local Windows-hosted browser Web Upload server** is explicitly in scope under [ADR-0004](docs/adr/0004-one-desktop-optional-lan-portal.md); it is not an Internet service or an installed iPhone app. Feasibility of other designs may be documented, but implementation requires a new explicit product decision.
-- **North star:** a local-first WristPorter ecosystem for Wear OS owners switching from Android to iPhone — independent Watch Bridge, Windows photo/gallery transfer, optional iPhone Safari→Windows→watch upload and Windows APK management; all planned features must be clearly labeled NOT SHIPPED until tested.
-- Preserve released **WristPorter Desktop v1.1.2**: Windows / Java 25 / Maven / JavaFX / bundled ADB / JPEG+PNG Gallery transfer. It remains useful *without* the watch bridge.
-- Build new **WristPorter Bridge** as an independent **Kotlin Wear OS APK**, with Bluetooth interaction directly between an already configured watch and iPhone.
-- **One Windows app, not two:** opt-in QR/PIN browser mode runs on Windows and routes selected iPhone photos to the watch via the existing Wi-Fi ADB transfer core. The PC must remain on. No public listener, anonymous upload, persistent server, remote ADB admin or untested HEIC support. See [Local Web Portal](docs/LOCAL_WEB_PORTAL.md).
-- Main target: **Samsung Galaxy Watch4 Classic**. Existing photo transfer is hardware-confirmed. **Bluetooth-to-iPhone is not yet confirmed on this model in WristPorter.**
-- Apple's **ANCS** / **AMS** are the proposed documented protocol surfaces; extra BLE services require real-device discovery. Never call untested hardware or iOS functionality supported.
-- No factory reset, destructive watch operations, silent APK installation, pairing without user consent, collection of private notifications in logs, telemetry or uncontrolled retry loops.
-- Public customer copy must not claim an iPhone watch setup/pairing replacement, full Galaxy Wearable replacement, Health sync, arbitrary replies or watch call audio. **Direct** iPhone-to-watch photo transfer without PC is not included; **browser-assisted via running Windows** is a separate planned feature.
-- Wear OS `minSdk` is **not decided**: first inspect actual Watch4 Classic firmware/API in W0; do not silently inherit WeakBridge's API 33 requirement.
-- Respect third-party licenses. Reviewing external open-source code does **not** automatically authorize wholesale copying without attribution and license compliance.
+- **Shipped:** Windows Desktop v1.1.2, Java 25/Maven/JavaFX and Wi-Fi ADB transfer of JPEG/PNG to Wear OS. Preserve this standalone path.
+- **Planned, not shipped:** independent Kotlin Wear OS Bluetooth ANCS/AMS Bridge; an **optional** iPhone Safari → local Windows → ADB → watch upload mode **within the same Windows app**; and optional Windows APK management. No native iOS app, public cloud, background Internet server or user accounts. See [PRODUCT.md](docs/PRODUCT.md).
+- Watch4 Classic ↔ iPhone BLE feasibility, Safari Web Upload and battery behavior are **not hardware-verified**. Never extrapolate device support from CI or another project. Follow [VERIFICATION.md](docs/VERIFICATION.md).
+- Accepted JPEG/PNG files must retain **original bytes, resolution and metadata**: no silent resize, compression, re-encoding or quality reduction. A browser-provided iOS representation may differ from the original and needs separate verification; see [LOCAL_WEB_PORTAL.md](docs/LOCAL_WEB_PORTAL.md).
+- No watch factory reset, silent pairing/installation, destructive ADB commands, remote ADB/admin interface, private notification logging or committed keys/identifiers. Honor licenses and existing [ADRs](docs/adr/README.md).
 
-## One issue, one branch, one verification story
+## Autonomous execution
 
-- Select one [W-series milestone](docs/ROADMAP.md) and an Issue/task; inspect live state and dependencies.
-- Work in `feat/<scope>`, `fix/<scope>`, `docs/<scope>` or `test/<scope>`. Do not mix unrelated requirements; link the Issue in PR.
-- State goals, non-goals, risks and acceptance checks **before** implementation. Keep existing desktop behavior intact.
-- Add tests for protocol and state behavior; apply [Quality](docs/QUALITY.md) and [Verification](docs/VERIFICATION.md). Say **NOT RUN** or **NOT TESTED** when applicable.
-- Update only the canonical docs that changed. Add an ADR for any substantial scope/technology/security/lifecycle decision.
-- Each PR must contain: Issue, summary, changed components, tests executed/results, physical-device evidence or **not tested**, risk/rollback, docs changed.
-- After merge, update [STATE.md](docs/STATE.md) and the relevant Issue/verification ledger **in the same PR or a clearly linked follow-up**; verify `main`. A merged PR is not hardware acceptance.
-- Never commit pairing codes, Bluetooth MACs, IP addresses, ADB keys, personal messages/photos, passwords, build outputs or signing keys.
+**Default: complete the assigned Issue without requiring routine confirmations.** Independently inspect, plan, branch, implement, test, document, open/review a PR and **merge low-risk verified changes** when the precise conditions in [ENGINEERING_STANDARD.md](docs/ENGINEERING_STANDARD.md) are met. Do not ask permission for routine technical choices or every PR.
 
-## Starting a fresh conversation
+**Escalate:** unapproved scope change, security/privacy trade-off, public/network exposure, destructive operation, breaking shared contract, release/signing, unverified device-dependent acceptance or an unresolved cross-branch conflict. Never imply hardware testing happened when it did not. If a safe PR can be merged while device acceptance remains pending, label that partial milestone **EXPERIMENTAL / NOT DEVICE-VERIFIED** and leave the Issue open.
 
-Paste only a **task/Issue number** and the repository URL if convenient. Instruct the new agent to read **`AGENTS.md` and `docs/STATE.md` on GitHub first**, then the linked owners, inspect the actual branch and continue that Issue. Do not rely on a chat-generated handoff alone. The required end-of-task handoff format is in [STATE.md](docs/STATE.md).
+**Every handoff:** Issue/PR link, changed behavior, exact tests and CI evidence, real-device PASS/FAIL/NOT TESTED, known limits, and next action. Keep interim status in GitHub Issues/PRs; update [STATE.md](docs/STATE.md) only for durable cross-track changes. No redundant context documents.
 
-**Canonical repository:** https://github.com/aidarnig/WristPorter
-
-**Documentation check:** run `python ci/check-doc-links.py` when changing documentation; [docs integrity CI](.github/workflows/docs-check.yml) checks required context sources and internal links. This does not replace hardware verification.
+**Documentation validation:** `python ci/check-doc-links.py` and the [documentation CI](.github/workflows/docs-check.yml) check links and required files, not technical correctness or physical devices.
