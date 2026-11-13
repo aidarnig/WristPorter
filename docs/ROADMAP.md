@@ -1,14 +1,17 @@
 # WristPorter — durable roadmap
 
-**Canonical plan:** update milestone definitions here and work progress in the linked Issues. Status at planning time (2026-11-13): **Desktop v1.1.2 shipped; W0–W12 are PLANNED, not built.** This is a future **watch-app program without an iOS companion**. [Read current state](STATE.md) and [all feature limits](BRIDGE_CAPABILITIES.md) before starting any milestone.
+**Canonical plan:** update milestone definitions here and work progress in the linked Issues. Status at planning time (2026-11-13): **Desktop v1.1.2 shipped; W0–W16 are PLANNED, not built.** This is a future **Wear OS + Windows ecosystem program without an installed iOS companion app**, with two independent tracks: direct Bluetooth Bridge and Windows-hosted local browser upload. [Read current state](STATE.md) and [all feature limits](BRIDGE_CAPABILITIES.md) before starting any milestone.
 
 ## Product goals
+
+**North star:** WristPorter is a **local-first ecosystem for Wear OS owners after moving from Android to iPhone**, not merely a photo-transfer utility. Existing Desktop, future Wear OS Bridge and optional browser access through Windows must compose without becoming mandatory dependencies on each other.
 
 1. Preserve already-working **Windows → Wear OS JPEG/PNG Gallery transfer** and the no-installer portable experience.
 2. Add **WristPorter Bridge** on Wear OS to connect an *already configured* watch directly to iPhone over Bluetooth, without an iOS app, cloud, account or desktop running continuously.
 3. Maximize genuine **ANCS notifications/actions and AMS media metadata/commands**, plus watch-local UX and BLE services **only where observed**.
 4. Treat **reliability, battery, privacy, security, accessibility, recovery and honest compatibility** as product features and release blockers, not cleanup tasks.
-5. Make cross-chat development reproducible through [AGENTS.md](../AGENTS.md), [engineering rules](ENGINEERING_STANDARD.md), [STATE.md](STATE.md), PR templates and issue-specific acceptance checks.
+5. Extend the **same Windows app** with an **on-demand private-LAN browser page** so iPhone Safari can upload JPEG/PNG via Windows → ADB → watch, with APK management in that same Windows app. The PC must remain on. Validate auth, network transport, photo format and cleanup before release.
+6. Make cross-chat development reproducible through [AGENTS.md](../AGENTS.md), [engineering rules](ENGINEERING_STANDARD.md), [STATE.md](STATE.md), PR templates and issue-specific acceptance checks.
 
 ## Version/compatibility policy
 
@@ -17,6 +20,8 @@
 - Reference Watch4 Classic firmware/API and an actual iPhone model/iOS version must first be recorded in W0. Do **not** assume other project's Watch6/iPhone test verifies ours.
 - iOS companion development is **explicitly DEFERRED**, and no feature whose implementation needs it is in the W0–W12 delivery commitment.
 - Windows APK management is optional: the Android app must be usable after initial ADB installation without a continuously running PC.
+- **One Windows ZIP/EXE, two photo entry points**: native Desktop picker and manually started browser Web Upload; no separately distributed Windows edition or installed iOS app ([ADR-0004](adr/0004-one-desktop-optional-lan-portal.md)).
+- The Web Upload portal **requires** a running Windows PC; the independent ANCS/AMS Bridge **does not**. HEIC and iPhone web uploads are still unimplemented.
 
 ## Milestones and issue anchors
 
@@ -34,7 +39,11 @@
 | **W9** | [#22](https://github.com/aidarnig/WristPorter/issues/22) · PLANNED | Threat model, permissions, privacy verification and signed APK delivery | Start W1; final sign-off after W3 |
 | **W10** | [#23](https://github.com/aidarnig/WristPorter/issues/23) · PLANNED | Probe available iPhone battery/device/time BLE services and advanced ANCS/AMS commands | W3, W5 |
 | **W11** | [#24](https://github.com/aidarnig/WristPorter/issues/24) · PLANNED | Optional Windows APK install/update/diagnostics, preserving photo path | W1, stable watch APK |
-| **W12** | [#25](https://github.com/aidarnig/WristPorter/issues/25) · PLANNED | Full device acceptance, beta signing/release, documented limitations/compatibility | Integrated W0–W11 evidence |
+| **W12** | [#25](https://github.com/aidarnig/WristPorter/issues/25) · PLANNED | **Bluetooth Bridge** acceptance, beta signing/release, documented limitations | Integrated W0–W11 evidence for Bridge scope |
+| **W13** | [#27](https://github.com/aidarnig/WristPorter/issues/27) · PLANNED | LAN Web Upload architecture, Safari feasibility, threat model/TLS decision | Desktop v1.1.2; parallel to W0 |
+| **W14** | [#28](https://github.com/aidarnig/WristPorter/issues/28) · PLANNED | iPhone browser → Windows → ADB → watch JPG/PNG in same Windows EXE | W13 security/design gate |
+| **W15** | [#29](https://github.com/aidarnig/WristPorter/issues/29) · PLANNED | HEIC/Live Photo/metadata/orientation conversion research | W13/W14 architecture; optional for MVP |
+| **W16** | [#30](https://github.com/aidarnig/WristPorter/issues/30) · PLANNED | Browser-upload security, network and real-device acceptance; desktop regressions | W14; W15 only if included in release |
 
 Issues are **work packages**, not single mega-PRs. Split each into small coherent implementation/verification PRs; link all PRs to the anchor Issue and update acceptance evidence. A milestone cannot be called VERIFIED until its exit gate is met on reference hardware where required.
 
@@ -103,10 +112,23 @@ Issues are **work packages**, not single mega-PRs. Split each into small coheren
 | Private content leaks through issues/logs | Redaction, RAM-only defaults, controlled diagnostics, PR review |
 | Long chat context degrades | New chats use [AGENTS.md](../AGENTS.md) → [STATE.md](STATE.md) → anchored Issue and live GitHub, not prior chat transcripts |
 
+## Independent second delivery track — Windows local browser upload (W13–W16)
+
+[Detailed technical specification](LOCAL_WEB_PORTAL.md) · [ADR-0004](adr/0004-one-desktop-optional-lan-portal.md).
+
+- **W13, #27:** verify iPhone Safari photo selection, choose an embeddable **opt-in** LAN server, decide authentication and plaintext/HTTPS policy. Windows user selects the watch; QR exposes the PC URL only.
+- **W14, #28:** add Web Upload tab in **the same** Windows app; browser uploads user-selected JPG/PNG to a bounded, private staging area; existing `PhotoFiles` / `WatchTransferService` pushes to the watch. A shared transfer coordinator serializes Desktop and browser jobs, pins authorized watch and preserves copy-vs-scan result semantics.
+- **W15, #29:** actually test iPhone HEIC/HEIF, iCloud, Live Photos, multi-select, orientation and safe conversion options; do not assert support before data.
+- **W16, #30:** adversarial/upload/CSRF/auth/rate/cleanup/Windows-firewall tests, real Safari → Windows → Watch4 Gallery confirmation and old desktop transfer regression. Public release only after explicit security acceptance.
+
+These milestones can begin alongside the Bluetooth path as a **separate task/chat** once a shared interface contract is agreed. W11 [#24](https://github.com/aidarnig/WristPorter/issues/24) remains the **only** owner of Windows APK installation/update; it shares the Desktop shell but is never exposed as a remote web command. W12 Bridge beta is **not blocked** by W13–W16; local Web Upload can ship independently.
+
+**Long-term research only:** a watch-hosted on-demand Wi-Fi web uploader could theoretically remove the Windows dependency, but requires separate Android storage, camera/gallery, privacy and battery review. **Not an approved W13–W16 deliverable.**
+
 ## Existing completed desktop history and deferred non-blockers
 
 M0 Foundation, M1 ADB connection, M2 photo import, M3 transfer, M4 desktop UX, M5 desktop QA and M6 initial stable releases were shipped and refined through Desktop **v1.1.2**. Historical acceptance and outstanding Windows QA limitations stay in [QUALITY.md](QUALITY.md) and existing Issues [#2](https://github.com/aidarnig/WristPorter/issues/2), [#4](https://github.com/aidarnig/WristPorter/issues/4), [#7](https://github.com/aidarnig/WristPorter/issues/7), [#8](https://github.com/aidarnig/WristPorter/issues/8), [#9](https://github.com/aidarnig/WristPorter/issues/9).
 
-**Deferred:** real video/GIF showcase [#10](https://github.com/aidarnig/WristPorter/issues/10). iOS app and direct iPhone photo transfer are **not part of this roadmap**. Do not reopen them casually in W-series implementation.
+**Deferred:** installed iOS companion, direct browser-to-watch with no Windows PC, and real video/GIF showcase [#10](https://github.com/aidarnig/WristPorter/issues/10). iOS app and direct iPhone photo transfer are **not part of this roadmap**. Do not reopen them casually in W-series implementation.
 
 [Russian orientation](ROADMAP.ru.md) · [Engineering standard](ENGINEERING_STANDARD.md) · [Current handoff](STATE.md).

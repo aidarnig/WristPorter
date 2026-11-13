@@ -6,8 +6,9 @@
 | --- | --- | --- |
 | [STATE.md](STATE.md) | Current truth, last planning/implementation state, next action, open risks, reusable chat handoff | Detailed technical design, historical completed milestones |
 | [ROADMAP.md](ROADMAP.md) | Priorities, milestone dependencies, links to GitHub Issues, exit gates | Live task checklists duplicated from Issues |
-| [BRIDGE_CAPABILITIES.md](BRIDGE_CAPABILITIES.md) | Feasible / conditional / prohibited features **without** an iOS app, Apple protocol references | Unverified claims that specific watch firmware works |
-| [PRODUCT.md](PRODUCT.md) | Observable user behavior, supported use cases, explicitly excluded behavior | Internal implementation |
+| [BRIDGE_CAPABILITIES.md](BRIDGE_CAPABILITIES.md) | Feasible / conditional / prohibited features of the **direct BLE watch–iPhone bridge**, Apple protocol references | Windows-hosted browser uploads |
+| [LOCAL_WEB_PORTAL.md](LOCAL_WEB_PORTAL.md) | Planned browser/Safari upload via Windows, one-EXE architecture, API/security/format and end-to-end acceptance | Direct Bluetooth notification/media protocols |
+| [PRODUCT.md](PRODUCT.md) | **WristPorter ecosystem mission**, shipped vs planned product components, observable user behaviors, supported use cases and exclusions | Internal implementation |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | High-level module responsibilities and design boundaries | Individual decision rationale |
 | [BRIDGE_ARCHITECTURE.md](BRIDGE_ARCHITECTURE.md) | Proposed Wear OS BLE design, transport, lifecycle, permissions, privacy | Signed-off real-device measurements |
 | [adr/](adr/README.md) | Immutable decisions and rationale; supersede through new ADRs | Mutable task status |

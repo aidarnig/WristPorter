@@ -19,3 +19,16 @@ We do not bypass Windows security controls. Download only from [official GitHub 
 Future releases should use a trusted signing identity with protected credentials, verified signing in CI, and time to build publisher reputation. Self-signed certificates are not sufficient; a valid signature alone does not guarantee zero warnings.
 
 Microsoft documentation: [SmartScreen reputation](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation).
+
+## Planned local browser uploads / Безопасность будущего Web Upload
+
+**NOT IMPLEMENTED IN v1.1.2.** A future single-Windows-app Web Upload mode will permit an iPhone browser to submit selected photos to Windows on the private LAN for transfer to the watch over existing ADB. It is *not* a cloud app or installed iOS companion.
+
+- **HTTP over Wi-Fi is plaintext:** anybody who can intercept traffic on that LAN may read or change transmitted images, PINs or sessions. A pairing code restricts use but does **not** encrypt traffic. W13 must evaluate authenticated HTTPS/trust onboarding; without it, user consent/trusted-private-network restriction and explicit limitation documentation are mandatory release gates. Never claim public/hotel Wi-Fi is safe.
+- Listener is **OFF by default**, user-initiated, bound to selected private interface only, time-limited and stopped on desktop shutdown. Do not expose to the public Internet or bypass Windows Firewall protections.
+- Short-lived authorization, code attempt limits, strict Host/Origin/CSRF policy, revocable session, no permissive CORS or remotely available ADB/admin endpoints.
+- Only JPEG/PNG after server-side type/signature/size/pixel validation; limits on memory/temporary storage/requests, server-generated names, no path traversal or executable uploads, private temporary staging outside web root, cleanup on success/cancel/crash recovery.
+- Pin the selected ADB watch to the session; never permit remote watch changes or APK installs. Do not publish file content, phone IPs, tokens, serials or original image metadata in logs.
+- Separate adversarial tests and actual private-LAN iPhone → Windows → watch confirmation precede any stable release.
+
+Подробности: [LOCAL_WEB_PORTAL.md](LOCAL_WEB_PORTAL.md), [ADR-0004](adr/0004-one-desktop-optional-lan-portal.md), [W13–W16](ROADMAP.md). Текущий Desktop без включённого Web Upload не должен слушать локальную сеть.

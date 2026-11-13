@@ -6,11 +6,13 @@
 
 ![WristPorter](docs/assets/social-preview.png)
 
-**Send JPEG and PNG photos from your Windows PC directly to your Wear OS watch over Wi-Fi.** On the tested Galaxy Watch4 Classic, the photos appear in Samsung Gallery. No cable, cloud account or phone app is needed for the transfer.
+**Today:** send JPEG and PNG photos from your Windows PC directly to your Wear OS watch over Wi-Fi. On the tested Galaxy Watch4 Classic, the photos appear in Samsung Gallery. No cable, cloud account or phone app is needed for the transfer.
 
 **[Download WristPorter for Windows](https://github.com/aidarnig/WristPorter/releases/latest)** · [Quick start](docs/QUICK_START.md) · [Compatible watches](docs/COMPATIBILITY.md)
 
 The app is free and open source. The Windows portable ZIP includes Java and ADB, so you don't need to install Android Studio or a separate Java runtime.
+
+**Where WristPorter is going:** a local-first ecosystem for Wear OS owners switching from Android to iPhone: a standalone watch-side Bluetooth bridge for iPhone notifications/music, plus one Windows application for photos, watch management and a planned **browser upload from iPhone via Windows**. These additions are **planned, not included in the current 1.1.2 download**. [Full roadmap](docs/ROADMAP.md) · [Web Upload design](docs/LOCAL_WEB_PORTAL.md).
 
 ## Screenshots
 

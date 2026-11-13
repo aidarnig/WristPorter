@@ -23,3 +23,9 @@ W1 [#14](https://github.com/aidarnig/WristPorter/issues/14) will add **independe
 ## Documentation integrity workflow
 
 A lightweight [documentation workflow](../.github/workflows/docs-check.yml) runs the dependency-free [link/context checker](../ci/check-doc-links.py) on documentation PRs and main changes. It validates the required multi-chat context documents and local Markdown links without running Maven or a Windows packager. Developers can run `python ci/check-doc-links.py` before creating a documentation PR. The validator does **not** prove remote web URLs, hardware claims, or Markdown semantic correctness.
+
+## Planned local browser-upload CI
+
+W13/W14 must introduce separate focused tests for embedded HTTP/session/auth/CSRF/origin rules, upload limits and temporary storage/cleanup; use fake ADB and deterministic concurrency tests rather than real mobile hardware in CI. **Actual iPhone Safari and Watch4 Gallery** acceptance is manual and separately logged in [VERIFICATION.md](VERIFICATION.md).
+
+If a new `watch-web` Maven module is added, update `ci/verify-changed.sh` and `.github/workflows/ci.yml` so changes run its own tests **plus downstream module tests when a shared API changes**. Do not make docs-only commits trigger full Windows packaging. Web Upload server is never started implicitly in test agents or ordinary desktop runs. The separate Wear Kotlin workflow remains independent.
