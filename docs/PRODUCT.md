@@ -22,6 +22,7 @@ Wear OS support beyond the reference device is a testable possibility, **not** a
 - Retry failed copies and scan requests without duplicating successfully uploaded photos.
 - Verify transferred PNG/JPEG visibility in Gallery on real Watch 4 Classic hardware.
 - Never modify source photos or intentionally overwrite existing images on the watch.
+- For supported JPEG/PNG transfers, preserve the **original image file bytes**: no compression, resizing, recompression, re-encoding or metadata stripping. Thumbnails/previews are display-only and must not replace transfer payloads. Changing the destination filename is allowed; changing image contents is not. Preserve source resolution and quality. This requirement also applies to future Windows-mediated browser transfers, subject to verifying what Safari actually supplies.
 - Distribute a Windows 10/11 x64 **portable ZIP** containing `WristPorter.exe`, Java Runtime, and working ADB binaries with required DLLs and license notices. A user only extracts and launches; no installer, Java setup, or Android SDK setup.
 - Permit an explicit custom ADB override for advanced users.
 
