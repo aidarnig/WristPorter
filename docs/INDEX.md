@@ -39,3 +39,5 @@ Do **not** use “works”, “supported” or “done” for physical behavior 
 ## Update rule
 
 Never create alternative “final roadmap”, “v2 plan”, “new context summary” documents. Update the canonical owner and link it from the Issue. Append verified data (with date/device/version) to [VERIFICATION.md](VERIFICATION.md). Keep `STATE.md` compact and refresh it at every merge or meaningful status transition. Public English and Russian docs remain synchronized for shipped features.
+
+**Integrity enforcement:** [ci/check-doc-links.py](../ci/check-doc-links.py) and the [documentation workflow](../.github/workflows/docs-check.yml) check required context files and internal Markdown links. They are not substitutes for review or hardware evidence.

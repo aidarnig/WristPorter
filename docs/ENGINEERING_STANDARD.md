@@ -116,3 +116,7 @@ Every implementation Issue or PR should specify:
 ## 10. Definition of “handoff complete”
 
 A new chat can restore project state **without asking the user to retell anything**: the work Issue links merged PR(s), STATUS/STATE agrees with GitHub, critical decisions are ADRs, evidence is logged and the next step is precisely named. If this cannot be reconstructed, the previous task is not fully documented.
+
+## Automated context integrity check
+
+Run `python ci/check-doc-links.py` after any documentation reorganization and before submitting a documentation PR. The dedicated [documentation integrity workflow](../.github/workflows/docs-check.yml) checks required source-of-truth files and relative Markdown links on PRs/main. This is separate from the future Android CI and current Java/Windows packaging workflows; green link checks do not imply protocol or hardware validation.

@@ -42,3 +42,5 @@ The [docs index](docs/INDEX.md) assigns a unique owner to each type of informati
 Paste only a **task/Issue number** and the repository URL if convenient. Instruct the new agent to read **`AGENTS.md` and `docs/STATE.md` on GitHub first**, then the linked owners, inspect the actual branch and continue that Issue. Do not rely on a chat-generated handoff alone. The required end-of-task handoff format is in [STATE.md](docs/STATE.md).
 
 **Canonical repository:** https://github.com/aidarnig/WristPorter
+
+**Documentation check:** run `python ci/check-doc-links.py` when changing documentation; [docs integrity CI](.github/workflows/docs-check.yml) checks required context sources and internal links. This does not replace hardware verification.

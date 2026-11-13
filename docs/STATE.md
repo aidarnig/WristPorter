@@ -53,3 +53,7 @@ At chat start, do *not* assume this snapshot is fresh: compare its last complete
 - **Task anchor:** roadmap/governance planning, branch `docs/bridge-roadmap-and-engineering-standard`; the PR/merge record is the live authoritative link once merged.
 - **Verification:** specification sources reviewed; no BLE/Android watch APK code built or physically verified.
 - **Next issue:** [#13 — W0 feasibility](https://github.com/aidarnig/WristPorter/issues/13).
+
+## Context automation
+
+A lightweight [documentation CI workflow](../.github/workflows/docs-check.yml) and [local checker](../ci/check-doc-links.py) validate required handoff files and relative Markdown links. They cannot test physical BLE features or the accuracy of status claims.
