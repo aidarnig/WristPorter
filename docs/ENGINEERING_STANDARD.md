@@ -2,20 +2,26 @@
 
 **Status: binding for future work.** This document defines a predictable workflow for humans and new ChatGPT/Codex chats, and a single-source-of-truth rule. Read [AGENTS.md](../AGENTS.md), [STATE.md](STATE.md), [ROADMAP.md](ROADMAP.md) before starting.
 
-## 1. Contract for a fresh chat / agent session
+## 1. Contract for an issue-only executor session
 
-**Input:** GitHub URL and an Issue number are sufficient. The agent must retrieve current files and live metadata, **not request a replay of earlier chats**.
+**Minimum input:** a repository Issue URL or `WristPorter Issue #N` in a WristPorter-connected chat. The executor must recover scope from GitHub, not from previous conversation history. Product coordination and merge approval belong to the project owner/coordinating chat; the executor owns only its assigned Issue and branch.
 
-Before changing anything:
-1. Read `AGENTS.md`, `docs/STATE.md`, `docs/ROADMAP.md`, `docs/INDEX.md` and the target Issue.
-2. Check latest `main` commit, pending PRs, current branch, relevant code/tests, existing Issues. Resolve any contradiction between snapshot and live repository in favor of live verified data.
-3. Read feature feasibility, architecture and ADRs relevant to the issue.
-4. State the planned work, exact scope/non-goals, affected modules, dependencies, risks and test approach. Start only if dependencies are satisfied; otherwise document what is blocked.
-5. Verify the actual availability of GitHub connector/tools before claiming no access.
+**Read order (do not skip or reverse):**
+1. `AGENTS.md` (this repository's binding agent contract).
+2. `docs/STATE.md` (provisional project snapshot).
+3. The **live assigned GitHub Issue**, including acceptance, exclusions, blockers and PR links.
+4. `docs/ROADMAP.md` (upstream prerequisites and milestone gates).
+5. `docs/INDEX.md` and this `docs/ENGINEERING_STANDARD.md` (canonical owner and workflow).
+6. **Only the relevant** product/architecture/feasibility/security/ADR/verification files linked by the Issue or index, then applicable implementation and tests.
+7. Current `main` commit, open PRs/branches, dependency changes and existing CI status. Reconcile stale documentation against verified GitHub state before work; do not invent access limitations without checking available tools.
 
-At end: write PR/review and update Issue and [STATE.md](STATE.md) with commit, tests run, real hardware results (or explicit **NOT TESTED**), residual risks and next task. Never depend on a private invisible scratchpad.
+**Before changes:** check that upstream gates are satisfied; write a short execution plan in the Issue/PR containing specific goal, non-goals, affected paths, contracts, test approach, risks and hardware dependencies. Work only on the Issue's accepted scope; escalate a required product/security/architecture decision rather than silently broadening it.
 
-**Prompt template for a new chat:** “Repository: https://github.com/aidarnig/WristPorter. Work on issue #N. First read AGENTS.md, docs/STATE.md, the roadmap, relevant ADRs and current code; verify the live GitHub state. Implement only that issue, test, create/merge a focused PR as appropriate and update the canonical handoff. Do not rely on previous chat context.”
+**After changes:** open a focused PR (do not auto-merge), provide exact tests and their results, sanitized evidence and honest physical-device status, list docs/ADR changes, rollback and remaining risks. Add a concise Issue status update with PR link and any blocked user-run hardware instructions. Owner approval is mandatory for merge, release, new externally accessible network behavior, irreversible actions and material design changes.
+
+**Issue readiness requirement:** before delegating an Issue, the coordinator ensures it has purpose, deliverables/acceptance, scope and exclusions, dependencies, paths/contracts likely affected, tests including hardware if relevant, docs owner, risks/rollback and any decision gate. A milestone Issue may be split into small PR-sized subsets; add the subset to the Issue before starting it, rather than creating an undocumented cross-chat side quest.
+
+**Short invocation example:** `WristPorter Issue #27`. All other operating instructions come from `AGENTS.md` and this standard.
 
 ## 2. Single owner for each fact
 
@@ -27,9 +33,18 @@ Use [INDEX.md](INDEX.md). No redundant `PLAN_FINAL`, duplicate feature lists or 
 
 - **One Issue → one coherent concern per PR.** A long milestone may have several PRs; each links the same W-series Issue with precise acceptance subset. Avoid simultaneous edits to the same files by separate chats.
 - Branch names: `feat/ancs-events`, `fix/gatt-reconnect`, `test/ams-fragments`, `docs/watch-roadmap`; prefer Conventional Commits `feat:`, `fix:`, `test:`, `docs:`, `refactor:`, `ci:`.
-- Do not push speculative code straight into `main`. Propose focused PR, verify its actual diff, review changed paths and test outcome, then merge after acceptance; do not silently merge unrelated changes.
+- Do not push speculative code straight into `main`. Propose a focused PR and verify its diff and test outcome. **The executor must leave it unmerged until the project owner explicitly approves it**; no silent release or unrelated change.
 - Respect contract boundaries: existing Maven Java desktop modules vs new Wear Kotlin Gradle project. Shared protocol/contract changes land before dependent parallel PRs.
 - No unreviewed source transplant from WeakBridge/other projects: verify licenses and NOTICE, document derived code, cover imported behavior with tests.
+
+### Parallel chat / branch coordination
+
+- **Coordinator/project owner:** decides the active Issue queue, cross-issue priorities, shared API/ownership contracts, security/scope exceptions and merge order. An executor cannot redefine another chat's issue or claim another branch.
+- **Executor:** claims one Issue or a precisely documented subtask, creates a uniquely named branch from fresh `main`, uses the Issue for progress/blockers and provides one or more small reviewable PRs. Distinct chats never commit to the same branch.
+- **Before parallel starts:** identify touched modules and shared contracts. Independent lanes (for example W0 Bluetooth probe, W13 browser feasibility and #7 CI) may proceed together. If they require the same file/interface, sequence the contract PR first or have the coordinator assign one owner; do not race incompatible edits.
+- **Shared source and docs:** avoid concurrent edits to `AGENTS.md`, `docs/INDEX.md`, `docs/ROADMAP.md`, `docs/STATE.md` and ADR indexes unless ownership is assigned. Executors keep interim status in Issues/PRs; the integration step updates shared STATE after an approved merge.
+- **Integration order:** after a shared dependency is merged, update the dependent branch from current `main`, resolve conflicts deliberately and rerun impacted CI/tests. Never interpret stale green CI or unrelated prior hardware evidence as current verification.
+- **Blocked work:** specify which Issue, hardware observation, interface or owner decision is missing, what was attempted and the next safe action. Do not implement speculative substitutes or modify a different feature to appear unblocked.
 
 ## 4. Specification-first change checklist
 
@@ -104,6 +119,16 @@ Every implementation Issue or PR should specify:
 | Build/CI/install change | [DEVELOPMENT.md](DEVELOPMENT.md), [CI.md](CI.md), or scripts/workflows |
 | Shipped features | README/README.ru, user quick starts, CHANGELOG/release notes, public compatibility after verified test |
 
+### Required documentation writing and handoff order
+
+1. **While starting:** check the Issue and `INDEX.md` to identify the one canonical owner for each fact; do not make a separate plan/context document.
+2. **While implementing/researching:** put progress, experimental findings, code/test links and blockers into the **Issue or PR**. Document a proposed API/security decision there; seek product-owner approval for a changed contract before treating it as settled.
+3. **After evidence exists:** record reproducible test commands and outcomes in the PR. Record actual device observations in `VERIFICATION.md` using its template; mark unperformed scenarios **NOT TESTED**, never PASS. Do not invent measured hashes, devices or results.
+4. **For a changed contract:** update the canonical product/architecture/security/development document listed above; add a new numbered ADR only for a consequential approved decision, and update the ADR index. Keep released-feature EN/RU public documentation synchronized **only when shipped behavior changes**.
+5. **At PR review:** include a compact docs-change checklist: documents changed, deliberately unchanged owners, Issue/ADR links, evidence status, rollback and test commands. Run `python ci/check-doc-links.py` when accessible; otherwise label **NOT RUN** and rely on PR docs CI once reported.
+6. **At approved merge:** coordinator/integrator reconciles the Issue, affected verification entries and `STATE.md` in the approved PR or a linked follow-up; note the merged SHA, actual CI/device results, risks and next Issue. Do not independently overwrite another chat's handoff.
+
+Documenting a proposal does not mean the feature has shipped. `ROADMAP.md` changes only for approved milestone or dependency changes; use the Issue for routine task status. Neither a successful PR nor a documentation check implies physical-device acceptance.
 **ADR rule:** never silently rewrite an accepted historical decision to hide its rationale. Create a new numbered ADR that supersedes it; update index and canonical architecture links.
 
 ## 9. Security and contributor safety
