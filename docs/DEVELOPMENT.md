@@ -47,11 +47,11 @@ Keep technical changes in [CHANGELOG.md](../CHANGELOG.md). The short description
 
 The repository's About metadata and Social Preview are managed in GitHub Settings, not by changing README files. See [Branding](BRANDING.md) and [Sharing guide](OUTREACH.md).
 
-## Development across separate chats (new program)
+## Separate executor chats
 
-Every new coding chat/agent must first read repository-root [AGENTS.md](../AGENTS.md), then [STATE.md](STATE.md), [ROADMAP.md](ROADMAP.md), [BRIDGE_CAPABILITIES.md](BRIDGE_CAPABILITIES.md), [ENGINEERING_STANDARD.md](ENGINEERING_STANDARD.md) and the actual GitHub Issue/PR. The normative document map is [INDEX.md](INDEX.md); substantive design changes use [ADRs](adr/README.md).
+Delegate an executor by **Issue URL or number only**. The unique mandatory read order, autonomous safe-merge rules and documentation-writing procedure are in [AGENTS.md](../AGENTS.md) and [ENGINEERING_STANDARD.md](ENGINEERING_STANDARD.md); this development guide does not duplicate them.
 
-**WristPorter Bridge is planned, not yet built.** New Kotlin/Gradle Wear OS tooling, watch app commands and separate CI workflow will be documented here *once implemented in W1*. Until then this page's JDK 25/Maven instructions apply only to Desktop. No Android SDK/Gradle dependency may be added to the desktop-only Maven build.
+**WristPorter Bridge is planned, not yet built.** Add Kotlin/Gradle Wear OS build instructions and isolated CI here *once W1 creates them*. Until then the JDK 25/Maven commands above apply only to Desktop. Do not add Android SDK/Gradle dependencies to the Desktop Maven build.
 
 ## Future single-app Web Upload mode — not yet implemented
 
