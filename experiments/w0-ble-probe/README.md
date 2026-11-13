@@ -26,6 +26,8 @@ On a Watch4 already configured for Wi-Fi ADB, install the built debug APK using 
 
 Turn off wireless debugging after installation. Do not reset, unpair or wipe the watch.
 
+The experimental debug APK is also attached to the latest passing [W0 experimental BLE probe GitHub Actions run](https://github.com/aidarnig/WristPorter/actions/workflows/w0-ble-probe.yml) as a downloadable ZIP artifact named **wristporter-w0-probe-debug-apk** (7-day retention). Unzip and install the APK via the same explicit ADB command. This is a development-signed probe, **not** a signed consumer release.
+
 ## Real watch/iPhone test instructions
 
 1. Record watch model, Android API and firmware (probe UI or adb shell getprop ro.build.version.sdk); record iPhone model, iOS version and Bluetooth state separately. Never publish serial, MAC, pairing codes or private notification/media contents.
