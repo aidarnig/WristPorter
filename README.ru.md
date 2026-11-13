@@ -69,5 +69,6 @@ WristPorter использует стандартный беспроводной
 
 - [Сборка из исходников](docs/DEVELOPMENT.md) · [Архитектура](docs/ARCHITECTURE.md) · [Тестирование](docs/QUALITY.md)
 - [Как помочь проекту](CONTRIBUTING.ru.md) · [Задачи и ошибки](https://github.com/aidarnig/WristPorter/issues) · [Сообщить о совместимости](https://github.com/aidarnig/WristPorter/issues/new?template=watch-compatibility.yml)
+- **Планируется (ещё не выпущено):** [WristPorter Bridge — план по-русски](docs/ROADMAP.ru.md) · [Возможности без iOS-приложения](docs/BRIDGE_CAPABILITIES.md) · [Правила разработки](AGENTS.md)
 
 Лицензия [MIT](LICENSE). Проект независимый и не связан официально с Samsung, Google или производителями часов.

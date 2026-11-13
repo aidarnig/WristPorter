@@ -1,0 +1,34 @@
+name: Documentation integrity
+
+on:
+  pull_request:
+    paths:
+      - '**/*.md'
+      - 'ci/check-doc-links.py'
+      - '.github/workflows/docs-check.yml'
+  push:
+    branches: [main]
+    paths:
+      - '**/*.md'
+      - 'ci/check-doc-links.py'
+      - '.github/workflows/docs-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wristporter-docs-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check required context docs and relative Markdown links
+        run: python ci/check-doc-links.py

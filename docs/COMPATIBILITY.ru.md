@@ -1,4 +1,6 @@
-# Совместимость с часами
+# Совместимость с часами — передача фото с Windows
+
+> Этот список относится **только к существующей передаче фото через Windows/ADB**. Будущий Bluetooth-мост с iPhone **пока не проверен на реальных устройствах**: [возможности](BRIDGE_CAPABILITIES.md) и [журнал проверок](VERIFICATION.md).
 
 [English](COMPATIBILITY.md) · [**Русский**](COMPATIBILITY.ru.md) · [К README](../README.ru.md)
 

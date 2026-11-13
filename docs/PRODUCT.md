@@ -32,3 +32,13 @@ Successful ADB commands or media-scan broadcasts do **not** prove that Samsung G
 ## Verified launch target
 
 Initial stable scope is Windows x64 and Galaxy Watch 4 Classic over a local Wi-Fi ADB connection. Other devices, unusually large batches and transient network errors are supported on a best-effort basis and are not claims of hardware certification.
+
+## Planned expansion: WristPorter Bridge (not part of Desktop v1.1.2)
+
+A user with an **already configured Wear OS watch** wants iPhone notifications and iPhone media controls on the watch **without installing any iOS application**. We plan an independent Wear OS APK using built-in Bluetooth ANCS/AMS services, plus optional device-specific GATT capabilities verified on hardware. The existing Windows photo transfer remains standalone and must not require the bridge or the iPhone.
+
+**Desired behavior:** explicit pairing/permissions; receive, update and remove ANCS notifications; show safely retrieved app/title/content; execute only iOS-advertised actions; display and control AMS music only when the active player supports it; provide quiet hours, filtering, reconnection, user-facing diagnostics, accessible RU/EN watch UI. Battery, security and lifecycle reliability are mandatory quality outcomes.
+
+**Boundaries:** no iOS companion, iPhone-to-watch photo transfer, contacts/Health sync, arbitrary text replies, remote call audio, Galaxy Wearable replacement, factory-reset watch setup, cloud accounts or Internet relay in this program. Optional battery/device/time services require device discovery, not assumption.
+
+**Acceptance:** evidence from an actual Galaxy Watch4 Classic/iPhone pairing before calling BLE features supported. No Bridge features have yet been implemented or hardware-verified in WristPorter. Detailed [feature matrix](BRIDGE_CAPABILITIES.md), [W0–W12 roadmap](ROADMAP.md), [device verification ledger](VERIFICATION.md) and [ADR-0001](adr/0001-independent-wearos-bridge.md).

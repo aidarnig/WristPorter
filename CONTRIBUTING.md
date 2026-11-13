@@ -4,6 +4,8 @@
 
 Thanks for helping improve WristPorter. You don't have to be a developer: testing on a different Wear OS watch is especially useful.
 
+**Developing the planned iPhone-to-Wear OS Bridge?** Start with [AGENTS.md](AGENTS.md), [current project state](docs/STATE.md), [roadmap](docs/ROADMAP.md) and [engineering standard](docs/ENGINEERING_STANDARD.md). The Bridge is not yet a shipped feature.
+
 ## Test your watch
 
 1. Read the [compatibility requirements](docs/COMPATIBILITY.md) and [Quick start](docs/QUICK_START.md).

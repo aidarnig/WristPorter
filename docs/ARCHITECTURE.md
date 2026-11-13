@@ -35,3 +35,9 @@ Windows `jpackage --type app-image` bundles the Java runtime. `ci/bundle-adb.ps1
 The app discovers `platform-tools/adb.exe` next to its packaged `runtime/` folder. An explicit `WRISTPORTER_ADB` override takes precedence; the legacy `WGS_ADB`, user Documents Platform-Tools and PATH remain supported fallbacks.
 
 A legal/license review before public release must confirm compliance with the upstream notices and any third-party terms. Do not use Samsung/Google marks in a way that implies endorsement.
+
+## Planned independent Wear OS project (not present in v1.1.2)
+
+[ADR-0001](adr/0001-independent-wearos-bridge.md) fixes separation: the four Java/Maven desktop modules remain the tested Wi-Fi ADB/photo-transfer product. A new Kotlin/Gradle Wear OS APK will communicate with native iPhone BLE services without an iOS companion or running desktop PC. The desktop may later install/update the watch APK through explicit ADB actions; this does not make Bridge a dependency of photo transfer.
+
+Technical working design and open device questions: [BRIDGE_ARCHITECTURE.md](BRIDGE_ARCHITECTURE.md). Protocol and feature constraints: [BRIDGE_CAPABILITIES.md](BRIDGE_CAPABILITIES.md). First verify hardware via [W0 issue #13](https://github.com/aidarnig/WristPorter/issues/13), and never import an unsupported Android minSdk from another repository.
