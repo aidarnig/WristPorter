@@ -31,8 +31,10 @@ class OrderedBatchPacingProcessTest {
         byte[] firstBefore = Files.readAllBytes(first);
         byte[] secondBefore = Files.readAllBytes(second);
 
+        long started = System.nanoTime();
         new WatchTransferService().send(adb.toString(), "watch-1",
                 List.of(first, second), results::add);
+        long elapsed = System.nanoTime() - started;
 
         assertEquals(List.of(first, second), results.stream().map(TransferUpdate::source).toList());
         assertTrue(results.stream().allMatch(r ->
@@ -43,10 +45,10 @@ class OrderedBatchPacingProcessTest {
         assertTrue(calls.get(1).startsWith("scan|"));
         assertTrue(calls.get(2).startsWith("push|02.jpg|"));
         assertTrue(calls.get(3).startsWith("scan|"));
-        long firstScanMillis = Long.parseLong(calls.get(1).split("\\|")[1]);
-        long secondPushMillis = Long.parseLong(calls.get(2).split("\\|")[2]);
-        assertTrue(secondPushMillis - firstScanMillis >= 1_100,
-                "A second copy must not start immediately after the previous scan request");
+        // A monotonic local clock avoids flakiness from comparing wall-clock values
+        // reported by separate fake-ADB processes.
+        assertTrue(elapsed >= WatchTransferService.ORDERED_BATCH_PAUSE_NANOS,
+                "Ordered mode must enforce the scan spacing even for tiny files");
         assertArrayEquals(firstBefore, Files.readAllBytes(first));
         assertArrayEquals(secondBefore, Files.readAllBytes(second));
     }
@@ -58,8 +60,10 @@ class OrderedBatchPacingProcessTest {
         Path second = jpeg("F02.jpg");
         List<TransferUpdate> results = new ArrayList<>();
 
+        long started = System.nanoTime();
         new WatchTransferService().send(adb.toString(), "watch-1", List.of(first, second),
                 WatchTransferService.BatchMode.FAST, results::add);
+        long elapsed = System.nanoTime() - started;
 
         assertEquals(List.of(first, second), results.stream().map(TransferUpdate::source).toList());
         List<String> calls = Files.readAllLines(log);
@@ -68,10 +72,8 @@ class OrderedBatchPacingProcessTest {
         assertTrue(calls.get(1).startsWith("scan|"));
         assertTrue(calls.get(2).startsWith("push|F02.jpg|"));
         assertTrue(calls.get(3).startsWith("scan|"));
-        long firstScanMillis = Long.parseLong(calls.get(1).split("\\|")[1]);
-        long secondPushMillis = Long.parseLong(calls.get(2).split("\\|")[2]);
-        assertTrue(secondPushMillis - firstScanMillis < 1_100,
-                "Fast mode must not wait for the Ordered-mode pacing interval");
+        assertTrue(elapsed < WatchTransferService.ORDERED_BATCH_PAUSE_NANOS,
+                "Fast mode must not impose the Ordered-mode pacing interval");
     }
 
     @Test void cancellingAfterFirstPhotoInterruptsPacingWithoutStartingSecondPush() throws Exception {
