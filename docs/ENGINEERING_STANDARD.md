@@ -33,6 +33,12 @@ For **justified** owner-assisted Android tests, a trusted checkout includes ci/i
 
 A short PR summary must include scope, changed components, **actual** test commands/check status, hardware result or pending checkpoint, relevant docs, risks and rollback. Never report a test as passed when only planned or simulated.
 
+### Stop condition and evidence batching
+
+**Stop when the assigned acceptance question has been answered** (PASS, a reproducible FAIL, or a documented decisive limitation). For feasibility Issues, the result may be a proven communication path **with known limitations**, not a fully reliable production feature. Do not chase every secondary NOT TESTED case, redesign a probe or increment app versions indefinitely after that point; downstream features and reliability belong in their own Issues. A new experimental test/build cycle must identify the specific still-blocking acceptance decision, not merely promise more diagnostics.
+
+Keep intermediate sanitized observations in the **same Issue**. Consolidate durable verification into the canonical ledger at the meaningful milestone/PR boundary; **do not open a separate documentation PR for each screenshot, callback or test iteration**. If the scope has grown beyond a focused deliverable or repeated retests no longer change the decision, halt and request coordinator disposition rather than creating more work.
+
 ## 3. Owner-assisted real-device testing
 
 **Protect the owner's time.** Physical iPhone, Galaxy Watch4 or Windows tests are valuable only when they answer something that a reliable automated test cannot. The default is to test autonomously and **not** ask the owner to execute routine checks. A successful CI run is not proof of hardware compatibility, but `NOT TESTED` alone does not justify interrupting the owner.
