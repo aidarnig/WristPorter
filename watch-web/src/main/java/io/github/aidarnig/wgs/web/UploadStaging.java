@@ -67,7 +67,7 @@ public final class UploadStaging implements AutoCloseable {
     private final Limits limits;
     private final Map<String, StagedUpload> staged = new LinkedHashMap<>();
     private volatile boolean open;
-    private int generation;
+    private volatile int generation;
     private int active;
     private long reservedBytes;
     private long stagedBytes;
@@ -261,7 +261,7 @@ public final class UploadStaging implements AutoCloseable {
             if (!readers.hasNext()) throw new Rejected(422, "Image cannot be decoded");
             ImageReader reader = readers.next();
             try {
-                reader.setInput(source, true, true);
+                reader.setInput(source, false, true);
                 String readerFormat = reader.getFormatName();
                 if (!(isPng ? "png".equalsIgnoreCase(readerFormat)
                         : "jpeg".equalsIgnoreCase(readerFormat))) {
