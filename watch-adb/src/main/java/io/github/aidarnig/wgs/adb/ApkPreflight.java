@@ -22,7 +22,7 @@ import java.util.zip.ZipFile;
 /** Offline, local-only APK validation. Do not expose Path or raw parser exceptions to HTTP/logs. */
 public final class ApkPreflight {
     public static final String BRIDGE_PACKAGE = "io.github.aidarnig.wristporter.bridge";
-    private static final long MAX_BYTES = 150L * 1024 * 1024;
+    static final long MAX_BYTES = 150L * 1024 * 1024;
     private static final long MAX_MANIFEST_BYTES = 2L * 1024 * 1024;
     private static final int MAX_ZIP_ENTRIES = 4096;
 
