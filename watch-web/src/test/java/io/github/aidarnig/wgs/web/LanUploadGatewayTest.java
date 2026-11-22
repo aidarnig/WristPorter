@@ -115,6 +115,9 @@ class LanUploadGatewayTest {
         assertFalse(root.body().contains("watch-lease"));
         assertEquals("no-store", root.headers().firstValue("Cache-Control").orElseThrow());
         assertEquals("nosniff", root.headers().firstValue("X-Content-Type-Options").orElseThrow());
+        // no-referrer makes native HTML form POST send opaque Origin: null.
+        // same-origin keeps Referer private while preserving the matching Origin.
+        assertEquals("same-origin", root.headers().firstValue("Referrer-Policy").orElseThrow());
         assertTrue(root.headers().firstValue("Content-Security-Policy").orElseThrow()
                 .contains("default-src 'none'"));
         assertEquals(404, get("uploads").statusCode());
@@ -161,7 +164,12 @@ class LanUploadGatewayTest {
         assertEquals(403, postForm("pin=" + access.oneTimePin()
                 + "&formNonce=" + "0".repeat(32), cookie, null, "same-origin").statusCode());
         assertEquals(403, postForm(form, cookie, "http://evil.example", "same-origin").statusCode());
-        assertEquals(403, postForm(form, cookie, "null", "same-origin").statusCode());
+        HttpResponse<String> opaque = postForm(form, cookie, "null", "same-origin");
+        assertEquals(403, opaque.statusCode());
+        assertEquals("Origin rejected (OPAQUE_ORIGIN)", opaque.body());
+        HttpResponse<String> foreign = postForm(form, cookie, "https://evil.example", "same-origin");
+        assertEquals(403, foreign.statusCode());
+        assertEquals("Origin rejected (ORIGIN_MISMATCH)", foreign.body());
         assertEquals(403, postForm(form, cookie, null, "cross-site").statusCode());
         HttpResponse<String> paired = postForm(form, cookie, null, "same-origin");
         assertEquals(200, paired.statusCode());
