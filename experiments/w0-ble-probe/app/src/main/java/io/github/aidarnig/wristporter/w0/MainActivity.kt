@@ -354,7 +354,7 @@ class MainActivity : Activity() {
                     writeCharacteristic(connection, op.characteristic, op.value)
                 }
             } catch (_: SecurityException) { false } catch (_: IllegalArgumentException) { false }
-            if (started) { inFlight = op; return }
+            if (started) { inFlight = op; renderHealth(); return }
             val label = serviceLabel(op.characteristic.uuid)
             record("Local GATT operation could not start ($label)")
             if (op.characteristic.uuid == remoteCommand || op.characteristic.uuid == entityUpdate) {
@@ -362,6 +362,7 @@ class MainActivity : Activity() {
             }
         }
         requestDeferredRefreshIfReady()
+        renderHealth()
     }
 
     private fun serviceChanged(source: String) {
@@ -450,6 +451,7 @@ class MainActivity : Activity() {
         try { old?.disconnect() } catch (_: Exception) { /* permission may have been revoked */ }
         try { old?.close() } catch (_: Exception) { /* ignore */ }
         if (old != null) record("Disconnected: $reason")
+        renderHealth()
     }
 
     private fun serviceLabel(id: UUID): String = when (id) {
@@ -466,6 +468,10 @@ class MainActivity : Activity() {
         lines.addLast(message)
         while (lines.size > 60) lines.removeFirst()
         status.text = lines.joinToString("\n")
+        renderHealth()
+    }
+
+    private fun renderHealth() {
         if (::health.isInitialized) health.text = "v0.0.4 inspector | Latest session\n" +
             diagnostics.summary() + "\nLast AMS issue: " + lastAmsError +
             "\nGATT operations: queued=" + operationQueue.size + " active=" + (inFlight != null)
