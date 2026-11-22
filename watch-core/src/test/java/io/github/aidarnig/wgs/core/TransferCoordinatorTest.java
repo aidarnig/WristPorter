@@ -488,11 +488,11 @@ class TransferCoordinatorTest {
     }
 
     @Test void lateAdbProgressAfterWatchSwitchCannotContaminateNewWatch() throws Exception {
-        assertRevokedBackendCannotReportProgress(ADB, "watch-B");
+        assertRevokedBackendCannotReportProgress(ADB, "watch-B", false);
     }
 
     @Test void lateAdbProgressAfterExecutableChangeCannotContaminateNewLease() throws Exception {
-        assertRevokedBackendCannotReportProgress("another-adb", "watch-A");
+        assertRevokedBackendCannotReportProgress("another-adb", "watch-A", true);
     }
 
     /**
@@ -500,7 +500,8 @@ class TransferCoordinatorTest {
      * AFTER selectWatch() revokes its lease. The old ADB slot must stay occupied until
      * that backend exits. Only then may a new owner send to the new explicit target.
      */
-    private void assertRevokedBackendCannotReportProgress(String nextAdb, String nextWatch)
+    private void assertRevokedBackendCannotReportProgress(String nextAdb, String nextWatch,
+                                                          boolean hadEarlierProgress)
             throws Exception {
         CountDownLatch enteredOldBackend = new CountDownLatch(1);
         CountDownLatch allowLateCallback = new CountDownLatch(1);
@@ -513,6 +514,13 @@ class TransferCoordinatorTest {
                 if (paths.equals(List.of(FIRST))) {
                     assertEquals(ADB, adb);
                     assertEquals("watch-A", serial);
+                    if (hadEarlierProgress) {
+                        // Previously admitted result must disappear immediately on retarget,
+                        // rather than remaining visible until the old backend finally exits.
+                        observer.accept(new TransferUpdate(FIRST, 1, 1,
+                                TransferUpdate.Status.COPIED_SCAN_REQUESTED,
+                                "old watch before retarget", "old-earlier.png"));
+                    }
                     enteredOldBackend.countDown();
                     awaitIgnoringInterrupts(allowLateCallback);
                     observer.accept(new TransferUpdate(FIRST, 1, 1,
@@ -539,7 +547,14 @@ class TransferCoordinatorTest {
         try {
             assertTrue(enteredOldBackend.await(5, TimeUnit.SECONDS));
             assertEquals(TransferCoordinator.Phase.STARTED, take(oldEvents).phase());
+            if (hadEarlierProgress) {
+                assertEquals(TransferCoordinator.Phase.PROGRESS, take(oldEvents).phase());
+                assertTrue(coordinator.outcomes(TransferCoordinator.Owner.DESKTOP)
+                        .containsKey(FIRST));
+            }
             coordinator.selectWatch(nextAdb, nextWatch);
+            assertTrue(coordinator.outcomes(TransferCoordinator.Owner.DESKTOP).isEmpty(),
+                    "Retargeting must immediately forget any old-watch results");
             var newLease = coordinator.selection();
             assertNotEquals(oldLease, newLease);
             assertTrue(coordinator.isBusy(), "Interrupting the old job cannot release the slot");
@@ -559,7 +574,8 @@ class TransferCoordinatorTest {
             allowOldBackendExit.countDown();
             TransferCoordinator.Event terminal = take(oldEvents);
             assertEquals(TransferCoordinator.Phase.CANCELLED, terminal.phase());
-            assertEquals(0, terminal.completed(), "Revoked callbacks must not advance counters");
+            assertEquals(hadEarlierProgress ? 1 : 0, terminal.completed(),
+                    "Progress acknowledged before revocation may count; late callbacks cannot");
             assertTrue(oldEvents.isEmpty(), "No stale progress after cancellation");
             assertFalse(coordinator.isBusy());
             assertTrue(coordinator.outcomes(TransferCoordinator.Owner.DESKTOP).isEmpty());
