@@ -139,3 +139,17 @@ The native Desktop photo-transfer result above **does not prove** any iPhone bro
 | WEB-14 | Windows package with browser mode off | NOT TESTED | EXE opens, bundled ADB works, no web runtime dependency |
 
 **Testing instruction:** record local browser URL/IP, device address and PIN privately only. Public issue/PR may include non-sensitive Windows/iOS/watch versions and test status. Log detailed results using the sanitized template above. The strict W13–W16 gates live in [LOCAL_WEB_PORTAL.md](LOCAL_WEB_PORTAL.md) and [QUALITY.md](QUALITY.md).
+
+## W14-B — Real Safari to Windows test-only PIN gateway (2026-11-22)
+
+**Tester:** project owner, directly reported in the W14-B Issue #39 executor chat. **Test artifact:** no-install Windows `wristporter-w14b-gateway-probe-45035303499`, [Actions run #45035303499](https://github.com/aidarnig/WristPorter/actions/runs/45035303499), commit `4c4c892b72c6310dc720ea8eb5636711159a4d5e` (PR #44). **Client:** iPhone Safari on iOS **26.5.2**; iPhone model and Windows version/build not stated. **Network:** owner-operated local Wi-Fi, actual network trust and firewall configuration not independently audited; no private address or PIN recorded. **No watch or photos used:** test server exposes a pairing/status probe only.
+
+| ID | Owner-assisted real-device scenario | Result | Sanitized observation |
+| --- | --- | --- | --- |
+| W14B-LAN-01 | iPhone Safari opens explicitly started Windows test-only HTTP gateway | **PASS (reachability)** | Safari loaded the served PIN page and submitted the form; this demonstrates LAN HTTP reachability, not a shipped Web Upload interface |
+| W14B-AUTH-01 | Earlier test PIN form submission on iPhone Safari | **FAIL (historical)** | `Origin rejected` occurred with previous probe builds; implementation investigation identified server `Referrer-Policy: no-referrer` as a spec-consistent cause of opaque `Origin: null`. Actual Safari request headers were not captured |
+| W14B-AUTH-02 | Retry one-time PIN on corrected gateway with `Referrer-Policy: same-origin` | **PASS (owner)** | On iOS 26.5.2 owner explicitly reported `Paired (test only)` from the tested Windows build |
+| W14B-STOP-01 | Press ENTER in Windows console, then reload Safari; listener should be unreachable | **PASS (owner)** | After pairing, owner confirmed that the previously accessible Safari page stopped opening following the instructed Windows stop and browser retry; no direct port scan or process audit performed |
+| W14B-NEG-01 | Wrong/expired PIN, Host/Origin/CSRF abuse, rate-limit, session expiry and revocation on real iPhone/Windows LAN | **NOT TESTED on hardware** | Automated JUnit/PR gate passed separately; those do not prove real LAN attack resistance |
+
+**Scope limitation:** W14B-AUTH-02 verifies only the explicitly invoked **test-only PIN session endpoint**. It does not verify real photos, Safari file selection, JPEG/PNG upload staging, ADB transfers, Galaxy Gallery visibility, Windows bundled Desktop integration, production Desktop-integrated start/stop, or the overall WEB-01/WEB-02/WEB-09 acceptance rows above. Public/stable release remains unapproved, and a **separate independent security review of PR #44's latest HEAD** is required before merge. Do not share local IP, pairing code, session cookie or photo contents in public logs/issues.

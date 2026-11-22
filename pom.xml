@@ -3,7 +3,7 @@
  <modelVersion>4.0.0</modelVersion>
  <groupId>io.github.aidarnig</groupId><artifactId>wristporter</artifactId><version>1.1.2</version>
  <packaging>pom</packaging>
- <modules><module>watch-domain</module><module>watch-adb</module><module>watch-core</module><module>watch-desktop</module></modules>
+ <modules><module>watch-domain</module><module>watch-adb</module><module>watch-core</module><module>watch-desktop</module><module>watch-web</module></modules>
  <properties>
   <maven.compiler.release>25</maven.compiler.release>
   <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

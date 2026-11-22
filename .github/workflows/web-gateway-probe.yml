@@ -1,0 +1,43 @@
+name: W14-B test-only Windows LAN gateway probe
+
+# A separate no-install test artifact, not the production Desktop app or release.
+on:
+  pull_request:
+    paths:
+      - 'watch-web/**'
+      - 'pom.xml'
+      - 'ci/package-web-gateway-probe.ps1'
+      - 'ci/start-web-gateway-probe.cmd'
+      - '.github/workflows/web-gateway-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wristporter-web-gateway-probe-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  windows-probe:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Build and test isolated gateway; bundle minimal Java runtime
+        shell: pwsh
+        run: ./ci/package-web-gateway-probe.ps1
+      - name: Upload test-only ZIP and SHA256 (7-day retention)
+        uses: actions/upload-artifact@v4
+        with:
+          name: wristporter-w14b-gateway-probe-${{ github.run_id }}
+          path: |
+            dist/WristPorter-W14B-GatewayProbe-Windows-x64.zip
+            dist/WristPorter-W14B-GatewayProbe-Windows-x64.zip.sha256
+          if-no-files-found: error
+          retention-days: 7

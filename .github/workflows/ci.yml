@@ -29,7 +29,8 @@ jobs:
       adb: ${{ steps.changed.outputs.adb }}
       core: ${{ steps.changed.outputs.core }}
       desktop: ${{ steps.changed.outputs.desktop }}
-      any: ${{ steps.changed.outputs.domain == 'true' || steps.changed.outputs.adb == 'true' || steps.changed.outputs.core == 'true' || steps.changed.outputs.desktop == 'true' }}
+      web: ${{ steps.changed.outputs.web }}
+      any: ${{ steps.changed.outputs.domain == 'true' || steps.changed.outputs.adb == 'true' || steps.changed.outputs.core == 'true' || steps.changed.outputs.desktop == 'true' || steps.changed.outputs.web == 'true' }}
     steps:
       - uses: actions/checkout@v4
         if: github.event_name != 'workflow_dispatch'
@@ -66,6 +67,13 @@ jobs:
               - 'ci/test-verify-changed.sh'
               - 'ci/test-ci-triggers.py'
               - '.github/workflows/ci.yml'
+            web:
+              - 'watch-web/**'
+              - 'pom.xml'
+              - 'ci/verify-changed.sh'
+              - 'ci/test-verify-changed.sh'
+              - 'ci/test-ci-triggers.py'
+              - '.github/workflows/ci.yml'
 
   verify:
     needs: detect
@@ -89,5 +97,6 @@ jobs:
           ADB_CHANGED: ${{ needs.detect.outputs.adb }}
           CORE_CHANGED: ${{ needs.detect.outputs.core }}
           DESKTOP_CHANGED: ${{ needs.detect.outputs.desktop }}
+          WEB_CHANGED: ${{ needs.detect.outputs.web }}
           FULL_REACTOR: ${{ github.event_name == 'workflow_dispatch' }}
         run: bash ci/verify-changed.sh

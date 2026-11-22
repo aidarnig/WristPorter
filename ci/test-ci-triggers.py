@@ -59,6 +59,7 @@ for event in ("push",):
         "watch-core/src/test/java/ExampleTest.java": True,
         "watch-adb/pom.xml": True,
         "watch-desktop/pom.xml": True,
+        "watch-web/src/main/java/Example.java": True,
         **{p: True for p in common},
         "docs/CI.md": False,
         "README.md": False,

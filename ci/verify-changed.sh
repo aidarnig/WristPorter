@@ -11,6 +11,7 @@ modules=()
 [[ "${ADB_CHANGED:-false}" == "true" ]] && modules+=(watch-adb)
 [[ "${CORE_CHANGED:-false}" == "true" ]] && modules+=(watch-core)
 [[ "${DESKTOP_CHANGED:-false}" == "true" ]] && modules+=(watch-desktop)
+[[ "${WEB_CHANGED:-false}" == "true" ]] && modules+=(watch-web)
 
 if (( ${#modules[@]} == 0 )); then
   echo "No modified Maven modules"
