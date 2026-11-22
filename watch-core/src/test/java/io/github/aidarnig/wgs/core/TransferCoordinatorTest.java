@@ -212,6 +212,131 @@ class TransferCoordinatorTest {
                 "A revoked lease must not revive when returning to an old device");
     }
 
+    @Test void resumeSkipsAcknowledgedCopiesButRetriesScanFailureAndUnreportedItems()
+            throws Exception {
+        Path third = Path.of("three.png");
+        Path fourth = Path.of("four.jpg");
+        String remote = "wgs-123e4567-e89b-12d3-a456-426614174000.jpg";
+        CountDownLatch firstTwoFinished = new CountDownLatch(1);
+        AtomicInteger initialSendCalls = new AtomicInteger();
+        AtomicInteger resumedCalls = new AtomicInteger();
+        TransferCoordinator coordinator = new TransferCoordinator(new FakeBackend() {
+            @Override public void send(String adb, String serial, List<Path> photos,
+                                       Consumer<TransferUpdate> observer) throws Exception {
+                initialSendCalls.incrementAndGet();
+                assertEquals(List.of(FIRST, SECOND, third, fourth), photos);
+                observer.accept(new TransferUpdate(FIRST, 1, 4,
+                        TransferUpdate.Status.COPIED_SCAN_REQUESTED, "copied", "remote-first.png"));
+                observer.accept(new TransferUpdate(SECOND, 2, 4,
+                        TransferUpdate.Status.COPIED_SCAN_FAILED, "needs scan", remote));
+                firstTwoFinished.countDown();
+                new CountDownLatch(1).await(); // Cancellable while a later file is pending.
+            }
+            @Override public void retry(String adb, String serial, List<TransferUpdate> pending,
+                                        Consumer<TransferUpdate> observer) {
+                resumedCalls.incrementAndGet();
+                assertEquals("watch-A", serial);
+                assertEquals(List.of(SECOND, third, fourth),
+                        pending.stream().map(TransferUpdate::source).toList());
+                assertEquals(TransferUpdate.Status.COPIED_SCAN_FAILED, pending.getFirst().status());
+                assertEquals(remote, pending.getFirst().remoteName());
+                assertEquals(TransferUpdate.Status.FAILED, pending.get(1).status());
+                assertEquals(TransferUpdate.Status.FAILED, pending.get(2).status());
+                for (int i = 0; i < pending.size(); i++) {
+                    Path path = pending.get(i).source();
+                    observer.accept(new TransferUpdate(path, i + 1, pending.size(),
+                            TransferUpdate.Status.COPIED_SCAN_REQUESTED, "done",
+                            path.equals(SECOND) ? remote : "new-copy"));
+                }
+            }
+        }, worker);
+        coordinator.selectWatch(ADB, "watch-A");
+        var lease = coordinator.selection();
+        BlockingQueue<TransferCoordinator.Event> events = new LinkedBlockingQueue<>();
+        coordinator.send(TransferCoordinator.Owner.DESKTOP, lease,
+                List.of(FIRST, SECOND, third, fourth), events::add);
+        assertTrue(firstTwoFinished.await(5, TimeUnit.SECONDS));
+        assertTrue(coordinator.cancel(TransferCoordinator.Owner.DESKTOP));
+        assertEquals(TransferCoordinator.Phase.CANCELLED, terminal(events).phase());
+        assertTrue(coordinator.canResume(TransferCoordinator.Owner.DESKTOP));
+        assertEquals(3, coordinator.resumeCount(TransferCoordinator.Owner.DESKTOP));
+        assertEquals(TransferUpdate.Status.COPIED_SCAN_REQUESTED,
+                coordinator.outcomes(TransferCoordinator.Owner.DESKTOP).get(FIRST).status());
+        coordinator.resume(TransferCoordinator.Owner.DESKTOP, lease, events::add);
+        assertEquals(TransferCoordinator.Phase.COMPLETED, terminal(events).phase());
+        assertEquals(1, initialSendCalls.get(), "Acknowledged first copy cannot be pushed again");
+        assertEquals(1, resumedCalls.get());
+        assertEquals(4, coordinator.outcomes(TransferCoordinator.Owner.DESKTOP).size());
+        assertFalse(coordinator.canResume(TransferCoordinator.Owner.DESKTOP));
+    }
+
+    @Test void changingWatchOrQueueDisablesInterruptedBatchResume() throws Exception {
+        CountDownLatch entered = new CountDownLatch(1);
+        TransferCoordinator coordinator = new TransferCoordinator(new FakeBackend() {
+            @Override public void send(String adb, String serial, List<Path> paths,
+                                       Consumer<TransferUpdate> observer) throws InterruptedException {
+                observer.accept(new TransferUpdate(FIRST, 1, 2,
+                        TransferUpdate.Status.COPIED_SCAN_REQUESTED, "done", "remote"));
+                entered.countDown();
+                new CountDownLatch(1).await();
+            }
+        }, worker);
+        coordinator.selectWatch(ADB, "watch-A");
+        var lease = coordinator.selection();
+        BlockingQueue<TransferCoordinator.Event> events = new LinkedBlockingQueue<>();
+        coordinator.send(TransferCoordinator.Owner.DESKTOP, lease, List.of(FIRST, SECOND), events::add);
+        assertTrue(entered.await(5, TimeUnit.SECONDS));
+        coordinator.cancel(TransferCoordinator.Owner.DESKTOP);
+        assertEquals(TransferCoordinator.Phase.CANCELLED, terminal(events).phase());
+        assertTrue(coordinator.canResume(TransferCoordinator.Owner.DESKTOP));
+        assertEquals(1, coordinator.resumeCount(TransferCoordinator.Owner.DESKTOP));
+
+        coordinator.replaceQueue(TransferCoordinator.Owner.DESKTOP, List.of(SECOND));
+        assertFalse(coordinator.canResume(TransferCoordinator.Owner.DESKTOP));
+        assertThrows(IllegalStateException.class, () -> coordinator.resume(
+                TransferCoordinator.Owner.DESKTOP, lease, events::add));
+
+        coordinator.selectWatch(ADB, "watch-B");
+        coordinator.replaceQueue(TransferCoordinator.Owner.DESKTOP, List.of(FIRST, SECOND));
+        coordinator.selectWatch(ADB, "watch-A");
+        assertFalse(coordinator.canResume(TransferCoordinator.Owner.DESKTOP));
+        assertThrows(IllegalStateException.class, () -> coordinator.resume(
+                TransferCoordinator.Owner.DESKTOP, lease, events::add));
+    }
+
+    @Test void failedPreflightCanResumeUnreportedFilesWithoutChangingWatch() throws Exception {
+        AtomicInteger initialCalls = new AtomicInteger();
+        AtomicInteger recovery = new AtomicInteger();
+        TransferCoordinator coordinator = new TransferCoordinator(new FakeBackend() {
+            @Override public void send(String adb, String serial, List<Path> paths,
+                                       Consumer<TransferUpdate> observer) throws Exception {
+                initialCalls.incrementAndGet();
+                throw new IOException("Watch temporarily offline");
+            }
+            @Override public void retry(String adb, String serial, List<TransferUpdate> previous,
+                                        Consumer<TransferUpdate> observer) {
+                recovery.incrementAndGet();
+                assertEquals(List.of(FIRST, SECOND), previous.stream()
+                        .map(TransferUpdate::source).toList());
+                assertTrue(previous.stream().allMatch(u -> u.status() == TransferUpdate.Status.FAILED));
+                for (int i = 0; i < previous.size(); i++) {
+                    observer.accept(new TransferUpdate(previous.get(i).source(), i + 1, previous.size(),
+                            TransferUpdate.Status.COPIED_SCAN_REQUESTED, "done", "remote"));
+                }
+            }
+        }, worker);
+        coordinator.selectWatch(ADB, "watch-A");
+        var lease = coordinator.selection();
+        BlockingQueue<TransferCoordinator.Event> events = new LinkedBlockingQueue<>();
+        coordinator.send(TransferCoordinator.Owner.DESKTOP, lease, List.of(FIRST, SECOND), events::add);
+        assertEquals(TransferCoordinator.Phase.FAILED, terminal(events).phase());
+        assertEquals(2, coordinator.resumeCount(TransferCoordinator.Owner.DESKTOP));
+        coordinator.resume(TransferCoordinator.Owner.DESKTOP, lease, events::add);
+        assertEquals(TransferCoordinator.Phase.COMPLETED, terminal(events).phase());
+        assertEquals(1, initialCalls.get());
+        assertEquals(1, recovery.get());
+    }
+
     private static TransferCoordinator.Event take(BlockingQueue<TransferCoordinator.Event> queue)
             throws Exception {
         var event = queue.poll(5, TimeUnit.SECONDS);
