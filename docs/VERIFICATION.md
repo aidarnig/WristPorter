@@ -43,13 +43,13 @@ All observations must include **date, app build/commit, watch model/firmware/API
 
 **Disposition:** Both original defects remain recorded as FAIL on the first preview (historical evidence), and both fixed scenarios are now **PASS on owner retest**. This does **not** verify other watch models, actual Gallery counts for each new image, scan-only retry under injected failure or HTTP/Safari. **Independent review of PR #43 at latest head is still REQUIRED before merge**; do not close #38 solely on this test evidence.
 
-## W0 — initial real-device probe (all NOT TESTED)
+## W0 — initial real-device probe (owner checkpoint 2026-11-22)
 
 | ID | Scenario | Status | Evidence requirements |
 | --- | --- | --- | --- |
-| BLE-00 | Record Watch4 Classic firmware/API (`getprop ro.build.version.sdk`) | NOT TESTED | Model/firmware/API only, no serial |
-| BLE-01 | Record selected iPhone model, iOS version, Bluetooth status | NOT TESTED | Hardware and OS version, not Bluetooth address |
-| BLE-02 | Explicit discoverable watch and iOS pairing/bond with matching confirmation | NOT TESTED | UI sequence and errors redacted |
+| BLE-00 | Record Watch4 Classic firmware/API (`getprop ro.build.version.sdk`) | **PASS (owner)** | Watch4 Classic, Android 16, API 36, firmware display prefix `BP2A…` (full build string not supplied) |
+| BLE-01 | Record selected iPhone model, iOS version, Bluetooth status | **INCONCLUSIVE** | iOS 26.5.2, Bluetooth on and watch shown connected; exact iPhone model not reported |
+| BLE-02 | Explicit discoverable watch and iOS pairing/bond with matching confirmation | **INCONCLUSIVE** | iPhone Bluetooth UI displayed watch as «Подключено» after probe discoverability; matching-code confirmation not separately reported; no notification-sharing dialog appeared |
 | BLE-03 | Watch opens authorized GATT client to iPhone; ANCS/AMS discoverability | NOT TESTED | Exposed service set, permission behavior |
 | BLE-04 | Fresh incoming iPhone notification reaches watch via ANCS | NOT TESTED | App category / sanitized timing, no message text |
 | BLE-05 | iPhone music metadata and supported command received via AMS | NOT TESTED | Player type and command support, no private metadata |
@@ -58,6 +58,8 @@ All observations must include **date, app build/commit, watch model/firmware/API
 | BLE-08 | Explicit disconnect halts retries and advertisement | NOT TESTED | No residual GATT/foreground service |
 | BLE-09 | Read optional Battery, Device Information, Current Time services | NOT TESTED | Which exposed, values type, permission |
 | BLE-10 | Investigate minSdk candidate based on reference Android build | NOT TESTED | Exact actual API and resulting ADR |
+
+**W0 owner evidence (2026-11-22):** User-installed experimental debug probe from [PR #34](https://github.com/aidarnig/WristPorter/pull/34), [Android CI run #45024297957](https://github.com/aidarnig/WristPorter/actions/runs/45024297957), source commit `5b8e2c9d41a65293020089b9ca49a6f64b93f83b`. Owner read Android **16 / API 36** from the watch probe UI and reported only firmware prefix **BP2A…** (full build string deliberately omitted); owner reported **iOS 26.5.2** with the watch showing **Connected** in iPhone Bluetooth settings, but no popup for sharing notifications. Device model of iPhone and matching pairing code observation are not yet reported; do not equate iOS “Connected” with ANCS/AMS GATT authorization. No private identifiers were retained. Exact installed binary checksum was not confirmed independently. Owner mentioned a **planned** iOS update to 27.2.1 (not an observed version). **BLE-03…BLE-10 remain NOT TESTED.** Next decision-critical check: watch probe → **3. Choose bonded phone** → select own iPhone and report only sanitized GATT connection status, ANCS/AMS service presence and CCCD subscription statuses. See [Issue #13 evidence comment](https://github.com/aidarnig/WristPorter/issues/13#issuecomment-7081269183). No production minSdk decision yet.
 
 **W0 completion condition:** at minimum BLE-00..05 observed or recorded FAIL/BLOCKED with a reproducible report; before proceeding to W2, the product owner reviews whether BLE is feasible on this particular watch and iPhone.
 
