@@ -487,6 +487,106 @@ class TransferCoordinatorTest {
         assertEquals(2, pushes.get());
     }
 
+    @Test void lateAdbProgressAfterWatchSwitchCannotContaminateNewWatch() throws Exception {
+        assertRevokedBackendCannotReportProgress(ADB, "watch-B");
+    }
+
+    @Test void lateAdbProgressAfterExecutableChangeCannotContaminateNewLease() throws Exception {
+        assertRevokedBackendCannotReportProgress("another-adb", "watch-A");
+    }
+
+    /**
+     * The original backend deliberately ignores interruption and attempts a callback
+     * AFTER selectWatch() revokes its lease. The old ADB slot must stay occupied until
+     * that backend exits. Only then may a new owner send to the new explicit target.
+     */
+    private void assertRevokedBackendCannotReportProgress(String nextAdb, String nextWatch)
+            throws Exception {
+        CountDownLatch enteredOldBackend = new CountDownLatch(1);
+        CountDownLatch allowLateCallback = new CountDownLatch(1);
+        CountDownLatch lateCallbackReturned = new CountDownLatch(1);
+        CountDownLatch allowOldBackendExit = new CountDownLatch(1);
+        AtomicInteger newDevicePushes = new AtomicInteger();
+        TransferCoordinator coordinator = new TransferCoordinator(new FakeBackend() {
+            @Override public void send(String adb, String serial, List<Path> paths,
+                                       Consumer<TransferUpdate> observer) {
+                if (paths.equals(List.of(FIRST))) {
+                    assertEquals(ADB, adb);
+                    assertEquals("watch-A", serial);
+                    enteredOldBackend.countDown();
+                    awaitIgnoringInterrupts(allowLateCallback);
+                    observer.accept(new TransferUpdate(FIRST, 1, 1,
+                            TransferUpdate.Status.COPIED_SCAN_REQUESTED,
+                            "old watch reported late copy", "old-remote.png"));
+                    lateCallbackReturned.countDown();
+                    awaitIgnoringInterrupts(allowOldBackendExit);
+                } else {
+                    assertEquals(List.of(SECOND), paths);
+                    assertEquals(nextAdb, adb);
+                    assertEquals(nextWatch, serial);
+                    newDevicePushes.incrementAndGet();
+                    observer.accept(new TransferUpdate(SECOND, 1, 1,
+                            TransferUpdate.Status.COPIED_SCAN_REQUESTED, "new watch copied",
+                            "new-remote.jpg"));
+                }
+            }
+        }, worker);
+        BlockingQueue<TransferCoordinator.Event> oldEvents = new LinkedBlockingQueue<>();
+        BlockingQueue<TransferCoordinator.Event> newEvents = new LinkedBlockingQueue<>();
+        coordinator.selectWatch(ADB, "watch-A");
+        var oldLease = coordinator.selection();
+        coordinator.send(TransferCoordinator.Owner.DESKTOP, oldLease, List.of(FIRST), oldEvents::add);
+        try {
+            assertTrue(enteredOldBackend.await(5, TimeUnit.SECONDS));
+            assertEquals(TransferCoordinator.Phase.STARTED, take(oldEvents).phase());
+            coordinator.selectWatch(nextAdb, nextWatch);
+            var newLease = coordinator.selection();
+            assertNotEquals(oldLease, newLease);
+            assertTrue(coordinator.isBusy(), "Interrupting the old job cannot release the slot");
+            assertThrows(IllegalStateException.class, () -> coordinator.send(
+                    TransferCoordinator.Owner.WEB, newLease, List.of(SECOND), newEvents::add));
+
+            // The old backend now calls onProgress AFTER the watch selection changed.
+            allowLateCallback.countDown();
+            assertTrue(lateCallbackReturned.await(5, TimeUnit.SECONDS));
+            assertTrue(oldEvents.isEmpty(), "No stale PROGRESS event may be published");
+            assertTrue(coordinator.outcomes(TransferCoordinator.Owner.DESKTOP).isEmpty(),
+                    "Old-device update must not be recorded for the new selection");
+            assertTrue(coordinator.isBusy(), "Old ADB is still running after its late callback");
+            assertThrows(IllegalStateException.class, () -> coordinator.send(
+                    TransferCoordinator.Owner.WEB, newLease, List.of(SECOND), newEvents::add));
+
+            allowOldBackendExit.countDown();
+            TransferCoordinator.Event terminal = take(oldEvents);
+            assertEquals(TransferCoordinator.Phase.CANCELLED, terminal.phase());
+            assertEquals(0, terminal.completed(), "Revoked callbacks must not advance counters");
+            assertTrue(oldEvents.isEmpty(), "No stale progress after cancellation");
+            assertFalse(coordinator.isBusy());
+            assertTrue(coordinator.outcomes(TransferCoordinator.Owner.DESKTOP).isEmpty());
+
+            coordinator.send(TransferCoordinator.Owner.WEB, newLease,
+                    List.of(SECOND), newEvents::add);
+            assertEquals(TransferCoordinator.Phase.COMPLETED, terminal(newEvents).phase());
+            assertEquals(1, newDevicePushes.get());
+            assertEquals(TransferUpdate.Status.COPIED_SCAN_REQUESTED,
+                    coordinator.outcomes(TransferCoordinator.Owner.WEB).get(SECOND).status());
+        } finally {
+            allowLateCallback.countDown();
+            allowOldBackendExit.countDown();
+        }
+    }
+
+    private static void awaitIgnoringInterrupts(CountDownLatch latch) {
+        for (int tries = 0; tries < 100 && latch.getCount() > 0; tries++) {
+            try {
+                if (latch.await(50, TimeUnit.MILLISECONDS)) return;
+            } catch (InterruptedException ignored) {
+                // Simulate an ADB process that does not stop on Java interruption.
+            }
+        }
+        if (latch.getCount() > 0) throw new AssertionError("Timed out waiting for fake ADB gate");
+    }
+
     private static TransferCoordinator.Event take(BlockingQueue<TransferCoordinator.Event> queue)
             throws Exception {
         var event = queue.poll(5, TimeUnit.SECONDS);
