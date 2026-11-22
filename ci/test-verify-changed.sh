@@ -15,7 +15,7 @@ export PATH="$sandbox:$PATH"
 
 run_case() {
     : > "$WGS_CI_MVN_LOG"
-    env FULL_REACTOR=false DOMAIN_CHANGED=false ADB_CHANGED=false CORE_CHANGED=false DESKTOP_CHANGED=false "$@" \
+    env FULL_REACTOR=false DOMAIN_CHANGED=false ADB_CHANGED=false CORE_CHANGED=false DESKTOP_CHANGED=false WEB_CHANGED=false "$@" \
         bash "$here/verify-changed.sh"
 }
 
@@ -34,6 +34,10 @@ run_case CORE_CHANGED=true
 assert_selected watch-core
 run_case DESKTOP_CHANGED=true
 assert_selected watch-desktop
+run_case WEB_CHANGED=true
+assert_selected watch-web
+run_case ADB_CHANGED=true WEB_CHANGED=true
+assert_selected watch-adb,watch-web
 run_case FULL_REACTOR=true
 [[ "$(wc -l < "$WGS_CI_MVN_LOG")" -eq 1 ]]
 grep -Fx -- '-B -ntp verify' "$WGS_CI_MVN_LOG"
