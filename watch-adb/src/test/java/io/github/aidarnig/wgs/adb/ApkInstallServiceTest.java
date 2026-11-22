@@ -147,7 +147,7 @@ class ApkInstallServiceTest {
                 inspected.fileSha256(), inspected.packageName(), inspected.versionCode(),
                 inspected.versionName(), inspected.minSdk(), inspected.signerSha256(), true, inspected.mode());
         List<List<String>> calls = new ArrayList<>();
-        var svc = service(calls, serial + "\\tdevice\\n", "", new ApkInstallService.Command(0, "Success"));
+        var svc = service(calls, serial + "\tdevice\n", "", new ApkInstallService.Command(0, "Success"));
         assertEquals(ApkInstallService.Code.INSTALLED, svc.install(request(() -> true)).code());
         assertEquals(List.of(adb.toAbsolutePath().toString(), "-s", serial, "install", "-r", "-t"),
                 calls.get(2).subList(0, 6));
