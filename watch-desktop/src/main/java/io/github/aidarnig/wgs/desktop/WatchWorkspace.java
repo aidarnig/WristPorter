@@ -396,7 +396,14 @@ public final class WatchWorkspace extends BorderPane {
 
     /** Only the Windows UI may select the watch; Web clients receive leases, never choose serials. */
     private void syncSelectedWatch() {
+        TransferCoordinator.WatchLease previous = coordinator.selection();
         coordinator.selectWatch(adbPath.getText(), connectionEndpoint.getText());
+        if (!java.util.Objects.equals(previous, coordinator.selection())) {
+            // A result on Watch A must not appear as completed on Watch B.
+            files.resetStatuses();
+            history.getItems().clear();
+            hasCompletedTransfer = false;
+        }
         updateCount();
     }
 
@@ -427,7 +434,7 @@ public final class WatchWorkspace extends BorderPane {
             return;
         }
         int total = switch (action) {
-            case SEND -> files.getItems().size();
+            case SEND -> coordinator.pendingCount(TransferCoordinator.Owner.DESKTOP);
             case RESUME -> coordinator.resumeCount(TransferCoordinator.Owner.DESKTOP);
             case RETRY -> (int) coordinator.outcomes(TransferCoordinator.Owner.DESKTOP).values()
                     .stream().filter(TransferUpdate::retryable).count();
@@ -435,8 +442,8 @@ public final class WatchWorkspace extends BorderPane {
         if (total == 0) return;
         try {
             displayedJobId = switch (action) {
-                case SEND -> coordinator.send(TransferCoordinator.Owner.DESKTOP, lease,
-                        List.copyOf(files.getItems()), this::acceptTransferEvent);
+                case SEND -> coordinator.sendPending(TransferCoordinator.Owner.DESKTOP, lease,
+                        this::acceptTransferEvent);
                 case RESUME -> coordinator.resume(TransferCoordinator.Owner.DESKTOP, lease,
                         this::acceptTransferEvent);
                 case RETRY -> coordinator.retry(TransferCoordinator.Owner.DESKTOP, lease,
@@ -447,10 +454,10 @@ public final class WatchWorkspace extends BorderPane {
             return;
         }
         hasCompletedTransfer = false;
-        if (action == TransferAction.SEND) {
-            files.resetStatuses();
-        }
-        if (action != TransferAction.RESUME) history.getItems().clear();
+        // Preserve previously acknowledged outcomes and their gallery badges.
+        // Only new files are sent; scan failures stay available through Retry.
+        if (action != TransferAction.RESUME && action != TransferAction.SEND)
+            history.getItems().clear();
         progress.setProgress(0);
         progressHeadline.setText(I18n.t(switch (action) {
             case SEND -> "progress.title";
@@ -567,7 +574,9 @@ public final class WatchWorkspace extends BorderPane {
         count.setText(I18n.t("files.count", files.getItems().size()));
         send.setText(I18n.t(coordinator.canResume(TransferCoordinator.Owner.DESKTOP)
                 ? "progress.resume.button" : "progress.send"));
-        send.setDisable(coordinator.isBusy() || files.getItems().isEmpty());
+        send.setDisable(coordinator.isBusy() ||
+                (!coordinator.canResume(TransferCoordinator.Owner.DESKTOP)
+                        && coordinator.pendingCount(TransferCoordinator.Owner.DESKTOP) == 0));
         retryFailed.setDisable(coordinator.isBusy()
                 || !coordinator.canRetry(TransferCoordinator.Owner.DESKTOP));
     }
