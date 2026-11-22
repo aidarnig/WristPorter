@@ -51,6 +51,7 @@ class MainActivity : Activity() {
     private var discoveryInProgress = false
     private var serviceRefreshPending = false
     private var serviceChangeRefreshUsed = false
+    private var lastAmsError = "none"
     private val lines = ArrayDeque<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -98,7 +99,7 @@ class MainActivity : Activity() {
             isFillViewport = false
             isVerticalScrollBarEnabled = true
         })
-        record("W0 Round Probe v0.0.3 (diagnostic only)")
+        record("W0 GATT Inspector v0.0.4 (diagnostic only)")
         record("W0 experimental only; no phone data saved")
         record("Watch Android=${Build.VERSION.RELEASE} API=${Build.VERSION.SDK_INT}")
         record("Watch firmware=${Build.DISPLAY}")
@@ -173,6 +174,7 @@ class MainActivity : Activity() {
         discoveryInProgress = false
         serviceRefreshPending = false
         serviceChangeRefreshUsed = false
+        lastAmsError = "none"
         try {
             gatt = device.connectGatt(this, false, callbacks, BluetoothDevice.TRANSPORT_LE)
             record("GATT connection requested (selected bonded device; LE transport)")
@@ -223,9 +225,16 @@ class MainActivity : Activity() {
                 val changed = connection.getService(gattService)?.getCharacteristic(serviceChangedCharacteristic)
                 if (changed != null) subscribe(changed, indication = true)
                 else record("GATT Service Changed characteristic not exposed")
-                subscribe(connection.getService(ancsService)?.getCharacteristic(notificationSource))
-                subscribe(connection.getService(amsService)?.getCharacteristic(remoteCommand))
-                subscribe(connection.getService(amsService)?.getCharacteristic(entityUpdate))
+                val ancsChar = connection.getService(ancsService)?.getCharacteristic(notificationSource)
+                val amsRemote = connection.getService(amsService)?.getCharacteristic(remoteCommand)
+                val amsEntity = connection.getService(amsService)?.getCharacteristic(entityUpdate)
+                reportCapability("ANCS source", ancsChar)
+                reportCapability("AMS command", amsRemote)
+                reportCapability("AMS entity", amsEntity)
+                amsEntity?.let { record("AMS entity write: " + GattDiagnostics.entityWriteExpectation(it.properties)) }
+                subscribe(ancsChar)
+                subscribe(amsRemote)
+                subscribe(amsEntity)
                 // AMS registration writes follow a successful Entity Update CCCD response.
                 // Re-register after each discovery because iOS may republish AMS.
                 runNext()
@@ -237,7 +246,13 @@ class MainActivity : Activity() {
                 if (gatt !== connection) return@runOnUiThread
                 val characteristic = descriptor.characteristic
                 if (inFlight?.subscribe != true || inFlight?.characteristic?.uuid != characteristic.uuid) return@runOnUiThread
-                record("Subscribed " + serviceLabel(characteristic.uuid) + " status=$statusCode")
+                record("CCCD remote callback " + serviceLabel(characteristic.uuid) +
+                    " status=$statusCode (" + GattDiagnostics.status(statusCode) + ")")
+                if (statusCode != BluetoothGatt.GATT_SUCCESS &&
+                    (characteristic.uuid == remoteCommand || characteristic.uuid == entityUpdate)) {
+                    lastAmsError = "CCCD " + serviceLabel(characteristic.uuid) +
+                        ": " + GattDiagnostics.status(statusCode)
+                }
                 when (characteristic.uuid) {
                     notificationSource -> diagnostics.subscription("ANCS", statusCode)
                     remoteCommand -> diagnostics.subscription("AMS command", statusCode)
@@ -258,7 +273,12 @@ class MainActivity : Activity() {
             runOnUiThread {
                 if (gatt !== connection) return@runOnUiThread
                 if (inFlight?.subscribe != false || inFlight?.characteristic?.uuid != characteristic.uuid) return@runOnUiThread
-                record("AMS metadata subscription request status=$statusCode")
+                val entityId = inFlight?.value?.firstOrNull()?.toInt()?.and(0xff) ?: -1
+                record("AMS register entity=$entityId remote callback status=$statusCode (" +
+                    GattDiagnostics.status(statusCode) + ")")
+                if (statusCode != BluetoothGatt.GATT_SUCCESS) {
+                    lastAmsError = "Register entity=$entityId: " + GattDiagnostics.status(statusCode)
+                }
                 diagnostics.amsRegistration(statusCode)
                 inFlight = null
                 runNext()
@@ -298,6 +318,15 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun reportCapability(label: String, ch: BluetoothGattCharacteristic?) {
+        if (ch == null) {
+            record("$label: characteristic not exposed")
+            return
+        }
+        val hasCccd = ch.getDescriptor(cccd) != null
+        record("$label: " + GattDiagnostics.properties(ch.properties, hasCccd))
+    }
+
     private fun subscribe(ch: BluetoothGattCharacteristic?, indication: Boolean = false) {
         if (ch != null) {
             val value = if (indication) BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
@@ -313,13 +342,24 @@ class MainActivity : Activity() {
             val op = operationQueue.removeFirst()
             val started = try {
                 if (op.subscribe) {
+                    record("CCCD start " + serviceLabel(op.characteristic.uuid) + " request=" +
+                        (if (op.value.contentEquals(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)) "indicate" else "notify"))
                     val descriptor = op.characteristic.getDescriptor(cccd)
                     if (descriptor == null || !connection.setCharacteristicNotification(op.characteristic, true)) false
                     else writeDescriptor(connection, descriptor, op.value)
-                } else writeCharacteristic(connection, op.characteristic, op.value)
+                } else {
+                    val entityId = op.value.firstOrNull()?.toInt()?.and(0xff) ?: -1
+                    record("AMS write start entity=$entityId type=WITH_RESPONSE props=" +
+                        GattDiagnostics.properties(op.characteristic.properties, op.characteristic.getDescriptor(cccd) != null))
+                    writeCharacteristic(connection, op.characteristic, op.value)
+                }
             } catch (_: SecurityException) { false } catch (_: IllegalArgumentException) { false }
             if (started) { inFlight = op; return }
-            record("GATT operation could not start (" + serviceLabel(op.characteristic.uuid) + ")")
+            val label = serviceLabel(op.characteristic.uuid)
+            record("Local GATT operation could not start ($label)")
+            if (op.characteristic.uuid == remoteCommand || op.characteristic.uuid == entityUpdate) {
+                lastAmsError = "Local start failed: $label"
+            }
         }
         requestDeferredRefreshIfReady()
     }
@@ -368,14 +408,33 @@ class MainActivity : Activity() {
 
     @Suppress("DEPRECATION")
     private fun writeDescriptor(connection: BluetoothGatt, descriptor: BluetoothGattDescriptor, value: ByteArray): Boolean {
-        return if (Build.VERSION.SDK_INT >= 33) connection.writeDescriptor(descriptor, value) == BluetoothGatt.GATT_SUCCESS
-        else { descriptor.value = value; connection.writeDescriptor(descriptor) }
+        return if (Build.VERSION.SDK_INT >= 33) {
+            val localStart = connection.writeDescriptor(descriptor, value)
+            record("CCCD local start " + serviceLabel(descriptor.characteristic.uuid) + " code=$localStart")
+            localStart == BluetoothGatt.GATT_SUCCESS
+        } else {
+            descriptor.value = value
+            val started = connection.writeDescriptor(descriptor)
+            record("CCCD local start " + serviceLabel(descriptor.characteristic.uuid) + " started=$started")
+            started
+        }
     }
 
     @Suppress("DEPRECATION")
     private fun writeCharacteristic(connection: BluetoothGatt, ch: BluetoothGattCharacteristic, value: ByteArray): Boolean {
-        return if (Build.VERSION.SDK_INT >= 33) connection.writeCharacteristic(ch, value, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT) == BluetoothGatt.GATT_SUCCESS
-        else { ch.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT; ch.value = value; connection.writeCharacteristic(ch) }
+        // AMS Entity Update is specified as writable *with response*. Do not silently
+        // switch to NO_RESPONSE on a failed write: log the advertised properties instead.
+        return if (Build.VERSION.SDK_INT >= 33) {
+            val localStart = connection.writeCharacteristic(ch, value, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+            record("AMS local start code=$localStart")
+            localStart == BluetoothGatt.GATT_SUCCESS
+        } else {
+            ch.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+            ch.value = value
+            val started = connection.writeCharacteristic(ch)
+            record("AMS local start started=$started")
+            started
+        }
     }
 
     private fun disconnect(reason: String) {
@@ -407,7 +466,9 @@ class MainActivity : Activity() {
         lines.addLast(message)
         while (lines.size > 60) lines.removeFirst()
         status.text = lines.joinToString("\n")
-        if (::health.isInitialized) health.text = "v0.0.3 round | Latest session\n" + diagnostics.summary()
+        if (::health.isInitialized) health.text = "v0.0.4 inspector | Latest session\n" +
+            diagnostics.summary() + "\nLast AMS issue: " + lastAmsError +
+            "\nGATT operations: queued=" + operationQueue.size + " active=" + (inFlight != null)
     }
 
     override fun onDestroy() {
