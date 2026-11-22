@@ -71,6 +71,8 @@ public final class UploadStaging implements AutoCloseable {
     private int active;
     private long reservedBytes;
     private long stagedBytes;
+    private int acceptedThisSession;
+    private long bytesThisSession;
 
     public static Path defaultDirectory() {
         String local = System.getenv("LOCALAPPDATA");
@@ -102,7 +104,10 @@ public final class UploadStaging implements AutoCloseable {
         sweep();
         staged.clear();
         stagedBytes = 0;
+        acceptedThisSession = 0;
+        bytesThisSession = 0;
         reservedBytes = 0;
+        if (active != 0) throw new IOException("Previous uploads still running");
         active = 0;
         generation++;
         open = true;
@@ -163,8 +168,8 @@ public final class UploadStaging implements AutoCloseable {
         synchronized (this) {
             if (!open) throw new Rejected(409, "Staging is not available");
             if (active >= limits.concurrent()) throw new Rejected(429, "Too many active uploads");
-            if (staged.size() + active >= limits.files()
-                    || stagedBytes + reservedBytes + reserve > limits.session()
+            if (acceptedThisSession + active >= limits.files()
+                    || bytesThisSession + reservedBytes + reserve > limits.session()
                     || stagedBytes + reservedBytes + reserve > limits.total()) {
                 throw new Rejected(413, "Staging quota exceeded");
             }
@@ -212,6 +217,8 @@ public final class UploadStaging implements AutoCloseable {
                 }
                 staged.put(id, result);
                 stagedBytes += size;
+                acceptedThisSession++;
+                bytesThisSession += size;
                 committed = true;
             }
             return result;
@@ -316,6 +323,8 @@ public final class UploadStaging implements AutoCloseable {
         }
         staged.clear();
         stagedBytes = 0;
+        acceptedThisSession = 0;
+        bytesThisSession = 0;
         if (failed != null) {
             open = false;  // fail closed rather than exceed a silent disk quota
             throw new IOException("Unable to clean staging", failed);
