@@ -196,6 +196,40 @@ public final class TransferCoordinator {
     }
 
     /**
+     * Counts the never-attempted items on the currently selected watch.
+     * Failure results are handled separately by retry(), including scan-only retry.
+     * Results from any other watch lease must never suppress a copy.
+     */
+    public synchronized int pendingCount(Owner owner) {
+        Session session = sessions.get(Objects.requireNonNull(owner, "owner"));
+        if (selected == null || !selected.equals(session.previousLease)) return session.queue.size();
+        return (int) session.queue.stream()
+                .filter(path -> !session.results.containsKey(path)).count();
+    }
+
+    /**
+     * Adds only never-attempted queued items to a new batch; previous successes are
+     * retained for this exact lease. On a different watch/ADB lease the entire queue
+     * becomes new and old results are discarded, preventing wrong-watch skipping.
+     *
+     * The old full send() remains available for an explicit intentional resend.
+     */
+    public synchronized long sendPending(Owner owner, WatchLease lease, Consumer<Event> observer) {
+        requireAdmission(owner, lease, observer);
+        Session session = sessions.get(owner);
+        boolean sameLease = lease.equals(session.previousLease);
+        List<Path> pending = sameLease
+                ? session.queue.stream().filter(path -> !session.results.containsKey(path)).toList()
+                : session.queue;
+        if (pending.isEmpty()) throw new IllegalStateException("No new photos in queue");
+        List<Path> snapshot = List.copyOf(pending);
+        if (!sameLease) session.results.clear();
+        session.previousLease = lease;
+        session.resumable = false;
+        return schedule(new Job(++nextJobId, owner, lease, snapshot, null, observer));
+    }
+
+    /**
      * Reject a busy slot rather than run Desktop and Web ADB commands concurrently.
      * The caller must hold a current, explicitly issued watch lease.
      */
