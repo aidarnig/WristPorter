@@ -25,6 +25,11 @@ class ApkPreflightTest {
         manifest.getOrCreateApplicationElement();
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         manifest.writeBytes(bytes);
+        assertTrue(bytes.size() > 8, "Generated binary manifest is not empty");
+        AndroidManifestBlock decoded = AndroidManifestBlock.load(new java.io.ByteArrayInputStream(bytes.toByteArray()));
+        assertEquals(pkg, decoded.getPackageName(), "Synthetic manifest package roundtrip");
+        assertEquals(3, decoded.getVersionCode(), "Synthetic manifest version roundtrip");
+        assertEquals(21, decoded.getMinSdkVersion(), "Synthetic manifest minSdk roundtrip");
         Path apk = dir.resolve(file);
         try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(apk))) {
             zip.putNextEntry(new ZipEntry("AndroidManifest.xml"));
