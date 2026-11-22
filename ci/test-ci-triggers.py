@@ -134,4 +134,15 @@ assert "actions/upload-artifact@v4" in preview
 assert "gh release" not in preview and "publish-release:" not in preview
 assert "  contents: read" in preview and "  contents: write" not in preview
 
+# Issue readiness labels are synchronized by a scoped workflow, not a PR script.
+issue_status = (root / ".github/workflows/issue-status.yml").read_text(encoding="utf-8")
+assert "  issues:" in section(issue_status.splitlines(), "on", 0)
+assert "    types: [opened, edited, reopened]" in issue_status
+assert "  issues: write" in issue_status
+for label in ("status:ready", "status:in-progress", "status:needs-device-test", "status:blocked"):
+    assert label in issue_status, label
+assert "          REVIEW_SENSITIVE:" in gate
+assert "            review_sensitive:" in gate
+assert "      - name: Apply exactly one status label" in issue_status
+
 print("Selective CI routing, always-on PR gate and preview checks passed")
