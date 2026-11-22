@@ -471,8 +471,16 @@ class MainActivity : Activity() {
             "\nGATT operations: queued=" + operationQueue.size + " active=" + (inFlight != null)
     }
 
+    override fun onStop() {
+        // This is a foreground-only experiment; onDestroy may be delayed for
+        // background activities. Release GATT immediately to avoid multiple
+        // probe apps keeping simultaneous sessions to the same iPhone.
+        if (gatt != null) disconnect("activity no longer visible")
+        super.onStop()
+    }
+
     override fun onDestroy() {
-        disconnect("activity stopped")
+        disconnect("activity destroyed")
         super.onDestroy()
     }
 }
