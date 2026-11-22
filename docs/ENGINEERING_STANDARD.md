@@ -72,7 +72,7 @@ Use a reviewer chat only for potentially high-impact changes: Bluetooth state/pe
 
 The reviewer receives the current PR link and independently reads the actual diff, Issue and relevant contracts. It examines security/privacy/battery risks, error/cancel/reconnect flows, regression coverage, CI evidence, device-test gaps and dependency consistency. It leaves blocking findings with file/line and suggested fix, or records "Independent review: no blocking findings at HEAD SHA ..." in the PR. The author fixes findings, the reviewer checks the new head. If both chats use the same GitHub account, a review comment is NOT a formal GitHub approval.
 
-The PR gate flags candidate sensitive paths in its job summary. This is only a review hint, not proof of correctness. **High-risk PRs must not be autonomously merged while independent findings or owner decisions remain unresolved**. Real release/device acceptance remains separate.
+The PR gate flags candidate sensitive paths in its job summary. This is only a review hint, not proof of correctness. **A high-risk PR needs a recorded independent review of its latest head SHA and resolution of blocking findings before any merge.** If no independent reviewer is available, hold the PR for the coordinating chat; a green automated gate alone is insufficient. Material scope/security/release decisions also require owner approval. Real release/device acceptance remains separate.
 
 ## 5. Write documentation once
 
