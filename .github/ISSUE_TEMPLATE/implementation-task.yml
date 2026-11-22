@@ -1,57 +1,55 @@
 name: Implementation / investigation task
-description: Work on one scoped feature, proof-of-concept, test or engineering decision.
+description: One small, independently verifiable work item; read AGENTS.md first.
 title: "[Task] "
 body:
   - type: markdown
     attributes:
       value: |
-        Start at **AGENTS.md → docs/STATE.md → docs/ROADMAP.md**. Use a W0–W12 anchor Issue. One task/branch/PR at a time. Never include device identifiers, notification text or pairing codes.
+        Executor starts from this Issue only. Read AGENTS.md, then task-relevant docs. No device identifiers, pairing codes or private photo/message data. Use one branch per executor.
+  - type: dropdown
+    id: execution_status
+    attributes:
+      label: Execution status
+      description: READY only when dependency and hardware prerequisites are available.
+      options:
+        - READY
+        - BLOCKED
+        - IN PROGRESS
+        - NEEDS DEVICE TEST
+    validations:
+      required: true
   - type: input
-    id: anchor
+    id: parent
     attributes:
-      label: Parent milestone Issue
-      placeholder: "#13 (W0)"
+      label: Parent milestone / upstream Issue
+      placeholder: "#28; none for an independent task"
     validations:
-      required: true
+      required: false
   - type: textarea
-    id: goal
+    id: outcome
     attributes:
-      label: Observable goal / user outcome
-      description: Say what should actually change for the user.
-    validations:
-      required: true
-  - type: textarea
-    id: scope
-    attributes:
-      label: Scope and non-goals
-      description: List both included and explicitly excluded behavior.
+      label: Observable result and non-goals
+      description: One testable outcome, exact scope and exclusions, no duplicated spec.
     validations:
       required: true
   - type: textarea
     id: dependencies
     attributes:
-      label: Dependencies / relevant contracts
-      placeholder: "W0 firmware data, transport interface, ADR numbers, version constraints"
-    validations:
-      required: false
-  - type: textarea
-    id: acceptance
-    attributes:
-      label: Acceptance / proof required
-      description: Exact automated tests, real-device scenarios and what will be NOT TESTED.
+      label: Dependencies / owned files / relevant docs
+      description: List Issues which must land first and any shared interface owner.
     validations:
       required: true
   - type: textarea
-    id: safety
+    id: tests
     attributes:
-      label: Security, privacy, battery and rollback
-      description: Risks or explicitly write "No identified new risks" with rationale.
+      label: Acceptance and owner-assisted device checkpoint
+      description: Automated tests plus exact watch/iPhone/Windows test if applicable; mark not applicable otherwise.
     validations:
       required: true
   - type: textarea
-    id: docs
+    id: risk
     attributes:
-      label: Canonical documentation to update
-      placeholder: "STATE.md, VERIFICATION.md, ADR-000x, etc."
+      label: Risk and rollback
+      description: Security/privacy/battery concerns; safe revert, or 'no new risk' with reason.
     validations:
-      required: false
+      required: true
