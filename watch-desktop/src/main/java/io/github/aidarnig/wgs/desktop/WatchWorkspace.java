@@ -5,6 +5,7 @@ import atlantafx.base.theme.PrimerLight;
 import io.github.aidarnig.wgs.adb.AdbExecutableLocator;
 import io.github.aidarnig.wgs.adb.WatchDevice;
 import io.github.aidarnig.wgs.adb.WatchEndpoint;
+import io.github.aidarnig.wgs.core.TransferCoordinator;
 import io.github.aidarnig.wgs.core.TransferUpdate;
 import io.github.aidarnig.wgs.core.WatchTransferService;
 import io.github.aidarnig.wgs.domain.PhotoFiles;
@@ -26,17 +27,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
-import java.util.LinkedHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 import java.util.prefs.Preferences;
 
 /** Functional first iteration. Preview thumbnails and settings are tracked for M2/M4. */
 public final class WatchWorkspace extends BorderPane {
     private final WatchTransferService service;
     private final ExecutorService worker;
+    private final TransferCoordinator coordinator;
+    private long displayedJobId;
     private final TextField adbPath = new TextField(AdbExecutableLocator.detect());
     private final TextField pairEndpoint = new TextField();
     private final PasswordField pairCode = new PasswordField();
@@ -54,21 +53,24 @@ public final class WatchWorkspace extends BorderPane {
     private final Button send = new Button(I18n.t("progress.send"));
     private final Button cancelTransfer = new Button(I18n.t("progress.cancel.button"));
     private final Button retryFailed = new Button(I18n.t("progress.retry.button"));
-    private final Map<Path, TransferUpdate> latestResults = new LinkedHashMap<>();
-    private Task<Void> activeTransfer;
-    private String previousDevice;
-    private boolean transferring;
     private final Preferences preferences = Preferences.userNodeForPackage(WatchWorkspace.class);
     private boolean hasCompletedTransfer;
     private boolean lightTheme = preferences.getBoolean("appearance.light", false);
 
-    public WatchWorkspace(WatchTransferService service, ExecutorService worker) {
+    public WatchWorkspace(WatchTransferService service, ExecutorService worker,
+                          TransferCoordinator coordinator) {
         this.service = service;
         this.worker = worker;
+        this.coordinator = java.util.Objects.requireNonNull(coordinator, "coordinator");
         getStyleClass().add("app-shell");
         applyTheme();
         setTop(header());
-        files.getItems().addListener((javafx.collections.ListChangeListener<Path>) change -> updateCount());
+        files.getItems().addListener((javafx.collections.ListChangeListener<Path>) change -> {
+            coordinator.replaceQueue(TransferCoordinator.Owner.DESKTOP, List.copyOf(files.getItems()));
+            updateCount();
+        });
+        connectionEndpoint.textProperty().addListener((obs, before, after) -> syncSelectedWatch());
+        adbPath.textProperty().addListener((obs, before, after) -> syncSelectedWatch());
         ScrollPane connectionScroll = new ScrollPane(connectionPanel());
         connectionScroll.setFitToWidth(true);
         connectionScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -119,7 +121,7 @@ public final class WatchWorkspace extends BorderPane {
     }
 
     private void changeLanguage(String code) {
-        if (transferring) return;
+        if (coordinator.isBusy()) return;
         I18n.setLanguage(code);
         // Preserve watch endpoints, device picker, queue, results, and theme.
         setTop(null);
@@ -139,7 +141,7 @@ public final class WatchWorkspace extends BorderPane {
         } else {
             deviceStatus.setText(I18n.t("connect.no.connection"));
         }
-        history.getItems().setAll(latestResults.values().stream()
+        history.getItems().setAll(coordinator.outcomes(TransferCoordinator.Owner.DESKTOP).values().stream()
                 .map(update -> update.source().getFileName() + " — " + resultText(update))
                 .toList());
         activity.setText(hasCompletedTransfer
@@ -264,11 +266,11 @@ public final class WatchWorkspace extends BorderPane {
         folder.setOnAction(event -> chooseFolder());
         Button remove = new Button(I18n.t("files.remove"));
         remove.setOnAction(event -> {
-            if (!transferring) files.removeSelected();
+            if (!coordinator.isBusy()) files.removeSelected();
         });
         Button clear = new Button(I18n.t("files.clear"));
         clear.setOnAction(event -> {
-            if (!transferring) files.getItems().clear();
+            if (!coordinator.isBusy()) files.getItems().clear();
         });
         HBox actions = new HBox(8, add, folder, remove, clear);
         actions.setAlignment(Pos.CENTER_LEFT);
@@ -299,10 +301,9 @@ public final class WatchWorkspace extends BorderPane {
         send.setPrefWidth(215);
         cancelTransfer.setDisable(true);
         cancelTransfer.setOnAction(event -> {
-            if (activeTransfer != null) {
+            if (coordinator.cancel(TransferCoordinator.Owner.DESKTOP)) {
                 cancelTransfer.setDisable(true);
                 activity.setText(I18n.t("progress.cancel.message"));
-                activeTransfer.cancel(true);
             }
         });
         retryFailed.setDisable(true);
@@ -372,6 +373,7 @@ public final class WatchWorkspace extends BorderPane {
             }
         };
         task.setOnSucceeded(event -> {
+            if (coordinator.isBusy()) return; // Never retarget a live transfer from a stale scan.
             List<WatchDevice> ready = task.getValue().stream().filter(WatchDevice::ready).toList();
             List<String> serials = ready.stream().map(WatchDevice::serial).toList();
             watchPicker.getItems().setAll(serials);
@@ -392,108 +394,123 @@ public final class WatchWorkspace extends BorderPane {
         worker.submit(task);
     }
 
+    /** Only the Windows UI may select the watch; Web clients receive leases, never choose serials. */
+    private void syncSelectedWatch() {
+        TransferCoordinator.WatchLease previous = coordinator.selection();
+        coordinator.selectWatch(adbPath.getText(), connectionEndpoint.getText());
+        if (!java.util.Objects.equals(previous, coordinator.selection())) {
+            // A result on Watch A must not appear as completed on Watch B.
+            files.resetStatuses();
+            history.getItems().clear();
+            hasCompletedTransfer = false;
+        }
+        updateCount();
+    }
+
+    private enum TransferAction { SEND, RESUME, RETRY }
+
     private void sendImages() {
-        if (transferring || files.getItems().isEmpty()) return;
-        transfer(List.copyOf(files.getItems()), null);
+        if (coordinator.isBusy() || files.getItems().isEmpty()) return;
+        syncSelectedWatch();
+        transfer(coordinator.canResume(TransferCoordinator.Owner.DESKTOP)
+                ? TransferAction.RESUME : TransferAction.SEND);
     }
 
     private void retryFailures() {
-        if (transferring) return;
-        String serial = connectionEndpoint.getText().strip();
-        if (previousDevice == null || !previousDevice.equals(serial)) {
+        if (coordinator.isBusy()) return;
+        syncSelectedWatch();
+        if (!coordinator.canRetry(TransferCoordinator.Owner.DESKTOP)) {
             activity.setText(I18n.t("progress.retry.device"));
             return;
         }
-        List<TransferUpdate> pending = latestResults.values().stream()
-                .filter(TransferUpdate::retryable)
-                .filter(update -> files.getItems().contains(update.source()))
-                .toList();
-        if (!pending.isEmpty()) transfer(List.of(), pending);
+        transfer(TransferAction.RETRY);
     }
 
-    private void transfer(List<Path> selected, List<TransferUpdate> retryRequests) {
-        String executable = adbPath.getText().strip();
-        String serial = connectionEndpoint.getText().strip();
-        if (serial.isBlank()) {
+    private void transfer(TransferAction action) {
+        syncSelectedWatch();
+        TransferCoordinator.WatchLease lease = coordinator.selection();
+        if (lease == null) {
             activity.setText(I18n.t("progress.no.connection"));
             return;
         }
-        boolean isRetry = retryRequests != null;
-        int total = isRetry ? retryRequests.size() : selected.size();
+        int total = switch (action) {
+            case SEND -> coordinator.pendingCount(TransferCoordinator.Owner.DESKTOP);
+            case RESUME -> coordinator.resumeCount(TransferCoordinator.Owner.DESKTOP);
+            case RETRY -> (int) coordinator.outcomes(TransferCoordinator.Owner.DESKTOP).values()
+                    .stream().filter(TransferUpdate::retryable).count();
+        };
         if (total == 0) return;
-        hasCompletedTransfer = false;
-        if (!isRetry) {
-            latestResults.clear();
-            files.resetStatuses();
-            previousDevice = serial;
+        try {
+            displayedJobId = switch (action) {
+                case SEND -> coordinator.sendPending(TransferCoordinator.Owner.DESKTOP, lease,
+                        this::acceptTransferEvent);
+                case RESUME -> coordinator.resume(TransferCoordinator.Owner.DESKTOP, lease,
+                        this::acceptTransferEvent);
+                case RETRY -> coordinator.retry(TransferCoordinator.Owner.DESKTOP, lease,
+                        this::acceptTransferEvent);
+            };
+        } catch (IllegalArgumentException | IllegalStateException exception) {
+            failure(I18n.t("operation.transfer.error"), exception);
+            return;
         }
-        transferring = true;
-        activeTransfer = null;
-        cancelTransfer.setDisable(false);
-        updateCount();
-        history.getItems().clear();
+        hasCompletedTransfer = false;
+        // Preserve previously acknowledged outcomes and their gallery badges.
+        // Only new files are sent; scan failures stay available through Retry.
+        if (action != TransferAction.RESUME && action != TransferAction.SEND)
+            history.getItems().clear();
         progress.setProgress(0);
-        progressHeadline.setText(I18n.t(isRetry ? "progress.retry" : "progress.title"));
+        progressHeadline.setText(I18n.t(switch (action) {
+            case SEND -> "progress.title";
+            case RESUME -> "progress.resume";
+            case RETRY -> "progress.retry";
+        }));
         progressNumbers.setText("0 / " + total);
         progressDetails.setText(I18n.t("progress.details", 0, 0));
         activity.setText(I18n.t("progress.started"));
-        AtomicInteger errors = new AtomicInteger();
+        cancelTransfer.setDisable(false);
+        setTransferControls(true);
+        updateCount();
+    }
 
-        Task<Void> task = new Task<>() {
-            @Override protected Void call() throws Exception {
-                Consumer<TransferUpdate> report = update -> {
-                    if (update.status() != TransferUpdate.Status.COPIED_SCAN_REQUESTED) {
-                        errors.incrementAndGet();
-                    }
-                    Platform.runLater(() -> {
-                        latestResults.put(update.source(), update);
-                        files.showOutcome(update);
-                        progress.setProgress((double) update.position() / update.total());
-                        progressNumbers.setText(update.position() + " / " + update.total());
-                        progressDetails.setText(I18n.t("progress.details", update.position() - errors.get(), errors.get()));
-                        String result = resultText(update);
-                        history.getItems().add(update.source().getFileName() + " — " + result);
-                        activity.setText(I18n.t("progress.current", update.position(), update.total(), result));
-                        updateCount();
-                    });
-                };
-                if (isRetry) service.retry(executable, serial, retryRequests, report);
-                else service.send(executable, serial, selected, report);
-                return null;
+    /** Coordinator callbacks run off the FX thread; no JavaFX state is touched there. */
+    private void acceptTransferEvent(TransferCoordinator.Event event) {
+        Platform.runLater(() -> {
+            if (event.jobId() != displayedJobId) return;
+            if (event.phase() == TransferCoordinator.Phase.PROGRESS) {
+                TransferUpdate update = event.update();
+                files.showOutcome(update);
+                progress.setProgress((double) event.completed() / event.total());
+                progressNumbers.setText(event.completed() + " / " + event.total());
+                progressDetails.setText(I18n.t("progress.details",
+                        event.completed() - event.errors(), event.errors()));
+                String result = resultText(update);
+                history.getItems().add(update.source().getFileName() + " — " + result);
+                activity.setText(I18n.t("progress.current",
+                        event.completed(), event.total(), result));
+            } else if (event.phase() == TransferCoordinator.Phase.COMPLETED) {
+                finishTransfer();
+                hasCompletedTransfer = true;
+                activity.setText(I18n.t("progress.completed.details"));
+                progressHeadline.setText(I18n.t("progress.completed"));
+                progressNumbers.setText(event.total() + " / " + event.total());
+                progressDetails.setText(I18n.t("progress.details",
+                        event.completed() - event.errors(), event.errors()));
+            } else if (event.phase() == TransferCoordinator.Phase.FAILED) {
+                finishTransfer();
+                failure(I18n.t("operation.transfer.error"), event.failure());
+            } else if (event.phase() == TransferCoordinator.Phase.CANCELLED) {
+                finishTransfer();
+                progressHeadline.setText(I18n.t("progress.stopped"));
+                activity.setText(I18n.t("progress.stopped"));
             }
-        };
-        task.setOnSucceeded(event -> {
-            finishTransfer();
-            hasCompletedTransfer = true;
-            activity.setText(I18n.t("progress.completed.details"));
-            progressHeadline.setText(I18n.t("progress.completed"));
-            progressNumbers.setText(total + " / " + total);
-            progressDetails.setText(I18n.t("progress.details", total - errors.get(), errors.get()));
+            updateCount();
         });
-        task.setOnFailed(event -> {
-            finishTransfer();
-            failure(I18n.t("operation.transfer.error"), task.getException());
-        });
-        task.setOnCancelled(event -> {
-            cancelTransfer.setDisable(true);
-            activity.setText(I18n.t("progress.cancelling"));
-        });
-        activeTransfer = task;
-        // A canceled JavaFX Task can emit onCancelled before its subprocess exits.
-        // Keep the UI locked until the actual worker has returned.
-        worker.submit(() -> {
-            try {
-                task.run();
-            } finally {
-                Platform.runLater(() -> {
-                    if (activeTransfer == task && transferring) finishTransfer();
-                    if (task.isCancelled()) {
-                        progressHeadline.setText(I18n.t("progress.stopped"));
-                        activity.setText(I18n.t("progress.stopped"));
-                    }
-                });
-            }
-        });
+    }
+
+    private void setTransferControls(boolean busy) {
+        adbPath.setDisable(busy);
+        connectionEndpoint.setDisable(busy);
+        watchPicker.setDisable(busy || watchPicker.getItems().isEmpty());
     }
 
     private void runOperation(String message, Operation operation, Runnable success) {
@@ -512,7 +529,7 @@ public final class WatchWorkspace extends BorderPane {
         chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(
                 I18n.t("files.filetypes"), "*.jpg", "*.jpeg", "*.png", "*.JPG", "*.JPEG", "*.PNG"));
         List<File> result = chooser.showOpenMultipleDialog(getScene().getWindow());
-        if (result != null && !transferring) {
+        if (result != null && !coordinator.isBusy()) {
             files.addImages(result.stream().map(File::toPath)
                     .filter(PhotoFiles::isReadableImage).toList());
         }
@@ -522,11 +539,11 @@ public final class WatchWorkspace extends BorderPane {
         DirectoryChooser chooser = new DirectoryChooser();
         chooser.setTitle(I18n.t("files.folder.dialog"));
         File result = chooser.showDialog(getScene().getWindow());
-        if (result != null && !transferring) importPath(result.toPath());
+        if (result != null && !coordinator.isBusy()) importPath(result.toPath());
     }
 
     private void importPath(Path path) {
-        if (transferring) return;
+        if (coordinator.isBusy()) return;
         if (!Files.isDirectory(path)) {
             addImage(path);
             return;
@@ -538,6 +555,7 @@ public final class WatchWorkspace extends BorderPane {
             }
         };
         scan.setOnSucceeded(event -> {
+            if (coordinator.isBusy()) return;
             int before = files.getItems().size();
             files.addImages(scan.getValue());
             activity.setText(I18n.t("files.added", files.getItems().size() - before));
@@ -554,16 +572,18 @@ public final class WatchWorkspace extends BorderPane {
 
     private void updateCount() {
         count.setText(I18n.t("files.count", files.getItems().size()));
-        send.setDisable(transferring || files.getItems().isEmpty());
-        retryFailed.setDisable(transferring || previousDevice == null
-                || latestResults.values().stream().noneMatch(update ->
-                        update.retryable() && files.getItems().contains(update.source())));
+        send.setText(I18n.t(coordinator.canResume(TransferCoordinator.Owner.DESKTOP)
+                ? "progress.resume.button" : "progress.send"));
+        send.setDisable(coordinator.isBusy() ||
+                (!coordinator.canResume(TransferCoordinator.Owner.DESKTOP)
+                        && coordinator.pendingCount(TransferCoordinator.Owner.DESKTOP) == 0));
+        retryFailed.setDisable(coordinator.isBusy()
+                || !coordinator.canRetry(TransferCoordinator.Owner.DESKTOP));
     }
 
     private void finishTransfer() {
-        transferring = false;
-        activeTransfer = null;
         cancelTransfer.setDisable(true);
+        setTransferControls(false);
         updateCount();
     }
 
