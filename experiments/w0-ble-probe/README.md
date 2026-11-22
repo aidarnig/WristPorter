@@ -1,6 +1,6 @@
 # WristPorter W0 — isolated BLE feasibility probe
 
-**EXPERIMENTAL / NOT DEVICE-VERIFIED.** Owned by [Issue #13](https://github.com/aidarnig/WristPorter/issues/13). The Android project in this directory is not an installed/shipped WristPorter Bridge and does not modify the Windows Maven reactor.
+**EXPERIMENTAL / PARTIAL DEVICE FEASIBILITY VERIFIED, NOT A STABLE BRIDGE.** Owner confirmed Watch4 ↔ iPhone ANCS/AMS events on 2026-11-22; Bluetooth OFF/ON exposed a reproducible *loss of media events despite GATT status=0*, root cause not yet established. Owned by [Issue #13](https://github.com/aidarnig/WristPorter/issues/13). The Android project in this directory is not an installed/shipped WristPorter Bridge and does not modify the Windows Maven reactor.
 
 ## Probe behavior
 
@@ -8,8 +8,9 @@
 - User requests the Android system's discoverability dialog for at most 120 seconds, and initiates pairing in **iPhone Settings → Bluetooth**, verifying matching codes. Discovery through iPhone settings is a **hypothesis to test**, not a guarantee.
 - Show bonded-device names **only on watch**; explicit selection and confirmation of the chosen iPhone are mandatory.
 - Use the selected bonded device for a one-shot LE GATT client connection, inspect service UUIDs: ANCS, AMS, optional Battery/Device Information/Current Time. No address/name/identifier is logged.
-- Subscribe (if exposed and permitted) to ANCS Notification Source and AMS Remote Command / Entity Update; register AMS Player/Track attribute monitoring. Show only sanitized notification type/category and AMS command count / entity/attribute event indicators. **Do not capture message text, UID or media metadata values.**
-- Manual Disconnect closes GATT and stops pending operations. Activity destruction closes the connection. No background service, automatic reconnect, continuous scan, Internet permission, cloud, account or stored phone data.
+- Subscribe (if exposed and permitted) to ANCS Notification Source and AMS Remote Command / Entity Update; register AMS Player/Track attribute monitoring **after a successful Entity Update subscription acknowledgment**. Show only sanitized notification type/category, AMS command count, entity/attribute indicators and per-session subscription/event counters. **Do not capture message text, UID or media metadata values.**
+- Listen for optional GATT Service Changed indication and the Android service-change callback; trigger **at most one automatic service rediscovery per explicitly selected connection**. Tap **5. Refresh GATT services** to request another one-shot re-discovery manually. This does not reconnect or pair automatically.
+- Manual Disconnect closes GATT and stops pending operations. Activity destruction closes the connection. No background service, automatic reconnect, continuous scan, Internet permission, cloud, account or stored phone data. A successful GATT link **does not mean** ANCS/AMS have been rediscovered, CCCD operations accepted, or media events recovered; inspect the summary.
 - This app has no iPhone media control commands, ANCS attribute fetching or mature lifecycle management. It does **not** prove successful day-to-day Bridge behavior or battery life.
 
 ## Build
@@ -46,6 +47,19 @@ If `adb` says `unauthorized` or `offline`, do not retry an install blindly; reco
 
 Reply to Issue #13's executor chat with the watch Android/API, iPhone model/iOS and precisely what happened at the discoverability/pairing stage (no IDs). Only then proceed with BLE-03…BLE-05 in the same chat for GATT/ANCS/AMS; the owner should not be asked to run a massive full matrix blindly.
 
+
+
+## Targeted recovery test after iPhone Bluetooth OFF/ON (W0 v0.0.2 only)
+
+The 2026-11-22 owner observed that an explicit **Disconnect → Choose bonded phone** restored both notification and music events, but after switching iPhone Bluetooth OFF/ON a new manual GATT connection showed `status=0` while **AMS track-change events stopped**. This is **not** evidence of a stable recovery path and not a reason to unpair/reset.
+
+1. Install the new **v0.0.2-w0** artifact from its successful Android Actions run, on the same already authorized watch (the APK package ID is unchanged; explicit `adb install -r` updates it). No iPhone app or reset.
+2. Open the watch probe; **3. Choose bonded phone** and manually select your own iPhone. Confirm ANCS/AMS services and `sub=0` / `entitySub=0` / `AMS registrations=2/2` in the top summary. Change one track on the iPhone; note whether the AMS event count increases.
+3. Switch iPhone Bluetooth OFF/ON **once**. If the watch probe shows disconnected, reselect the same phone via **3. Choose bonded phone**; do not erase the bond. On a resumed `Link state=connected`, inspect the **session summary**, notably `AMS present`, `entitySub`, `AMS registrations` and `events`. Change a track once.
+4. **Only if AMS events do not resume**, press **5. Refresh GATT services** once. Let its descriptor and registration statuses settle, change a track again and compare the summary counters. Stop after that one attempt; report the sanitized before/after summaries or failure lines to the executor chat.
+5. **4. Disconnect** exits the experiment's GATT session; close the app. Disable Wireless debugging after installing. No repeated Bluetooth toggles, forced unpair, logs containing personal data or device identifiers.
+
+This is a bounded foreground-only diagnostic, not an automatic repair guarantee. If the service is temporarily unpublished or the iPhone media player sends no event, a refresh alone may not restore it. No production battery/reliability guarantee is implied.
 
 ## Real watch/iPhone test instructions
 
