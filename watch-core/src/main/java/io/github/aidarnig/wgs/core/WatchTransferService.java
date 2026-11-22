@@ -14,6 +14,9 @@ import java.util.function.Consumer;
 
 @Service
 public class WatchTransferService {
+    /** User-selected semantics of one copy batch. Neither mode changes image bytes. */
+    public enum BatchMode { FAST, ORDERED }
+
     /*
      * Media scans are asynchronous and MediaStore.DATE_ADDED has second precision.
      * Closely spaced requests can be displayed out of queue order by some Galleries.
@@ -40,7 +43,18 @@ public class WatchTransferService {
     /** Copies each file once, and requests a separate media scan after every successful copy. */
     public void send(String adb, String serial, List<Path> files, Consumer<TransferUpdate> callback)
             throws IOException, InterruptedException {
+        send(adb, serial, files, BatchMode.ORDERED, callback);
+    }
+
+    /**
+     * Executes an explicit, per-batch mode. FAST retains the pre-#45 ADB behavior;
+     * ORDERED keeps the Watch4-tested scan-request spacing, without claiming a
+     * universal Galaxy Gallery sorting guarantee.
+     */
+    public void send(String adb, String serial, List<Path> files, BatchMode mode,
+                     Consumer<TransferUpdate> callback) throws IOException, InterruptedException {
         Objects.requireNonNull(files, "files");
+        Objects.requireNonNull(mode, "mode");
         Objects.requireNonNull(callback, "callback");
         if (files.isEmpty()) return;
 
@@ -49,9 +63,7 @@ public class WatchTransferService {
         long priorScanAt = 0;
         for (int i = 0; i < files.size(); i++) {
             checkInterrupted();
-            // Avoid overlapping media scans when the user requests a full batch.
-            // The wait is interruptible so cancellation remains responsive.
-            if (priorScanAt != 0) paceAfterScan(priorScanAt);
+            if (mode == BatchMode.ORDERED && priorScanAt != 0) paceAfterScan(priorScanAt);
             TransferUpdate update = copyAndScan(client, serial, files.get(i), i + 1, files.size());
             priorScanAt = update.status() == TransferUpdate.Status.FAILED ? 0 : System.nanoTime();
             callback.accept(update);
