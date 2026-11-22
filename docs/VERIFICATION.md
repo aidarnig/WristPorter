@@ -81,6 +81,8 @@ All observations must include **date, app build/commit, watch model/firmware/API
 
 **W0 completion condition:** at minimum BLE-00..05 observed or recorded FAIL/BLOCKED with a reproducible report; before proceeding to W2, the product owner reviews whether BLE is feasible on this particular watch and iPhone.
 
+**W0 final coordinator acceptance (2026-11-22): ACCEPTED FOR FOREGROUND PROTOCOL FEASIBILITY ONLY.** The owner-observed Watch4 Classic/API36 ↔ iPhone GATT session, fresh ANCS notifications, AMS event receipt and manual Bluetooth OFF/ON → user-selected GATT/subscription restoration answer the exploratory W0 feasibility question. The original trial failures (AMS GATT status 1/3) remain recorded above; the cause of intermittent errors was not proven. **BLE-01** iPhone model, **BLE-02** initial matching-code observation and parts of **BLE-05** media command behavior remain incomplete; this is an explicit evidence limitation, not a claim that every scenario passed. No persistent background connection, automatic recovery, battery profile, remote player-command execution or API30–35 compatibility has been demonstrated. [PR #34](https://github.com/aidarnig/WristPorter/pull/34) passed experimental CI and independent BLE/privacy review but was **closed without merging**: disposable diagnostic code, not a shippable product component. Original reproducible source and test artifacts remain linked from that PR and [Issue #13](https://github.com/aidarnig/WristPorter/issues/13). **W0 accepted, Bridge unimplemented; no further W0 device testing requested.**
+
 ## Reliability scenarios (plan; not evidence)
 
 | ID | Scenario | Expected safety property |
