@@ -97,7 +97,7 @@ public final class ApkPreflight {
                     version.longValue(), manifest.getVersionName(), minSdk, signer, testOnly, policy.mode());
         } catch (Rejected e) {
             throw e;
-        } catch (IOException | RuntimeException | NoSuchAlgorithmException | CertificateEncodingException e) {
+        } catch (Exception e) {
             // No private path, package parser content, or stack trace in user-facing errors.
             throw new Rejected(Error.MALFORMED_APK);
         }
