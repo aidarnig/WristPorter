@@ -19,6 +19,8 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import android.view.View
+import android.view.ViewGroup
 import java.util.ArrayDeque
 import java.util.UUID
 
@@ -54,14 +56,24 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         adapter = getSystemService(BluetoothManager::class.java)?.adapter
+        val diameter = resources.displayMetrics.widthPixels
+        val round = resources.configuration.isScreenRound
+        // Keep the entire text block within the watch's central safe-width.
+        // Proportional insets also work on different-sized round Wear OS displays.
+        val horizontalInset = if (round) (diameter * 0.16f).toInt() else dp(12)
+        val topInset = if (round) (diameter * 0.15f).toInt() else dp(12)
+        val bottomScrollSlack = if (round) (diameter * 0.48f).toInt() else dp(60)
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(12, 8, 12, 8)
+            setPadding(horizontalInset, topInset, horizontalInset, 0)
         }
         status = TextView(this).apply { textSize = 12f }
         fun control(text: String, action: () -> Unit) {
             layout.addView(Button(this).apply {
                 this.text = text
+                setAllCaps(false)
+                textSize = 12f
+                maxLines = 2
                 setOnClickListener { action() }
             })
         }
@@ -69,16 +81,32 @@ class MainActivity : Activity() {
         control("2. Discoverable (120s)") { requestDiscoverable() }
         control("3. Choose bonded phone") { showBondedDevices() }
         control("4. Disconnect") { disconnect("user request") }
-        control("5. Refresh GATT services") { requestServiceRefresh("manual") }
-        health = TextView(this).apply { textSize = 11f; setPadding(0, 6, 0, 6) }
-        layout.addView(health)
+        control("5. Refresh GATT") { requestServiceRefresh("manual") }
+        health = TextView(this).apply {
+            textSize = 11f
+            setPadding(0, dp(10), 0, dp(8))
+        }
         layout.addView(status)
-        setContentView(ScrollView(this).apply { addView(layout) })
+        // The current session summary stays after the log, where it is easy to find.
+        layout.addView(health)
+        // Extra scrollable blank space lets the final lines move up from behind
+        // the circular lower bezel into the center of the watch face.
+        layout.addView(View(this), LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, bottomScrollSlack
+        ))
+        setContentView(ScrollView(this).apply {
+            addView(layout)
+            isFillViewport = false
+            isVerticalScrollBarEnabled = true
+        })
+        record("W0 Round Probe v0.0.3 (diagnostic only)")
         record("W0 experimental only; no phone data saved")
         record("Watch Android=${Build.VERSION.RELEASE} API=${Build.VERSION.SDK_INT}")
         record("Watch firmware=${Build.DISPLAY}")
         record("On iPhone: Settings > Bluetooth; confirm matching pairing code and allow notification sharing")
     }
+
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density + 0.5f).toInt()
 
     private fun hasAccess(): Boolean = Build.VERSION.SDK_INT < 31 ||
         (checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED &&
@@ -139,6 +167,8 @@ class MainActivity : Activity() {
     private fun connect(device: BluetoothDevice) {
         if (!hasAccess()) { record("Permission missing"); return }
         disconnect("replace connection")
+        // Do not mix previous-session GATT errors with the new connection.
+        lines.clear()
         diagnostics.newConnection()
         connected = false
         discoveryInProgress = false
@@ -378,7 +408,7 @@ class MainActivity : Activity() {
         lines.addLast(message)
         while (lines.size > 60) lines.removeFirst()
         status.text = lines.joinToString("\n")
-        if (::health.isInitialized) health.text = diagnostics.summary()
+        if (::health.isInitialized) health.text = "v0.0.3 round | Latest session\n" + diagnostics.summary()
     }
 
     override fun onDestroy() {
