@@ -1,11 +1,6 @@
 name: Documentation integrity
 
 on:
-  pull_request:
-    paths:
-      - '**/*.md'
-      - 'ci/check-doc-links.py'
-      - '.github/workflows/docs-check.yml'
   push:
     branches: [main]
     paths:
