@@ -99,6 +99,18 @@ class ApkInstallServiceTest {
         assertTrue(calls.isEmpty());
         assertEquals(ApkInstallService.Code.LEASE_REVOKED, svc.install(request(() -> false)).code());
     }
+    @Test void growingFileAfterInspectionIsStoppedBeforeLargeTempCopy() throws Exception {
+        ready();
+        // The inspected four-byte file has become much larger. The installer
+        // must stop staging at the inspected limit, not copy megabytes first.
+        Files.write(file, new byte[1_000_000]);
+        List<List<String>> calls = new ArrayList<>();
+        var svc = service(calls, serial + "\tdevice\n", "",
+                new ApkInstallService.Command(0, "Success"));
+        assertEquals(ApkInstallService.Code.APK_CHANGED, svc.install(request(() -> true)).code());
+        assertTrue(calls.isEmpty(), "Mutated APK must not result in any ADB command");
+    }
+
     @Test void leaseRevocationBetweenDiscoveryAndInstallationIsRejected() throws Exception {
         ready();
         AtomicBoolean lease = new AtomicBoolean(true);
