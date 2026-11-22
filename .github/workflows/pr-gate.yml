@@ -1,0 +1,98 @@
+name: PR gate
+
+# Always present, including documentation-only PRs. This is the single status
+# eligible for branch protection; path-filtered jobs alone are unsafe to require.
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: wristporter-pr-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: pr-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v4
+        id: changed
+        with:
+          filters: |
+            domain:
+              - 'watch-domain/**'
+              - 'pom.xml'
+              - 'ci/verify-changed.sh'
+              - 'ci/test-verify-changed.sh'
+              - 'ci/test-ci-triggers.py'
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/pr-gate.yml'
+            adb:
+              - 'watch-adb/**'
+              - 'pom.xml'
+              - 'ci/verify-changed.sh'
+              - 'ci/test-verify-changed.sh'
+              - 'ci/test-ci-triggers.py'
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/pr-gate.yml'
+            core:
+              - 'watch-core/**'
+              - 'pom.xml'
+              - 'ci/verify-changed.sh'
+              - 'ci/test-verify-changed.sh'
+              - 'ci/test-ci-triggers.py'
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/pr-gate.yml'
+            desktop:
+              - 'watch-desktop/**'
+              - 'pom.xml'
+              - 'ci/verify-changed.sh'
+              - 'ci/test-verify-changed.sh'
+              - 'ci/test-ci-triggers.py'
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/pr-gate.yml'
+            docs:
+              - '**/*.md'
+              - 'ci/check-doc-links.py'
+              - '.github/workflows/docs-check.yml'
+      - name: Validate CI and gate routing (always)
+        run: python3 ci/test-ci-triggers.py
+      - name: Set up Java only for changed Java paths
+        if: steps.changed.outputs.domain == 'true' || steps.changed.outputs.adb == 'true' || steps.changed.outputs.core == 'true' || steps.changed.outputs.desktop == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Validate module routing
+        if: steps.changed.outputs.domain == 'true' || steps.changed.outputs.adb == 'true' || steps.changed.outputs.core == 'true' || steps.changed.outputs.desktop == 'true'
+        run: bash ci/test-verify-changed.sh
+      - name: Verify changed Java modules and downstream compilation
+        if: steps.changed.outputs.domain == 'true' || steps.changed.outputs.adb == 'true' || steps.changed.outputs.core == 'true' || steps.changed.outputs.desktop == 'true'
+        env:
+          DOMAIN_CHANGED: ${{ steps.changed.outputs.domain }}
+          ADB_CHANGED: ${{ steps.changed.outputs.adb }}
+          CORE_CHANGED: ${{ steps.changed.outputs.core }}
+          DESKTOP_CHANGED: ${{ steps.changed.outputs.desktop }}
+          FULL_REACTOR: 'false'
+        run: bash ci/verify-changed.sh
+      - name: Check documentation integrity
+        if: steps.changed.outputs.docs == 'true'
+        run: python3 ci/check-doc-links.py
+      - name: Explain coverage
+        if: always()
+        env:
+          JAVA_CHANGED: ${{ steps.changed.outputs.domain == 'true' || steps.changed.outputs.adb == 'true' || steps.changed.outputs.core == 'true' || steps.changed.outputs.desktop == 'true' }}
+          DOCS_CHANGED: ${{ steps.changed.outputs.docs }}
+        run: |
+          echo "## PR gate: applicable checks" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Java changes detected: ${JAVA_CHANGED}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Documentation changes detected: ${DOCS_CHANGED}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Gate runs on every PR; unrelated paths only receive the routing-policy check." >> "$GITHUB_STEP_SUMMARY"
+          echo "- Windows preview artifacts, Android probe builds and physical-device tests are separate. Green PR gate does NOT certify them." >> "$GITHUB_STEP_SUMMARY"
