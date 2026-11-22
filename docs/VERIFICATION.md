@@ -32,6 +32,17 @@ All observations must include **date, app build/commit, watch model/firmware/API
 
 **Disposition:** W14-A transfer/cancel hardware baseline verified; resume and incremental-queue behaviors were found defective on the first preview; both have proposed fixes and require targeted owner retests on the new build before PR merge. No claims about Safari, HTTP, iOS, scan-only retry under injected failure or alternate devices. For interruptions mid-ADB push, remote copy completion may be ambiguous without a callback; do not promise perfect deduplication of that in-flight file.
 
+## W14-A — Owner retest after fixes (2026-11-22)
+
+**Tester:** project owner (direct chat report: "Оба сценария сработали верно"). **Target build:** current-HEAD Windows preview [run #45028266585](https://github.com/aidarnig/WristPorter/actions/runs/45028266585), commit `7821acbfd7a21f353a0def62680293c72e4e56b3`, which was provided immediately before this feedback. Owner did not independently state ZIP checksum, watch firmware or Windows build in this confirmation. Treat the two scenario results as owner-reported, not independent automated/Gallery verification.
+
+| ID | Retest scenario | Result | Actual owner report |
+| --- | --- | --- | --- |
+| W14A-DESK-06 | Successful photo retained in queue, append 10 new photos, send only new items | **PASS (owner)** | Confirms the previously reported 1+10 duplicate-copy regression is fixed; both prescribed scenarios "worked correctly" |
+| W14A-DESK-07 | Cancel a roughly 15-photo queue after partial progress, then Continue only outstanding items | **PASS (owner)** | Confirms cancel→Continue behavior is correct; previously completed items no longer retriggered as in the original bug |
+
+**Disposition:** Both original defects remain recorded as FAIL on the first preview (historical evidence), and both fixed scenarios are now **PASS on owner retest**. This does **not** verify other watch models, actual Gallery counts for each new image, scan-only retry under injected failure or HTTP/Safari. **Independent review of PR #43 at latest head is still REQUIRED before merge**; do not close #38 solely on this test evidence.
+
 ## W0 — initial real-device probe (all NOT TESTED)
 
 | ID | Scenario | Status | Evidence requirements |
