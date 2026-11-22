@@ -61,6 +61,14 @@ jobs:
               - '**/*.md'
               - 'ci/check-doc-links.py'
               - '.github/workflows/docs-check.yml'
+            review_sensitive:
+              - 'watch-adb/src/**'
+              - 'watch-web/**'
+              - 'wearos/**'
+              - 'experiments/w0-ble-probe/**'
+              - 'ci/package-windows.ps1'
+              - '.github/workflows/windows-portable.yml'
+              - 'docs/adr/**'
       - name: Validate CI and gate routing (always)
         run: python3 ci/test-ci-triggers.py
       - name: Set up Java only for changed Java paths
@@ -90,9 +98,12 @@ jobs:
         env:
           JAVA_CHANGED: ${{ steps.changed.outputs.domain == 'true' || steps.changed.outputs.adb == 'true' || steps.changed.outputs.core == 'true' || steps.changed.outputs.desktop == 'true' }}
           DOCS_CHANGED: ${{ steps.changed.outputs.docs }}
+          REVIEW_SENSITIVE: ${{ steps.changed.outputs.review_sensitive }}
         run: |
           echo "## PR gate: applicable checks" >> "$GITHUB_STEP_SUMMARY"
           echo "- Java changes detected: ${JAVA_CHANGED}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Documentation changes detected: ${DOCS_CHANGED}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Independent review recommended by path signals: ${REVIEW_SENSITIVE}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- A risk signal is NOT a passed review; inspect the actual diff and Issue." >> "$GITHUB_STEP_SUMMARY"
           echo "- Gate runs on every PR; unrelated paths only receive the routing-policy check." >> "$GITHUB_STEP_SUMMARY"
           echo "- Windows preview artifacts, Android probe builds and physical-device tests are separate. Green PR gate does NOT certify them." >> "$GITHUB_STEP_SUMMARY"
