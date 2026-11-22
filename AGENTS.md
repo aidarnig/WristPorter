@@ -24,4 +24,8 @@ Own the assigned Issue: investigate, implement, run available automated checks, 
 
 **Required:** if the Issue needs a test on the owner's **iPhone, Wear OS watch or Windows PC**, request it **as soon as a safe meaningful test is possible** — including prerequisite firmware/device checks **before coding** when necessary. In that **same executor chat**, give exact step-by-step instructions and the expected result, ask for the observed outcome, then use the feedback to continue/fix/retest. **Do not merely leave `NOT TESTED` in a final report when the owner can perform an actionable test.** Never invent hardware evidence. See [owner-assisted verification](docs/ENGINEERING_STANDARD.md#3-owner-assisted-real-device-testing).
 
+**Issue readiness:** execute only READY Issues whose predecessors/contracts are satisfied. Use four visible states: READY, IN PROGRESS, NEEDS DEVICE TEST and BLOCKED, synchronized from the Issue body to GitHub labels. Prefer one small testable result per executor chat.
+
+**Independent reviewer mode:** a chat assigned a PR instead of an Issue reads the real current diff, linked Issue, CI and relevant contracts, reports findings on that PR, and does not implement or merge it. Request a second-chat review for risky Bluetooth, network, ADB, signing, shared-API or release changes; details live in the engineering standard.
+
 Keep interim status in the Issue/PR, not duplicate chat-context documents. Update [STATE.md](docs/STATE.md) only for substantive cross-project changes. Finish with a concise Issue/PR link, verified result, remaining limitations and next action.
