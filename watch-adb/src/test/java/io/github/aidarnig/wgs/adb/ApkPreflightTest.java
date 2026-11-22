@@ -24,6 +24,7 @@ class ApkPreflightTest {
         manifest.setMinSdkVersion(21);
         manifest.getOrCreateApplicationElement();
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        manifest.refreshFull();
         manifest.writeBytes(bytes);
         assertTrue(bytes.size() > 8, "Generated binary manifest is not empty");
         AndroidManifestBlock decoded = AndroidManifestBlock.load(new java.io.ByteArrayInputStream(bytes.toByteArray()));
