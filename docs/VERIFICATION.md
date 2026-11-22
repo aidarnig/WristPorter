@@ -28,8 +28,9 @@ All observations must include **date, app build/commit, watch model/firmware/API
 | W14A-DESK-02 | Transfer batch larger than 20 photos | **PASS** | Owner reports 20+ photos all transferred; precise count and Gallery confirmation for each batch item not separately specified |
 | W14A-DESK-03 | Cancel during a 15-photo batch at 10/15 | **PASS (stop)** | Transfer stops on Cancel; no claim of device-side cleanup of in-flight photo |
 | W14A-DESK-04 | Press Send after cancellation and check already transferred files | **FAIL (resume UX)** | Progress restarts at 0/15 and already transferred photos are sent again; duplicate local-to-watch pushes observed, but exact extra Gallery entries not counted |
+| W14A-DESK-05 | After a successful photo, leave it in queue, add 10 more and press Send again | **FAIL (incremental send)** | Owner reports first photo is sent again along with 10 new photos; reported from prior Windows preview, not retested on corrected build |
 
-**Disposition:** W14-A transfer/cancel hardware baseline verified; resume behavior needs correction and a targeted second owner test before PR merge. No claims about Safari, HTTP, iOS, scan-only retry under injected failure or alternate devices. For interruptions mid-ADB push, remote copy completion may be ambiguous without a callback; do not promise perfect deduplication of that in-flight file.
+**Disposition:** W14-A transfer/cancel hardware baseline verified; resume and incremental-queue behaviors were found defective on the first preview; both have proposed fixes and require targeted owner retests on the new build before PR merge. No claims about Safari, HTTP, iOS, scan-only retry under injected failure or alternate devices. For interruptions mid-ADB push, remote copy completion may be ambiguous without a callback; do not promise perfect deduplication of that in-flight file.
 
 ## W0 — initial real-device probe (all NOT TESTED)
 
