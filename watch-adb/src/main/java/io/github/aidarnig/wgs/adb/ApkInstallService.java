@@ -3,11 +3,12 @@ package io.github.aidarnig.wgs.adb;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,9 +72,7 @@ public final class ApkInstallService {
         try {
             // The caller-inspected file may have changed. Install a private byte-for-byte snapshot.
             staged = Files.createTempFile("wristporter-install-", ".apk");
-            Files.copy(request.apk().path(), staged, StandardCopyOption.REPLACE_EXISTING);
-            if (Files.size(staged) != request.apk().size()
-                    || !ApkPreflight.sha256File(staged).equalsIgnoreCase(request.apk().fileSha256()))
+            if (!copyInspectedBytes(request.apk(), staged))
                 return Result.of(Code.APK_CHANGED);
             // Signature and package MUST be checked again on the exact bytes passed to ADB.
             ApkPreflight.Inspected snapshot;
@@ -132,6 +131,30 @@ public final class ApkInstallService {
         }
     }
 
+
+    /**
+     * The owner-selected APK may grow or be replaced after preflight. Refuse to follow
+     * newly planted source links and stop at the *inspected* byte limit, not only after
+     * a potentially unbounded copy has exhausted the Windows temp volume.
+     */
+    private static boolean copyInspectedBytes(ApkPreflight.Inspected original, Path staged)
+            throws IOException {
+        long total = 0;
+        try (InputStream in = Files.newInputStream(original.path(), LinkOption.NOFOLLOW_LINKS);
+             OutputStream out = Files.newOutputStream(staged, StandardOpenOption.WRITE,
+                     StandardOpenOption.TRUNCATE_EXISTING, LinkOption.NOFOLLOW_LINKS)) {
+            byte[] buffer = new byte[32 * 1024];
+            for (int read; (read = in.read(buffer)) != -1;) {
+                if (read == 0) continue;
+                total += read;
+                if (total > original.size()) return false;
+                out.write(buffer, 0, read);
+            }
+        }
+        return total == original.size()
+                && ApkPreflight.sha256File(staged).equalsIgnoreCase(original.fileSha256());
+    }
+
     private Command call(Path adb, Duration timeout, String... args) throws IOException, InterruptedException {
         List<String> command = new ArrayList<>(args.length + 1);
         command.add(adb.toString());
@@ -148,7 +171,8 @@ public final class ApkInstallService {
         Path apk = r.apk().path();
         return apk != null && apk.isAbsolute() && Files.isRegularFile(apk, LinkOption.NOFOLLOW_LINKS)
                 && !Files.isSymbolicLink(apk) && ApkPreflight.BRIDGE_PACKAGE.equals(r.apk().packageName())
-                && r.apk().size() > 0 && r.apk().mode() == r.policy().mode()
+                && r.apk().size() > 0 && r.apk().size() <= ApkPreflight.MAX_BYTES
+                && r.apk().mode() == r.policy().mode()
                 && r.apk().signerSha256() != null && r.apk().signerSha256().matches("[0-9A-Fa-f]{64}")
                 && r.apk().fileSha256() != null
                 && r.apk().fileSha256().matches("[0-9A-Fa-f]{64}");
