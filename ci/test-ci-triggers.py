@@ -124,6 +124,9 @@ assert set(patterns(section(gate_filters, "review_sensitive", 12), 14)) == {
     ".github/workflows/windows-portable.yml", "docs/adr/**",
 }
 assert "          FULL_REACTOR: 'false'" in gate
+# A web-only PR must not silently skip Maven tests in the always-on gate.
+assert all("steps.changed.outputs.web == 'true'" in line for line in gate.splitlines()
+           if "if: steps.changed.outputs.domain" in line or "JAVA_CHANGED:" in line)
 docs = (root / ".github/workflows/docs-check.yml").read_text(encoding="utf-8")
 docs_on = section(docs.splitlines(), "on", 0)
 assert "  push:" in docs_on and "  workflow_dispatch:" in docs_on
