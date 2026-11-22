@@ -110,12 +110,17 @@ for required in (
 assert "      - uses: dorny/paths-filter@v4" in gate
 gate_filters = gate.split("          filters: |\n", 1)[1].split("\n      - name: Validate CI", 1)[0].splitlines()
 gate_groups = re.findall(r"^            ([a-z][a-z0-9_-]*):$", "\n".join(gate_filters), re.M)
-assert gate_groups == groups + ["docs"], gate_groups
+assert gate_groups == groups + ["docs", "review_sensitive"], gate_groups
 for group, module in zip(groups, modules):
     got = set(patterns(section(gate_filters, group, 12), 14))
     assert got == common | {".github/workflows/pr-gate.yml", f"{module}/**"}, group
 assert set(patterns(section(gate_filters, "docs", 12), 14)) == {
     "**/*.md", "ci/check-doc-links.py", ".github/workflows/docs-check.yml",
+}
+assert set(patterns(section(gate_filters, "review_sensitive", 12), 14)) == {
+    "watch-adb/src/**", "watch-web/**", "wearos/**",
+    "experiments/w0-ble-probe/**", "ci/package-windows.ps1",
+    ".github/workflows/windows-portable.yml", "docs/adr/**",
 }
 assert "          FULL_REACTOR: 'false'" in gate
 docs = (root / ".github/workflows/docs-check.yml").read_text(encoding="utf-8")
