@@ -1,6 +1,6 @@
 # WristPorter Bridge — proposed Wear OS architecture
 
-**Design status:** proposal, accepted direction; **no Kotlin implementation exists yet**. [ADR-0001](adr/0001-independent-wearos-bridge.md) fixes separation from Windows; [ADR-0002](adr/0002-direct-ble-safety.md) governs BLE/security defaults. Implementation starts after [W0 #13](https://github.com/aidarnig/WristPorter/issues/13) establishes the reference watch capabilities.
+**Design status:** BLE architecture proposal, accepted direction; W1-A introduces an isolated Kotlin/Compose **UI shell only**, without a BLE implementation. [ADR-0001](adr/0001-independent-wearos-bridge.md) fixes separation from Windows; [ADR-0002](adr/0002-direct-ble-safety.md) governs BLE/security defaults. Implementation starts after [W0 #13](https://github.com/aidarnig/WristPorter/issues/13) establishes the reference watch capabilities.
 
 ## System boundary
 

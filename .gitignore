@@ -20,3 +20,10 @@ photos-test/
 
 # Local portable packages
 dist/
+
+# Independent Gradle/Wear OS local outputs
+**/.gradle/
+**/build/
+local.properties
+*.apk
+*.aab
