@@ -259,10 +259,13 @@ class UploadStagingTest {
                     () -> s.stage(new ByteArrayInputStream(png), "image/png", (long) png.length));
             assertEquals(413, error.status());
             assertTrue(s.release(one.id()));
-            assertNotNull(s.stage(new ByteArrayInputStream(png), "image/png",
-                    (long) png.length));
+            assertEquals(413, assertThrows(UploadStaging.Rejected.class,
+                    () -> s.stage(new ByteArrayInputStream(png), "image/png",
+                            (long) png.length)).status(), "Session quota is cumulative");
             s.clear();
             assertTrue(s.find(two.id()).isEmpty());
+            assertNotNull(s.stage(new ByteArrayInputStream(png), "image/png",
+                    (long) png.length));
         } finally {
             s.close();
         }
