@@ -10,6 +10,7 @@ on:
       - 'watch-*/src/**'
       - 'ci/package-windows.ps1'
       - 'ci/bundle-adb.ps1'
+      - 'ci/install-watch-test-apk.ps1'
       - '.github/workflows/windows-preview.yml'
   workflow_dispatch:
 
@@ -31,6 +32,15 @@ jobs:
           distribution: temurin
           java-version: '25'
           cache: maven
+      - name: Parse-check safe watch APK installer
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $parseErrors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path 'ci/install-watch-test-apk.ps1').Path, [ref]$tokens, [ref]$parseErrors
+          )
+          if ($parseErrors.Count -gt 0) { throw ($parseErrors | Out-String) }
       - name: Verify and package portable Windows preview
         shell: pwsh
         run: ./ci/package-windows.ps1
