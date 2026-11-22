@@ -8,11 +8,11 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "io.github.aidarnig.wristporter.w0.round"
+        applicationId = "io.github.aidarnig.wristporter.w0.inspector"
         minSdk = 30 // EXPERIMENTAL build floor; W0 does not decide Bridge minSdk
         targetSdk = 35
-        versionCode = 3
-        versionName = "0.0.3-round"
+        versionCode = 4
+        versionName = "0.0.4-inspector"
     }
 
     compileOptions {
