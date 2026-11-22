@@ -361,9 +361,19 @@ public final class LanUploadGateway implements AutoCloseable {
             submitted = parsed.group(1);
             formNonce = parsed.group(2);
         }
-        if (!originNotForged(exchange)
-                || (!hasMatchingOrigin(exchange) && !validFormNonce(exchange, formNonce))) {
-            reply(exchange, 403, "Origin rejected"); return;
+        if (!originNotForged(exchange)) {
+            // Test-only non-sensitive diagnostic: classify the failing policy,
+            // never echo actual header values, URLs, PINs or cookies.
+            List<String> origins = exchange.getRequestHeaders().get("Origin");
+            String reason;
+            if (origins == null) reason = "FETCH_METADATA";
+            else if (origins.size() != 1) reason = "DUPLICATE_ORIGIN";
+            else if ("null".equals(origins.getFirst())) reason = "OPAQUE_ORIGIN";
+            else reason = "ORIGIN_MISMATCH";
+            reply(exchange, 403, "Origin rejected (" + reason + ")"); return;
+        }
+        if (!hasMatchingOrigin(exchange) && !validFormNonce(exchange, formNonce)) {
+            reply(exchange, 403, "Origin rejected (FORM_PROOF)"); return;
         }
         String peer = exchange.getRemoteAddress().getAddress().getHostAddress();
         boolean granted = false;
@@ -459,7 +469,10 @@ public final class LanUploadGateway implements AutoCloseable {
     private static void addSecurityHeaders(Headers h) {
         h.set("Cache-Control", "no-store");
         h.set("X-Content-Type-Options", "nosniff");
-        h.set("Referrer-Policy", "no-referrer");
+        // For native HTML form POST, no-referrer can turn Origin into literal
+        // "null" on Safari (Fetch/referrer-policy semantics). same-origin sends
+        // referrer information only to this same server; no cross-site leakage.
+        h.set("Referrer-Policy", "same-origin");
         h.set("X-Frame-Options", "DENY");
         h.set("Cross-Origin-Resource-Policy", "same-origin");
         h.set("Content-Security-Policy",
