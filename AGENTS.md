@@ -1,31 +1,27 @@
 # WristPorter — agent entry point
 
-**Single-task handoff:** in a WristPorter-connected chat, give the executor only `Issue #N` or its GitHub URL. The Issue is the assignment, GitHub is the shared memory, and [this repository](https://github.com/aidarnig/WristPorter) is the source of truth. Do not ask the owner to paste prior chats or duplicate the task description.
+**Start with one GitHub Issue.** An executor chat needs only `WristPorter Issue #N` (or its URL). GitHub `main`, the assigned Issue and linked PRs are the source of truth; do not ask the owner to repeat previous chats.
 
-## Start in this order
+## Minimal reading path
 
-1. **This `AGENTS.md`**, then the **live assigned GitHub Issue**, including its linked PRs and blockers.
-2. [Current state](docs/STATE.md) — short snapshot; confirm it against live `main`.
-3. [Documentation index](docs/INDEX.md) and [engineering workflow](docs/ENGINEERING_STANDARD.md).
-4. [Roadmap](docs/ROADMAP.md) for dependency gates, **only the task-relevant** product/architecture/security/ADR/verification documents from the index and Issue, and the actual code/tests.
-5. Check current `main`, open PRs and relevant prior commits. Verify available GitHub tools before claiming access is unavailable.
+1. Read **this file**, then the **live assigned Issue** and linked PRs/comments.
+2. Skim [current state](docs/STATE.md) and verify it against live `main` and relevant open PRs.
+3. Follow [engineering workflow](docs/ENGINEERING_STANDARD.md) for execution, tests, autonomous integration and handoff.
+4. Consult the [documentation index](docs/INDEX.md) to read **only task-relevant** design, roadmap, ADR, build, security and verification pages. Inspect relevant code and tests; do not load the entire docs tree by default.
 
-If the Issue lacks a routine implementation detail, investigate and choose a reasonable approach; update its acceptance checklist if needed. Ask the owner **only** for a material product/security decision, a genuine hardware action or another blocker that cannot be resolved safely from the repository.
+Verify available repository tools before claiming access is missing. Resolve routine ambiguities by inspecting code and documenting the chosen approach in the Issue.
 
-## Product invariants
+## Non-negotiable product boundaries
 
-- **Shipped:** Windows Desktop v1.1.2, Java 25/Maven/JavaFX and Wi-Fi ADB transfer of JPEG/PNG to Wear OS. Preserve this standalone path.
-- **Planned, not shipped:** independent Kotlin Wear OS Bluetooth ANCS/AMS Bridge; an **optional** iPhone Safari → local Windows → ADB → watch upload mode **within the same Windows app**; and optional Windows APK management. No native iOS app, public cloud, background Internet server or user accounts. See [PRODUCT.md](docs/PRODUCT.md).
-- Watch4 Classic ↔ iPhone BLE feasibility, Safari Web Upload and battery behavior are **not hardware-verified**. Never extrapolate device support from CI or another project. Follow [VERIFICATION.md](docs/VERIFICATION.md).
-- Accepted JPEG/PNG files must retain **original bytes, resolution and metadata**: no silent resize, compression, re-encoding or quality reduction. A browser-provided iOS representation may differ from the original and needs separate verification; see [LOCAL_WEB_PORTAL.md](docs/LOCAL_WEB_PORTAL.md).
-- No watch factory reset, silent pairing/installation, destructive ADB commands, remote ADB/admin interface, private notification logging or committed keys/identifiers. Honor licenses and existing [ADRs](docs/adr/README.md).
+- Shipped Desktop: Windows portable, Java 25/Maven/JavaFX, Wi-Fi ADB JPEG/PNG → Wear OS Gallery. Preserve this independent photo path.
+- Planned separately: Kotlin Wear OS iPhone BLE ANCS/AMS Bridge; **optional** Safari → the **same** Windows app → Wi-Fi ADB → watch; Windows APK manager. No native iOS app or public cloud. Consult [PRODUCT.md](docs/PRODUCT.md) and relevant [ADRs](docs/adr/README.md).
+- Accepted JPEG/PNG transfer payloads preserve original **bytes, resolution and metadata**; never silently compress/re-encode. Safari may provide a transformed representation; do not claim original-iPhone-file identity without measurement.
+- No factory resets, destructive watch commands, silent pairing/APK installation, unauthorized LAN exposure, remote ADB admin, sensitive logs, committed secrets or unsupported compatibility claims. Follow the task's security and verification gates.
 
-## Autonomous execution
+## Work autonomously; test with the owner interactively
 
-**Default: complete the assigned Issue without requiring routine confirmations.** Independently inspect, plan, branch, implement, test, document, open/review a PR and **merge low-risk verified changes** when the precise conditions in [ENGINEERING_STANDARD.md](docs/ENGINEERING_STANDARD.md) are met. Do not ask permission for routine technical choices or every PR.
+Own the assigned Issue: investigate, implement, run available automated checks, document, open/review PRs and integrate **low-risk verified** changes according to the [engineering standard](docs/ENGINEERING_STANDARD.md). Escalate only material decisions/risks, not routine implementation choices.
 
-**Escalate:** unapproved scope change, security/privacy trade-off, public/network exposure, destructive operation, breaking shared contract, release/signing, unverified device-dependent acceptance or an unresolved cross-branch conflict. Never imply hardware testing happened when it did not. If a safe PR can be merged while device acceptance remains pending, label that partial milestone **EXPERIMENTAL / NOT DEVICE-VERIFIED** and leave the Issue open.
+**Required:** if the Issue needs a test on the owner's **iPhone, Wear OS watch or Windows PC**, request it **as soon as a safe meaningful test is possible** — including prerequisite firmware/device checks **before coding** when necessary. In that **same executor chat**, give exact step-by-step instructions and the expected result, ask for the observed outcome, then use the feedback to continue/fix/retest. **Do not merely leave `NOT TESTED` in a final report when the owner can perform an actionable test.** Never invent hardware evidence. See [owner-assisted verification](docs/ENGINEERING_STANDARD.md#3-owner-assisted-real-device-testing).
 
-**Every handoff:** Issue/PR link, changed behavior, exact tests and CI evidence, real-device PASS/FAIL/NOT TESTED, known limits, and next action. Keep interim status in GitHub Issues/PRs; update [STATE.md](docs/STATE.md) only for durable cross-track changes. No redundant context documents.
-
-**Documentation validation:** `python ci/check-doc-links.py` and the [documentation CI](.github/workflows/docs-check.yml) check links and required files, not technical correctness or physical devices.
+Keep interim status in the Issue/PR, not duplicate chat-context documents. Update [STATE.md](docs/STATE.md) only for substantive cross-project changes. Finish with a concise Issue/PR link, verified result, remaining limitations and next action.
