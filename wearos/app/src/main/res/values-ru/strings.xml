@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">WristPorter</string>
+    <string name="connection_label">Подключение</string>
+    <string name="not_connected">Не подключено</string>
+    <string name="bluetooth_not_implemented">Bluetooth-мост пока не реализован</string>
+    <string name="shell_explanation">Предварительная версия. Сопряжение и уведомления недоступны.</string>
+</resources>

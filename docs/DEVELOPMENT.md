@@ -61,7 +61,17 @@ The repository's About metadata and Social Preview are managed in GitHub Setting
 
 Delegate an executor by **Issue URL or number only**. The unique mandatory read order, autonomous safe-merge rules and documentation-writing procedure are in [AGENTS.md](../AGENTS.md) and [ENGINEERING_STANDARD.md](ENGINEERING_STANDARD.md); this development guide does not duplicate them.
 
-**WristPorter Bridge is planned, not yet built.** Add Kotlin/Gradle Wear OS build instructions and isolated CI here *once W1 creates them*. Until then the JDK 25/Maven commands above apply only to Desktop. Do not add Android SDK/Gradle dependencies to the Desktop Maven build.
+## Wear OS app shell (W1-A, debug-only)
+
+`wearos/` is a separate Kotlin/Gradle Android build, NOT part of the JDK 25/Maven reactor. Use JDK **17**, Android SDK Platform **36** and Build Tools **36.0.0**, Gradle **8.13**, AGP **8.13.2** and Kotlin/Compose Compiler plugin **2.3.21** (pinned in the Gradle files). Gradle 8.13 must be installed or provisioned explicitly; this initial shell does not bundle a Gradle wrapper.
+
+```bash
+cd wearos
+gradle --no-daemon :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
+```
+
+The debug APK is `wearos/app/build/outputs/apk/debug/app-debug.apk`, package `io.github.aidarnig.wristporter.bridge`. It has no Bluetooth/network/notification permissions or working pairing controls. `minSdk=30` is a provisional build floor (API 30-35 untested), `targetSdk=36` and `compileSdk=36` are independent choices. The test-only APK is uploaded by [Wear OS CI](../.github/workflows/wearos.yml), never tagged or published as a release. Use [the explicit selected-watch installer](../ci/install-watch-test-apk.ps1) only if an owner-assisted packaging check is actually warranted. Uninstall safely with `adb -s <selected-watch-serial> uninstall io.github.aidarnig.wristporter.bridge` after explicit device confirmation.
+
 
 ## Future single-app Web Upload mode — not yet implemented
 

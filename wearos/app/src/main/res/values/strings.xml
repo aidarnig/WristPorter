@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">WristPorter</string>
+    <string name="connection_label">Connection</string>
+    <string name="not_connected">Not connected</string>
+    <string name="bluetooth_not_implemented">Bluetooth bridge not implemented yet</string>
+    <string name="shell_explanation">Preview only. Pairing and notifications are unavailable.</string>
+</resources>

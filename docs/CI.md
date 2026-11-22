@@ -34,9 +34,9 @@ The existing W0 experiment branch produces a W0 debug APK using its own workflow
 
 issue-status.yml syncs the Issue form's Execution status (READY, IN PROGRESS, NEEDS DEVICE TEST, BLOCKED) to one of the status:ready, status:in-progress, status:needs-device-test or status:blocked labels on Issue edits. The job has issue-only write permissions and never executes task text. A label is a queue signal, **not** validation that a dependency is truly merged. If GitHub token label writes are restricted, keep the Issue body status as the primary truth and request the minimal repository permission change.
 
-## Planned Wear OS CI (not yet configured)
+## Wear OS CI (W1-A shell)
 
-W1 [#14](https://github.com/aidarnig/WristPorter/issues/14) will add **independent path-filtered Android/Kotlin CI** for `wearos/**` sources, unit tests and lint. Full Gradle/watch builds must not become a dependency of unrelated Java or documentation changes. Release-signing secrets stay outside the repository, and device acceptance remains manual in [VERIFICATION.md](VERIFICATION.md).
+[wearos.yml](../.github/workflows/wearos.yml) runs only for `wearos/**` or its own workflow changes on PR/main (plus manual dispatch). JDK 17, Gradle 8.13, SDK 36, debug assembly, JVM shell/localization tests and Android lint are isolated from the Java PR gate and Maven CI. A 14-day **test-only** debug APK is uploaded; no signing credentials, releases or physical-watch compatibility claims are involved. Device acceptance remains a separate [VERIFICATION.md](VERIFICATION.md) record.
 
 ## Documentation integrity workflow
 

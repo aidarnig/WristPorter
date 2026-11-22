@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-feature android:name="android.hardware.type.watch" android:required="true" />
+
+    <!-- No Bluetooth, network, notification or background-service permissions in W1-A. -->
+    <application
+        android:allowBackup="false"
+        android:icon="@drawable/ic_wristporter"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.Material.NoActionBar">
+        <!-- The W1-A shell launches without a phone companion; it has no BLE functionality. -->
+        <meta-data android:name="com.google.android.wearable.standalone" android:value="true" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
