@@ -8,6 +8,10 @@ import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
+import java.nio.file.Path;
+import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -31,8 +35,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
- * W14-B: isolated, manually started HTTP authorization probe. Not wired into Desktop or ADB.
- * Deliberately has no upload, filesystem, watch selection or management routes.
+ * W14-C: isolated opt-in authenticated gateway with private JPEG/PNG staging.
+ * Not wired into Desktop, Safari gallery or ADB; never serves staged bytes.
  *
  * HTTP is PLAINTEXT: tokens, PINs and later photos are observable on the local network.
  * The Windows owner must confirm a trusted private LAN before invoking start().
@@ -89,12 +93,14 @@ public final class LanUploadGateway implements AutoCloseable {
     private final Clock clock;
     private final Predicate<Inet4Address> addressPolicy;
     private final SecureRandom random;
+    private final UploadStaging uploads;
     private final Map<String, List<Instant>> failuresByPeer = new HashMap<>();
     private final List<Instant> globalFailures = new ArrayList<>();
     private final Map<String, Instant> pendingForms = new LinkedHashMap<>();
 
     private HttpServer server;
     private ThreadPoolExecutor executor;
+    private ScheduledExecutorService janitor;
     private StartRequest startedWith;
     private String url;
     private String pin;
@@ -107,9 +113,16 @@ public final class LanUploadGateway implements AutoCloseable {
 
     // Package-private loopback test seam; production constructor always applies adapter checks.
     LanUploadGateway(Clock clock, Predicate<Inet4Address> addressPolicy, SecureRandom random) {
+        this(clock, addressPolicy, random, UploadStaging.defaultDirectory());
+    }
+
+    // Package-private storage seam for isolated tests; production uses per-user LocalAppData.
+    LanUploadGateway(Clock clock, Predicate<Inet4Address> addressPolicy,
+                     SecureRandom random, Path stageDirectory) {
         this.clock = Objects.requireNonNull(clock);
         this.addressPolicy = Objects.requireNonNull(addressPolicy);
         this.random = Objects.requireNonNull(random);
+        this.uploads = new UploadStaging(stageDirectory, random);
     }
 
     public synchronized OwnerAccess start(StartRequest request) throws IOException {
@@ -129,6 +142,12 @@ public final class LanUploadGateway implements AutoCloseable {
         }
 
         HttpServer created = HttpServer.create(new InetSocketAddress(request.bindAddress(), 0), 0);
+        try {
+            uploads.open();
+        } catch (IOException | RuntimeException e) {
+            created.stop(0);
+            throw e;
+        }
         ThreadPoolExecutor workers = new ThreadPoolExecutor(
                 2, 2, 0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(8), task -> {
                     Thread thread = new Thread(task, "wristporter-web-gateway");
@@ -147,12 +166,21 @@ public final class LanUploadGateway implements AutoCloseable {
             globalFailures.clear();
             pendingForms.clear();
             created.start();
+            janitor = Executors.newSingleThreadScheduledExecutor(task -> {
+                Thread thread = new Thread(task, "wristporter-web-cleanup");
+                thread.setDaemon(true);
+                return thread;
+            });
+            janitor.scheduleAtFixedRate(this::expireStaging, 1, 1, TimeUnit.SECONDS);
             executor = workers;
             server = created;
             return new OwnerAccess(url + "/", pin, pinExpiresAt, PLAINTEXT_WARNING);
         } catch (RuntimeException failure) {
             created.stop(0);
             workers.shutdownNow();
+            if (janitor != null) janitor.shutdownNow();
+            janitor = null;
+            try { uploads.close(); } catch (IOException ignored) { /* fail closed */ }
             clearSecrets();
             throw failure;
         }
@@ -166,13 +194,18 @@ public final class LanUploadGateway implements AutoCloseable {
     public void stop() {
         HttpServer toStop;
         ThreadPoolExecutor workers;
+        ScheduledExecutorService sweeper;
         synchronized (this) {
             toStop = server;
             workers = executor;
+            sweeper = janitor;
             server = null;
             executor = null;
+            janitor = null;
             clearSecrets();
         }
+        if (sweeper != null) sweeper.shutdownNow();
+        try { uploads.close(); } catch (IOException ignored) { /* Sweep again at next start */ }
         if (toStop != null) toStop.stop(0);
         if (workers != null) workers.shutdownNow();
     }
@@ -220,6 +253,7 @@ public final class LanUploadGateway implements AutoCloseable {
                 && snapshot.selectedWatchLease().equals(snapshot.currentWatchLease().get());
         if (!valid) {
             synchronized (this) { session = null; pin = null; }
+            purgeUploads();
         }
         return valid;
     }
@@ -247,10 +281,21 @@ public final class LanUploadGateway implements AutoCloseable {
                     reply(exchange, 403, "Unauthorized"); return;
                 }
                 synchronized (this) { session = null; }
+                purgeUploads();
                 exchange.getResponseHeaders().add("Set-Cookie",
                         "WPSESSION=; Max-Age=0; HttpOnly; SameSite=Strict; Path=/");
                 reply(exchange, 200, "Logged out");
-            } else if (List.of("/", "/status", "/session", "/session/logout").contains(path)) {
+            } else if ("/uploads".equals(path) && "POST".equals(method)) {
+                upload(exchange);
+            } else if (path.matches("/jobs/[0-9a-f]{32}/cancel")) {
+                if (!"POST".equals(method)) { reply(exchange, 405, "Method not allowed"); return; }
+                if (!originNotForged(exchange) || !authorized(exchange, true)) {
+                    reply(exchange, 403, "Unauthorized"); return;
+                }
+                String id = path.substring("/jobs/".length(), path.length() - "/cancel".length());
+                reply(exchange, uploads.release(id) ? 200 : 404, "Cancellation processed");
+            } else if (List.of("/", "/status", "/session", "/session/logout", "/uploads")
+                    .contains(path)) {
                 reply(exchange, 405, "Method not allowed");
             } else {
                 reply(exchange, 404, "Not found");
@@ -261,6 +306,70 @@ public final class LanUploadGateway implements AutoCloseable {
         } finally {
             exchange.close();
         }
+    }
+
+    private void upload(HttpExchange exchange) throws IOException {
+        if (!originNotForged(exchange) || !authorized(exchange, true)) {
+            reply(exchange, 403, "Unauthorized"); return;
+        }
+        Headers headers = exchange.getRequestHeaders();
+        List<String> types = headers.get("Content-Type");
+        if (types == null || types.size() != 1) {
+            reply(exchange, 415, "Only JPEG or PNG is supported"); return;
+        }
+        String type = types.getFirst().trim().toLowerCase(Locale.ROOT);
+        List<String> lengths = headers.get("Content-Length");
+        if (lengths != null && lengths.size() != 1) {
+            reply(exchange, 400, "Invalid request length"); return;
+        }
+        Long length = null;
+        if (lengths != null) {
+            try {
+                length = Long.parseLong(lengths.getFirst());
+            } catch (NumberFormatException invalid) {
+                reply(exchange, 400, "Invalid request length"); return;
+            }
+            if (length <= 0 || length > UploadStaging.MAX_FILE_BYTES) {
+                reply(exchange, 413, "Image exceeds file limit"); return;
+            }
+        }
+        try {
+            UploadStaging.StagedUpload image = uploads.stage(exchange.getRequestBody(), type, length);
+            if (!authorized(exchange, true) || !watchLeaseValid()) {
+                uploads.release(image.id());
+                reply(exchange, 403, "Sharing revoked"); return;
+            }
+            reply(exchange, 202, "Staged " + image.id() + " " + image.mime());
+        } catch (UploadStaging.Rejected rejected) {
+            reply(exchange, rejected.status(), rejected.getMessage());
+        }
+    }
+
+    /** Internal Windows-only handoff; no URL may return the file or its path. */
+    public synchronized Optional<UploadStaging.StagedUpload> staged(String id) {
+        if (session == null || !clock.instant().isBefore(session.expiresAt())
+                || !watchLeaseValid()) return Optional.empty();
+        return uploads.find(id);
+    }
+
+    /** Called by a future ADB coordinator after success, or for local cancellation. */
+    public boolean completeUpload(String id) throws IOException {
+        return uploads.release(id);
+    }
+
+    private void purgeUploads() {
+        try { uploads.clear(); } catch (IOException ignored) { /* fail closed */ }
+    }
+
+    private void expireStaging() {
+        synchronized (this) {
+            if (server == null) return;
+            if (session != null && !clock.instant().isBefore(session.expiresAt())) {
+                session = null;
+                purgeUploads();
+            }
+        }
+        watchLeaseValid();
     }
 
     private boolean validHost(HttpExchange exchange) {
@@ -431,6 +540,7 @@ public final class LanUploadGateway implements AutoCloseable {
             if (snapshot != null && !clock.instant().isBefore(snapshot.expiresAt())) {
                 session = null;
                 snapshot = null;
+                purgeUploads();
             }
         }
         if (candidate == null || snapshot == null
