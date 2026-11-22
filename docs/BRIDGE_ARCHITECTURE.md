@@ -102,7 +102,7 @@ Probe, don't presume, `Battery Service`, `Device Information` and `Current Time`
 
 ## Open design decisions (not to assume)
 
-- Exact Watch4 Android API and minSdk.
+- Reference **Watch4 Classic Android 16 / API36 is owner-observed** (W0 #13, 2026-11-22). **W1 initial development minSdk=30** is provisionally chosen based on the existing W0 Gradle floor and Wear OS 3-era scope; real functionality on API30–35 has **not** been tested. Treat this as a scaffolding choice, not a compatibility or release claim. Choose targetSdk separately per current [Wear OS Play policy](https://developer.android.com/google/play/requirements/target-sdk) (API35+ since August 2026). Reassess with actual API-specific device and foreground-service evidence.
 - Best lifecycle mechanism on Samsung firmware.
 - How iPhone publishes service/bond following pairing and device reboots.
 - Notification permission/user-consent prompts and background restart on target firmware.
