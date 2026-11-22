@@ -1,35 +1,25 @@
-# WristPorter documentation ownership
+# WristPorter documentation index
 
-Start with [AGENTS.md](../AGENTS.md). **A single GitHub Issue is sufficient to delegate work.** The executor's reading order, autonomy and PR/merge workflow are defined in AGENTS and [ENGINEERING_STANDARD.md](ENGINEERING_STANDARD.md); do not duplicate the rules here.
+**Read on demand.** [AGENTS.md](../AGENTS.md) defines the Issue-first entry path. [ENGINEERING_STANDARD.md](ENGINEERING_STANDARD.md) is the **single owner of agent workflow**, including interactive owner-assisted device testing and PR merge rules. This index only identifies where lasting facts belong.
 
-| Canonical source | Owns |
+| Source | Owns |
 | --- | --- |
-| [GitHub Issues](https://github.com/aidarnig/WristPorter/issues) | Live assignments, progress, dependencies, acceptance and linked PRs |
-| [STATE.md](STATE.md) | Short cross-track state, significant blockers, next priority (not per-PR history) |
-| [ROADMAP.md](ROADMAP.md) | Milestones, approved dependencies and release gates |
-| [PRODUCT.md](PRODUCT.md) | Product mission, shipped/planned scope, observable behavior and exclusions |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Existing module responsibilities and shared contracts |
-| [BRIDGE_CAPABILITIES.md](BRIDGE_CAPABILITIES.md) | Conditional/direct ANCS/AMS capabilities and unsupported claims |
-| [BRIDGE_ARCHITECTURE.md](BRIDGE_ARCHITECTURE.md) | Wear OS proposed protocol, state and lifecycle design |
-| [LOCAL_WEB_PORTAL.md](LOCAL_WEB_PORTAL.md) | Browser/Safari upload through Windows, session security and formats |
-| [adr/](adr/README.md) | Historic architectural decisions and their supersession |
-| [ENGINEERING_STANDARD.md](ENGINEERING_STANDARD.md) | Executor autonomy, branching, CI/review, documentation and handoff procedure |
-| [VERIFICATION.md](VERIFICATION.md) | Real-device scenarios, actual PASS/FAIL/BLOCKED/NOT TESTED, measurements |
-| [QUALITY.md](QUALITY.md) | Acceptance policy, release gates and historical Desktop hardware evidence |
-| [DEVELOPMENT.md](DEVELOPMENT.md), [CI.md](CI.md) | Build/packaging commands and change-aware CI |
-| [UX.md](UX.md), [BRANDING.md](BRANDING.md) | Shipped app UX and branding |
-| [SECURITY.md](SECURITY.md) | Desktop signing and existing security policy |
-| [COMPATIBILITY.md](COMPATIBILITY.md) | Public verified Desktop/watch support, not speculative BLE compatibility |
-| [QUICK_START.md](QUICK_START.md), [RELEASE_NOTES.md](RELEASE_NOTES.md), [CHANGELOG.md](../CHANGELOG.md) | Actual shipped behavior and releases |
-| [CONTRIBUTING.md](../CONTRIBUTING.md) | Public contributor onboarding |
+| [GitHub Issues](https://github.com/aidarnig/WristPorter/issues) / linked PRs | Individual scope, current progress, acceptance, evidence and blockers |
+| [STATE.md](STATE.md) | Compact **cross-track** status and next priorities, not an issue-by-issue history |
+| [ROADMAP.md](ROADMAP.md) | Approved milestones, dependencies and gates |
+| [PRODUCT.md](PRODUCT.md) | Product mission, shipped/planned behavior and exclusions |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Existing module boundaries and shared contracts |
+| [BRIDGE_CAPABILITIES.md](BRIDGE_CAPABILITIES.md) | BLE/iPhone ANCS/AMS feasibility and conditional limits |
+| [BRIDGE_ARCHITECTURE.md](BRIDGE_ARCHITECTURE.md) | Proposed Wear BLE protocol, state and lifecycle |
+| [LOCAL_WEB_PORTAL.md](LOCAL_WEB_PORTAL.md) | Safari → Windows → watch browser upload, API, security and formats |
+| [adr/](adr/README.md) | Approved decisions and their historical rationale |
+| [ENGINEERING_STANDARD.md](ENGINEERING_STANDARD.md) | Agent autonomy, branch/PR/merge, **guided hardware tests**, documentation workflow |
+| [VERIFICATION.md](VERIFICATION.md) | Actual hardware test IDs, statuses, evidence and measurement records |
+| [QUALITY.md](QUALITY.md) | Quality/release gates and historical Desktop acceptance |
+| [DEVELOPMENT.md](DEVELOPMENT.md), [CI.md](CI.md) | Build, packaging and automation commands/policy |
+| [UX.md](UX.md), [BRANDING.md](BRANDING.md) | Shipped app interface/branding |
+| [SECURITY.md](SECURITY.md), [COMPATIBILITY.md](COMPATIBILITY.md) | Desktop signing and publicly verified compatibility |
+| [QUICK_START.md](QUICK_START.md), [RELEASE_NOTES.md](RELEASE_NOTES.md), [CHANGELOG.md](../CHANGELOG.md) | User onboarding and shipped release history |
+| [CONTRIBUTING.md](../CONTRIBUTING.md) | Public contributor entry point |
 
-## Status language
-
-- **PLANNED** — accepted direction, no implementation proof.
-- **EXPERIMENTAL** — PoC or code exists, but not product-accepted on reference hardware.
-- **IMPLEMENTED / NOT DEVICE-VERIFIED** — implemented and code-tested; device acceptance missing.
-- **VERIFIED** — exact behavior observed on specified hardware/build and recorded in VERIFICATION.
-- **BLOCKED** — named dependency or permission is missing.
-- **OUT OF SCOPE** — requires an explicit product decision to change.
-
-**Rule:** write each lasting fact in its owner document, report in-progress work in the Issue/PR, and keep STATE short. Do not invent alternate plan/handoff docs. Public RU/EN shipped information stays synchronized. The [documentation CI](../.github/workflows/docs-check.yml) checks links and required files, **not** correctness or hardware behavior.
+**No duplicate plans, handoff documents or test claims:** Issue/PR for progress, verification ledger for observed devices, one canonical document for lasting facts. Use status terms from [VERIFICATION.md](VERIFICATION.md) and never call CI-only evidence hardware verification. Synchronize RU/EN public docs for shipped features. [Docs CI](../.github/workflows/docs-check.yml) validates file links, not truth.
