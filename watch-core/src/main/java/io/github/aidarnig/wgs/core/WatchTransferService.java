@@ -9,10 +9,20 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 @Service
 public class WatchTransferService {
+    /*
+     * Media scans are asynchronous and MediaStore.DATE_ADDED has second precision.
+     * Closely spaced requests can be displayed out of queue order by some Galleries.
+     * Pace batch copies so successive scan requests cannot share a one-second window
+     * merely because small files copy quickly. This is best-effort: only the watch
+     * Gallery can confirm its actual ordering policy.
+     */
+    static final long ORDERED_BATCH_PAUSE_NANOS = TimeUnit.MILLISECONDS.toNanos(1_200);
+
     public List<WatchDevice> devices(String adb) throws IOException, InterruptedException {
         return new AdbClient(adb).devices();
     }
@@ -36,9 +46,15 @@ public class WatchTransferService {
 
         AdbClient client = connectedClient(adb, serial);
         client.ensureFolder(serial);
+        long priorScanAt = 0;
         for (int i = 0; i < files.size(); i++) {
             checkInterrupted();
-            callback.accept(copyAndScan(client, serial, files.get(i), i + 1, files.size()));
+            // Avoid overlapping media scans when the user requests a full batch.
+            // The wait is interruptible so cancellation remains responsive.
+            if (priorScanAt != 0) paceAfterScan(priorScanAt);
+            TransferUpdate update = copyAndScan(client, serial, files.get(i), i + 1, files.size());
+            priorScanAt = update.status() == TransferUpdate.Status.FAILED ? 0 : System.nanoTime();
+            callback.accept(update);
         }
     }
 
@@ -99,6 +115,11 @@ public class WatchTransferService {
             return new TransferUpdate(source, position, total,
                     TransferUpdate.Status.COPIED_SCAN_FAILED, exception.getMessage(), remoteName);
         }
+    }
+
+    private static void paceAfterScan(long priorScanAt) throws InterruptedException {
+        long remaining = ORDERED_BATCH_PAUSE_NANOS - (System.nanoTime() - priorScanAt);
+        if (remaining > 0) TimeUnit.NANOSECONDS.sleep(remaining);
     }
 
     private static void checkInterrupted() throws InterruptedException {
