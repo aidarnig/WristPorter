@@ -141,4 +141,19 @@ class ApkInstallServiceTest {
         assertEquals(ApkInstallService.Code.UNTRUSTED_APK, svc.install(request(() -> true)).code());
         assertTrue(calls.isEmpty());
     }
+    @Test void manifestTestOnlyEnablesTWithoutDowngradeOrUninstall() throws Exception {
+        ready();
+        inspected = new ApkPreflight.Inspected(inspected.path(), inspected.size(),
+                inspected.fileSha256(), inspected.packageName(), inspected.versionCode(),
+                inspected.versionName(), inspected.minSdk(), inspected.signerSha256(), true, inspected.mode());
+        List<List<String>> calls = new ArrayList<>();
+        var svc = service(calls, serial + "\\tdevice\\n", "", new ApkInstallService.Command(0, "Success"));
+        assertEquals(ApkInstallService.Code.INSTALLED, svc.install(request(() -> true)).code());
+        assertEquals(List.of(adb.toAbsolutePath().toString(), "-s", serial, "install", "-r", "-t"),
+                calls.get(2).subList(0, 6));
+        assertEquals(7, calls.get(2).size());
+        assertFalse(calls.get(2).contains("-d"));
+        assertFalse(calls.get(2).contains("uninstall"));
+    }
+
 }
