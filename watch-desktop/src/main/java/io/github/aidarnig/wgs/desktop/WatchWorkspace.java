@@ -27,11 +27,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
-import java.util.LinkedHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 import java.util.prefs.Preferences;
 
 /** Functional first iteration. Preview thumbnails and settings are tracked for M2/M4. */
@@ -61,10 +57,11 @@ public final class WatchWorkspace extends BorderPane {
     private boolean hasCompletedTransfer;
     private boolean lightTheme = preferences.getBoolean("appearance.light", false);
 
-    public WatchWorkspace(WatchTransferService service, ExecutorService worker) {
+    public WatchWorkspace(WatchTransferService service, ExecutorService worker,
+                          TransferCoordinator coordinator) {
         this.service = service;
         this.worker = worker;
-        this.coordinator = new TransferCoordinator(service, worker);
+        this.coordinator = java.util.Objects.requireNonNull(coordinator, "coordinator");
         getStyleClass().add("app-shell");
         applyTheme();
         setTop(header());
