@@ -496,7 +496,8 @@ class TransferCoordinatorTest {
 
     private static TransferCoordinator.Event terminal(BlockingQueue<TransferCoordinator.Event> events)
             throws Exception {
-        for (int i = 0; i < 10; i++) {
+        // A batch of N images emits STARTED + N progress callbacks + a terminal event.
+        for (int i = 0; i < 100; i++) {
             var event = take(events);
             if (event.phase() == TransferCoordinator.Phase.COMPLETED
                     || event.phase() == TransferCoordinator.Phase.FAILED
