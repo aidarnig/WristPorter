@@ -273,14 +273,18 @@ public final class LanUploadGateway implements AutoCloseable {
     private void authenticate(HttpExchange exchange) throws IOException {
         Headers headers = exchange.getRequestHeaders();
         String type = headers.getFirst("Content-Type");
-        if (type == null || (!type.equalsIgnoreCase("text/plain")
-                && !type.toLowerCase(Locale.ROOT).startsWith("application/x-www-form-urlencoded"))) {
+        if (type == null || headers.get("Content-Type").size() != 1
+                || (!type.equalsIgnoreCase("text/plain")
+                && !type.toLowerCase(Locale.ROOT).matches("application/x-www-form-urlencoded(?:;\\s*charset=utf-8)?"))) {
             reply(exchange, 415, "Unsupported request"); return;
         }
         String length = headers.getFirst("Content-Length");
+        if (length != null && headers.get("Content-Length").size() != 1) {
+            reply(exchange, 400, "Invalid request length"); return;
+        }
         if (length != null) {
             try {
-                if (Long.parseLong(length) > 64) { reply(exchange, 413, "PIN body too large"); return; }
+                if (Long.parseLong(length) < 0 || Long.parseLong(length) > 64) { reply(exchange, 413, "PIN body too large"); return; }
             } catch (NumberFormatException bad) {
                 reply(exchange, 400, "Invalid request length"); return;
             }
@@ -347,7 +351,7 @@ public final class LanUploadGateway implements AutoCloseable {
                 snapshot = null;
             }
         }
-        if (candidate == null || snapshot == null || !snapshot.watchLease().equals(startedWith.selectedWatchLease())
+        if (candidate == null || snapshot == null
                 || !constantTimeEquals(candidate, snapshot.secret())) return false;
         if (requireCsrf) {
             List<String> tokens = exchange.getRequestHeaders().get("X-WP-CSRF");
