@@ -49,15 +49,19 @@ Reply to Issue #13's executor chat with the watch Android/API, iPhone model/iOS 
 
 
 
-## Targeted recovery test after iPhone Bluetooth OFF/ON (W0 v0.0.2 only)
+## Targeted recovery test after iPhone Bluetooth OFF/ON (W0 v0.0.3 Round Probe)
 
 The 2026-11-22 owner observed that an explicit **Disconnect → Choose bonded phone** restored both notification and music events, but after switching iPhone Bluetooth OFF/ON a new manual GATT connection showed `status=0` while **AMS track-change events stopped**. This is **not** evidence of a stable recovery path and not a reason to unpair/reset.
 
-1. Install the new **v0.0.2-w0** APK from its successful Android Actions run onto the same authorized watch. It is a **separate side-by-side app** named **W0 Recovery Probe**, with package `io.github.aidarnig.wristporter.w0.recovery`, so it does **not** overwrite or require uninstalling the previous **WristPorter W0 Probe** (the CI debug signing key can change). Grant Nearby devices permission to the new app and select your already bonded iPhone. No re-pairing, reset or existing-probe uninstall.
+1. Install the **v0.0.3-round** APK from its passing Android Actions run on the already authorized watch. It is a **separate side-by-side app** named **W0 Round Probe**, with package `io.github.aidarnig.wristporter.w0.round`, so it does **not** overwrite or require uninstalling earlier GitHub Actions debug builds (the signing key can change). Grant Nearby devices permission and select the already bonded iPhone. No re-pairing or reset. Confirm the **v0.0.3 round** label in the on-screen session summary; earlier **WristPorter W0 Probe** and **W0 Recovery Probe** are distinct apps.
 2. Open the watch probe; **3. Choose bonded phone** and manually select your own iPhone. Confirm ANCS/AMS services and `sub=0` / `entitySub=0` / `AMS registrations=2/2` in the top summary. Change one track on the iPhone; note whether the AMS event count increases.
 3. Switch iPhone Bluetooth OFF/ON **once**. If the watch probe shows disconnected, reselect the same phone via **3. Choose bonded phone**; do not erase the bond. On a resumed `Link state=connected`, inspect the **session summary**, notably `AMS present`, `entitySub`, `AMS registrations` and `events`. Change a track once.
 4. **Only if AMS events do not resume**, press **5. Refresh GATT services** once. Let its descriptor and registration statuses settle, change a track again and compare the summary counters. Stop after that one attempt; report the sanitized before/after summaries or failure lines to the executor chat.
 5. **4. Disconnect** exits the experiment's GATT session; close the app. Disable Wireless debugging after installing. No repeated Bluetooth toggles, forced unpair, logs containing personal data or device identifiers.
+
+**Round-screen layout:** diagnostics use proportional side/top insets, two-line buttons, and extra blank scrollable space below the latest session summary. Swipe upward at the bottom to move the last lines toward the center, clear of the watch bezel. Reconnecting clears the previous session's scrollback so subscription errors are not mistaken for the current link. These are UX changes; screen fit still needs a real-device check.
+
+**Specific observed failure 2026-11-22:** on the watch photograph after iPhone Bluetooth OFF/ON, the GATT link returned `status=0`, ANCS Notification Source subscription returned `status=0`, while **AMS Remote Command and AMS Entity Update subscriptions returned `status=1`**; the owner observed no further events. The picture alone cannot identify the exact opened APK build, so this is recorded as an AMS subscription error with **unconfirmed APK version**, not proof v0.0.2 failed. Do not equate service discovery (`AMS present=true`) with a successful CCCD subscription.
 
 This is a bounded foreground-only diagnostic, not an automatic repair guarantee. If the service is temporarily unpublished or the iPhone media player sends no event, a refresh alone may not restore it. No production battery/reliability guarantee is implied.
 
