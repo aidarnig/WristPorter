@@ -20,6 +20,8 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -58,6 +60,24 @@ class LanUploadGatewayTest {
         if (cookie != null) b.header("Cookie", cookie);
         if (csrf != null) b.header("X-WP-CSRF", csrf);
         return client.send(b.build(), HttpResponse.BodyHandlers.ofString());
+    }
+
+    private HttpResponse<String> postForm(String body, String cookie, String requestOrigin,
+                                          String fetchSite) throws Exception {
+        HttpRequest.Builder b = HttpRequest.newBuilder(URI.create(access.url() + "session"))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.ofString(body));
+        if (cookie != null) b.header("Cookie", cookie);
+        if (requestOrigin != null) b.header("Origin", requestOrigin);
+        if (fetchSite != null) b.header("Sec-Fetch-Site", fetchSite);
+        return client.send(b.build(), HttpResponse.BodyHandlers.ofString());
+    }
+
+    private String formNonce(HttpResponse<String> page) {
+        Matcher found = Pattern.compile("name=\\\"formNonce\\\" value=\\\"([0-9a-f]{32})\\\"")
+                .matcher(page.body());
+        assertTrue(found.find(), "Expected nonce in the genuine pairing page");
+        return found.group(1);
     }
 
     private String origin() {
@@ -124,6 +144,56 @@ class LanUploadGatewayTest {
         assertEquals(403, post("session", access.oneTimePin(), "https://attacker.example",
                 null, null).statusCode());
         assertEquals(200, post("session", access.oneTimePin(), origin(), null, null).statusCode());
+    }
+
+    @Test void safariNativeFormWithoutOriginUsesCookieAndNonce() throws Exception {
+        start();
+        HttpResponse<String> page = get("");
+        String nonce = formNonce(page);
+        String cookie = page.headers().firstValue("Set-Cookie").orElseThrow();
+        assertTrue(cookie.startsWith("WPFORM="));
+        assertTrue(cookie.contains("HttpOnly; SameSite=Strict"));
+        assertFalse(page.body().contains(access.oneTimePin()));
+
+        String form = "pin=" + access.oneTimePin() + "&formNonce=" + nonce;
+        assertEquals(403, postForm(form, null, null, "same-origin").statusCode(),
+                "No form cookie, even with a valid hidden token");
+        assertEquals(403, postForm("pin=" + access.oneTimePin()
+                + "&formNonce=" + "0".repeat(32), cookie, null, "same-origin").statusCode());
+        assertEquals(403, postForm(form, cookie, "http://evil.example", "same-origin").statusCode());
+        assertEquals(403, postForm(form, cookie, "null", "same-origin").statusCode());
+        assertEquals(403, postForm(form, cookie, null, "cross-site").statusCode());
+        HttpResponse<String> paired = postForm(form, cookie, null, "same-origin");
+        assertEquals(200, paired.statusCode());
+        assertTrue(paired.body().contains("Paired (test only)"));
+        assertEquals(403, postForm(form, cookie, null, "same-origin").statusCode(),
+                "Successful pairing consumes PIN and form nonce");
+        assertTrue(paired.headers().allValues("Set-Cookie").stream()
+                .anyMatch(value -> value.startsWith("WPSESSION=")));
+    }
+
+    @Test void missingOriginCannotBypassExpiredFormOrAuthenticatedCsrf() throws Exception {
+        start();
+        HttpResponse<String> page = get("");
+        String token = formNonce(page);
+        String cookie = page.headers().firstValue("Set-Cookie").orElseThrow();
+        clock.advanceSeconds(121);
+        assertEquals(403, postForm("pin=" + access.oneTimePin()
+                + "&formNonce=" + token, cookie, null, "same-origin").statusCode());
+
+        gateway.stop();
+        start();
+        page = get("");
+        token = formNonce(page);
+        cookie = page.headers().firstValue("Set-Cookie").orElseThrow();
+        HttpResponse<String> paired = postForm("pin=" + access.oneTimePin()
+                + "&formNonce=" + token, cookie, null, null);
+        assertEquals(200, paired.statusCode(), "Legacy Safari without Fetch Metadata still pairs");
+        String sessionCookie = paired.headers().allValues("Set-Cookie").stream()
+                .filter(value -> value.startsWith("WPSESSION=")).findFirst().orElseThrow();
+        String csrf = paired.headers().firstValue("X-WP-CSRF").orElseThrow();
+        assertEquals(403, post("session/logout", "", null, sessionCookie, null).statusCode());
+        assertEquals(200, post("session/logout", "", null, sessionCookie, csrf).statusCode());
     }
 
     @Test void oneTimePinAndSessionCookieCsrfLogoutAndReplay() throws Exception {
