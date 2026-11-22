@@ -2,7 +2,13 @@
  <modelVersion>4.0.0</modelVersion>
  <parent><groupId>io.github.aidarnig</groupId><artifactId>wristporter</artifactId><version>1.1.2</version></parent>
  <artifactId>watch-adb</artifactId>
- <dependencies><dependency><groupId>io.github.aidarnig</groupId><artifactId>watch-domain</artifactId><version>${project.version}</version></dependency>
-<dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency></dependencies>
- 
+ <repositories><repository><id>google</id><url>https://dl.google.com/dl/android/maven2/</url></repository></repositories>
+ <dependencies>
+  <dependency><groupId>io.github.aidarnig</groupId><artifactId>watch-domain</artifactId><version>${project.version}</version></dependency>
+  <!-- Android's supported APK signing verifier; no external Android SDK installation. -->
+  <dependency><groupId>com.android.tools.build</groupId><artifactId>apksig</artifactId><version>8.13.2</version></dependency>
+  <!-- Maintained binary Android manifest reader (does not authenticate signatures). -->
+  <dependency><groupId>io.github.reandroid</groupId><artifactId>ARSCLib</artifactId><version>1.4.0</version></dependency>
+  <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
+ </dependencies>
 </project>
