@@ -26,7 +26,26 @@ On a Watch4 already configured for Wi-Fi ADB, install the built debug APK using 
 
 Turn off wireless debugging after installation. Do not reset, unpair or wipe the watch.
 
-The experimental debug APK is also attached to the latest passing [W0 experimental BLE probe GitHub Actions run](https://github.com/aidarnig/WristPorter/actions/workflows/w0-ble-probe.yml) as a downloadable ZIP artifact named **wristporter-w0-probe-debug-apk** (7-day retention). Unzip and install the APK via the same explicit ADB command. This is a development-signed probe, **not** a signed consumer release.
+The experimental debug APK is attached to the latest passing [W0 experimental BLE probe GitHub Actions run](https://github.com/aidarnig/WristPorter/actions/workflows/w0-ble-probe.yml) as a downloadable ZIP artifact named **wristporter-w0-probe-debug-apk** (requested retention: 30 days; older run artifacts may expire). You must be signed into GitHub to download an Actions artifact. Unzip it; the APK inside is `app-debug.apk`. This is a development-signed probe, **not** a signed consumer release.
+
+### Safer installation using the repository's Windows helper
+
+From a trusted checkout of WristPorter's `main`, use [`ci/install-watch-test-apk.ps1`](../../ci/install-watch-test-apk.ps1). Connect to your already configured watch over Wi-Fi ADB using the existing WristPorter UI (or your authorized ADB pairing), then run from repository root:
+
+```powershell
+.\ci\install-watch-test-apk.ps1 -ApkPath "C:\Path\to\app-debug.apk" -AdbPath "C:\Path\to\platform-tools\adb.exe"
+```
+
+Use the actual paths where you unzipped the APK and where your trusted `adb.exe` is installed. If `adb` is on PATH, omit `-AdbPath`. With multiple ADB devices, pass the locally checked `-Serial`. The helper validates one authorized device and requires you to type `INSTALL` before installing. Do not share ADB serials, watch IPs, pairing codes, or private notification text in public screenshots or Issues.
+
+If `adb` says `unauthorized` or `offline`, do not retry an install blindly; reconnect/authorize via the normal Windows/watch interface. To stop the test, press **4. Disconnect** and close the probe. Turning off Wireless debugging after installation is recommended; no watch reset or Bluetooth unpair is required.
+
+### First owner-assisted checkpoint
+
+**Start with BLE-00, BLE-01, BLE-02 only.** Launch the probe and record Android release/API and firmware build (excluding any identifier); record iPhone model and iOS separately; tap `1. Permissions`, then `2. Discoverable (120s)` and approve the system dialog. On the iPhone go to Settings → Bluetooth and look for the newly discoverable watch. If it appears, confirm matching numeric prompts and the iOS notification-sharing permission if offered. If it does not appear, record that outcome without restarting/resetting watches or changing bonds.
+
+Reply to Issue #13's executor chat with the watch Android/API, iPhone model/iOS and precisely what happened at the discoverability/pairing stage (no IDs). Only then proceed with BLE-03…BLE-05 in the same chat for GATT/ANCS/AMS; the owner should not be asked to run a massive full matrix blindly.
+
 
 ## Real watch/iPhone test instructions
 
