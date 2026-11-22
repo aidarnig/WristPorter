@@ -14,7 +14,25 @@ One Linux runner, Maven dependency cache, canceled superseded runs, no Windows m
 
 ## Limitation
 
-Downstream tests run only when their modules also changed or full reactor verification is requested. Run full reactor checks for breaking behavioral/API changes and before releases. GitHub may leave required jobs pending when an entire workflow is skipped by path filters: add an always-present status check before enabling mandatory branch protection.
+Downstream tests run only when their modules also changed or full reactor verification is requested. Run full reactor checks for breaking behavioral/API changes and before releases. The new always-on pr-gate is the correct required status. Separate packaging and physical device evidence still need their own release/acceptance gates.
+
+## Every-PR gate and efficient CI
+
+The PR gate workflow runs on **all pull requests**, including documentation-only changes, and exposes the stable job name **pr-gate**. Every PR runs CI-routing regression checks; relevant Java paths also run changed-module tests and downstream compilation, while Markdown edits run the docs-link checker. The gate reports what was applicable and warns about paths that may require independent review; it cannot certify unrun tests, signed packaging or real hardware.
+
+The existing selective Java workflow and documentation-integrity workflow now run on main push/manual dispatch instead of repeating the same work on PRs. The trigger regression script checks this separation and the unconditional PR gate.
+
+**Repository administrator action needed:** GitHub repository Settings -> Rules -> Rulesets (or Branch protection rules) -> target main -> require pull request and status check **pr-gate** from GitHub Actions. Do not require conditional Java/docs/preview workflow checks, which may be skipped. Restrict force pushes/deletions and require up-to-date checks if allowed by your repository plan. The current GitHub connector lacks admin access to enable/verify branch protection, so this protection is not claimed active.
+
+## Nonpublishing test artifacts
+
+The Windows preview workflow builds a portable ZIP, SHA-256 and PREVIEW-NOT-A-RELEASE notice on eligible PR changes or manual dispatch. The 7-day Actions artifact is for owner-assisted Windows testing only; it never tags/releases and has contents-read-only permissions. The stable windows-portable.yml publication pipeline remains separate.
+
+The existing W0 experiment branch produces a W0 debug APK using its own workflow. A new generic Wear debug-APK pipeline is part of W1 once actual wearable application source exists; an empty always-green Android job would conceal missing coverage.
+
+## Four readiness labels
+
+issue-status.yml syncs the Issue form's Execution status (READY, IN PROGRESS, NEEDS DEVICE TEST, BLOCKED) to one of the status:ready, status:in-progress, status:needs-device-test or status:blocked labels on Issue edits. The job has issue-only write permissions and never executes task text. A label is a queue signal, **not** validation that a dependency is truly merged. If GitHub token label writes are restricted, keep the Issue body status as the primary truth and request the minimal repository permission change.
 
 ## Planned Wear OS CI (not yet configured)
 

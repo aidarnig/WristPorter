@@ -10,6 +10,18 @@
 
 Only a GitHub Issue number/link is needed to start. Follow the reading path in AGENTS; inspect actual `main`, active PRs and dependencies before editing. When Issue details are incomplete but the decision is ordinary, investigate, choose and record acceptance details without sending the owner another context questionnaire.
 
+### Readiness and task sizing
+
+Use four Issue execution states: **READY**, **IN PROGRESS**, **NEEDS DEVICE TEST**, **BLOCKED**. The Issue form or first-line execution-status field is synchronized to four GitHub labels by the issue-status workflow. Labels do not verify prerequisites: inspect predecessor Issues and merged API contracts before acting. Correct stale READY states.
+
+Prefer one independently testable outcome and a focused PR per executor chat. Break an oversized roadmap Issue into linked child Issues, each with a "Depends on #N" field, owned modules, scope/non-goals and acceptance. Keep the original Issue as the milestone anchor; do not copy its full specification into every child.
+
+### Test artifact checkpoints
+
+The Windows preview workflow builds a test-only portable ZIP, checksum and provenance notice for relevant PRs, or when manually dispatched. It does not publish GitHub Releases. The existing W0 experiment branch builds its own Android debug APK. A generic Wear OS preview build is deferred until W1 creates a real installable Wear project. Never confuse a test artifact with a signed stable release.
+
+For owner-assisted Android tests, a trusted checkout includes ci/install-watch-test-apk.ps1. It requires an explicit APK path, one authorized selected ADB watch and a typed INSTALL confirmation; it never pairs, unpairs, resets or silently installs anything. Give the owner a confirmed Actions run and precise test scenario in the same chat, then iterate based on observed feedback.
+
 ## 2. Per-Issue execution cycle
 
 1. Confirm goal, scope/exclusions, dependency gates, affected contracts and observable acceptance tests. Check whether real iPhone/watch/PC facts or tests are needed **now or after a build**.
@@ -42,6 +54,10 @@ An executor cannot simulate the owner's physical result. The owner's test is **i
 
 ## 4. PR integration and escalation
 
+**Always-on PR check:** the PR gate has one stable pr-gate job on EVERY PR. It conditionally tests modified Java modules and documentation. Java/docs push-to-main workflows and Windows preview artifacts are separate; a green gate is never hardware acceptance. To enforce this status, the repository owner must enable the pr-gate required check in GitHub branch rules; connector access does not authorize that administration. See CI.md.
+
+
+
 **Autonomous merge permitted only when all conditions hold:** approved Issue/scope; small reviewed diff; current green relevant CI/tests with no unexplained skipped gates; no active branch/shared-contract collision; no regression to shipped Desktop behavior; no material new security/network/privacy or destructive behavior; repository permissions allow the merge. Isolated, OFF-by-default experimental foundations may merge while hardware acceptance is pending **only if** the unverified feature is not presented as shipped and its Issue remains open.
 
 **Hold the PR and bring a concise recommendation to the coordinator/owner** for: material scope or shared API change affecting another task; new network exposure or unapproved security/TLS/privacy trade-off; destructive data/bond operations; signing/credentials, licensing, release/tag publication; unverified hardware acceptance; unresolved significant CI/security failure or unsafe conflict. Do not repeatedly seek approval for ordinary technical choices.
@@ -49,6 +65,14 @@ An executor cannot simulate the owner's physical result. The owner's test is **i
 **Parallel development:** one owner per branch/shared contract; inspect open PRs before changing shared code. Merge dependency contracts first, update dependent branches from `main`, re-run affected tests after rebase or conflict resolution. Use Issues/PRs for interim updates rather than concurrently rewriting `STATE.md`.
 
 **Important distinction:** merging code ≠ shipping a release ≠ verifying real-device compatibility. See [QUALITY.md](QUALITY.md) and [VERIFICATION.md](VERIFICATION.md).
+
+### Independent second-chat review for high-risk PRs
+
+Use a reviewer chat only for potentially high-impact changes: Bluetooth state/permissions, selected-watch ADB commands, new LAN auth/transport, transfer-byte integrity, signing/release, shared public APIs or large complex diffs. Routine documentation/tests/internal fixes with green CI do not need a second chat.
+
+The reviewer receives the current PR link and independently reads the actual diff, Issue and relevant contracts. It examines security/privacy/battery risks, error/cancel/reconnect flows, regression coverage, CI evidence, device-test gaps and dependency consistency. It leaves blocking findings with file/line and suggested fix, or records "Independent review: no blocking findings at HEAD SHA ..." in the PR. The author fixes findings, the reviewer checks the new head. If both chats use the same GitHub account, a review comment is NOT a formal GitHub approval.
+
+The PR gate flags candidate sensitive paths in its job summary. This is only a review hint, not proof of correctness. **A high-risk PR needs a recorded independent review of its latest head SHA and resolution of blocking findings before any merge.** If no independent reviewer is available, hold the PR for the coordinating chat; a green automated gate alone is insufficient. Material scope/security/release decisions also require owner approval. Real release/device acceptance remains separate.
 
 ## 5. Write documentation once
 

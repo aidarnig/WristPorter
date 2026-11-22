@@ -1,0 +1,55 @@
+name: Issue execution status
+
+# A small shared readiness vocabulary; labels are derived from Issue text.
+# No task content is executed or treated as trusted code.
+on:
+  issues:
+    types: [opened, edited, reopened]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: issue-status-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Apply exactly one status label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Supports form-generated "### Execution status" and compact existing Issues.
+          status="$(printf '%s\n' "$ISSUE_BODY" | awk '
+            /^### Execution status$/ { in_status=1; next }
+            in_status && NF { print; exit }
+            /^\*\*Execution status:\*\*/ {
+              sub(/^\*\*Execution status:\*\*[[:space:]]*/, ""); print; exit
+            }
+          ')"
+          case "$status" in
+            READY) target="status:ready" ;;
+            'IN PROGRESS') target="status:in-progress" ;;
+            'NEEDS DEVICE TEST') target="status:needs-device-test" ;;
+            BLOCKED) target="status:blocked" ;;
+            *) echo "No recognized execution status; leaving labels unchanged."; exit 0 ;;
+          esac
+          gh label create "status:ready" --color 1D76DB --description "Dependencies met; ready for executor" --force
+          gh label create "status:in-progress" --color D4C5F9 --description "Executor is working on this Issue" --force
+          gh label create "status:needs-device-test" --color FEF2C0 --description "Requires owner-assisted iPhone/watch/Windows observation" --force
+          gh label create "status:blocked" --color E99695 --description "Explicit unresolved prerequisite or decision" --force
+          current_labels="$(gh issue view "$ISSUE_NUMBER" --json labels --jq '.labels[].name')"
+          for label in "status:ready" "status:in-progress" "status:needs-device-test" "status:blocked"; do
+            if [ "$label" != "$target" ] && printf '%s\n' "$current_labels" | grep -Fxq -- "$label"; then
+              gh issue edit "$ISSUE_NUMBER" --remove-label "$label"
+            fi
+          done
+          gh issue edit "$ISSUE_NUMBER" --add-label "$target"

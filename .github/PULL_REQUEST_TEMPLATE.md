@@ -1,36 +1,18 @@
-## Issue / outcome
+## Issue and result
+Relates to #<!-- number; use Closes #N ONLY if all acceptance gates pass -->
+**Outcome / exclusions:**
 
-Fixes #<!-- issue number -->  
-**Goal:**  
-**Included / excluded:**  
+## Changes and checks
+- Changed modules and contracts:
+- Automated tests + exact commands/CI links (PASS/FAIL/NOT RUN):
+- Device test checkpoint (PASS/FAIL/NOT TESTED/AWAITING OWNER TEST), artifact, steps and sanitized evidence:
+- Canonical docs changed (only if lasting facts changed):
 
-## Changed components / contracts
+## Integration decision
+- Risk: routine / review required (security, Bluetooth permissions, LAN exposure, ADB/data integrity, signing, destructive action, shared API or release).
+- Independent PR review (if required): link, findings and resolution. **A second chat must review the actual diff, not just the summary.**
+- Regression, known limits and rollback:
+- Decision: safe autonomous merge / HOLD (reason):
 
-- Components:
-- API/state/permission changes:
-- ADR / docs updated:
-
-## Verification (use actual evidence; no guesses)
-
-- [ ] Relevant automated tests run — exact commands, outputs and links below
-- [ ] Negative/error/cancellation cases tested
-- [ ] Privacy/security and battery/lifecycle impact evaluated
-- [ ] Wear OS Watch4 Classic + iPhone tested **or explicitly NOT TESTED**
-- [ ] Windows photo transfer remains unaffected (or relevant regression performed)
-- [ ] [docs/STATE.md](../docs/STATE.md) updated if task status changed
-- [ ] Related Issue updated with remaining work and next step
-
-**Automated:**  
-**Hardware (exact model/OS, scenario, PASS/FAIL/NOT TESTED):**  
-**Logs or screenshots sanitized:**  
-
-## Risk / rollback
-
-- Risks and outstanding blockers:
-- Safe way to disable/revert without device data loss:
-- Known unsupported behavior:
-
-## Handoff to next chat
-
-- Merged commit (fill after merge) / PR:
-- Next Issue + exact next action:
+## Handoff
+- Remaining acceptance gates and next concrete Issue/action:
