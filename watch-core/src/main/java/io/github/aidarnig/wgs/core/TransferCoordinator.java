@@ -38,12 +38,19 @@ public final class TransferCoordinator {
     public interface TransferBackend {
         void send(String adb, String serial, List<Path> files, Consumer<TransferUpdate> observer)
                 throws Exception;
+        /** Legacy fake backends keep their existing contract; production overrides for mode-aware sending. */
+        default void send(String adb, String serial, List<Path> files,
+                          WatchTransferService.BatchMode mode, Consumer<TransferUpdate> observer)
+                throws Exception {
+            send(adb, serial, files, observer);
+        }
         void retry(String adb, String serial, List<TransferUpdate> failures,
                    Consumer<TransferUpdate> observer) throws Exception;
     }
 
     private static final class Session {
         List<Path> queue = List.of();
+        WatchTransferService.BatchMode batchMode = WatchTransferService.BatchMode.ORDERED;
         final Map<Path, TransferUpdate> results = new LinkedHashMap<>();
         WatchLease previousLease;
         boolean resumable;
@@ -53,6 +60,7 @@ public final class TransferCoordinator {
         final long id;
         final Owner owner;
         final WatchLease lease;
+        final WatchTransferService.BatchMode batchMode;
         final List<Path> files;
         final List<TransferUpdate> retries;
         final int total;
@@ -62,11 +70,12 @@ public final class TransferCoordinator {
         int completed;
         int errors;
 
-        Job(long id, Owner owner, WatchLease lease, List<Path> files,
-            List<TransferUpdate> retries, Consumer<Event> observer) {
+        Job(long id, Owner owner, WatchLease lease, WatchTransferService.BatchMode batchMode,
+            List<Path> files, List<TransferUpdate> retries, Consumer<Event> observer) {
             this.id = id;
             this.owner = owner;
             this.lease = lease;
+            this.batchMode = batchMode;
             this.files = files;
             this.retries = retries;
             this.total = retries == null ? files.size() : retries.size();
@@ -87,6 +96,11 @@ public final class TransferCoordinator {
             @Override public void send(String adb, String serial, List<Path> files,
                                        Consumer<TransferUpdate> observer) throws Exception {
                 service.send(adb, serial, files, observer);
+            }
+            @Override public void send(String adb, String serial, List<Path> files,
+                                       WatchTransferService.BatchMode mode,
+                                       Consumer<TransferUpdate> observer) throws Exception {
+                service.send(adb, serial, files, mode, observer);
             }
             @Override public void retry(String adb, String serial, List<TransferUpdate> failures,
                                         Consumer<TransferUpdate> observer) throws Exception {
@@ -129,6 +143,22 @@ public final class TransferCoordinator {
 
     public synchronized WatchLease selection() { return selected; }
     public synchronized boolean isBusy() { return active != null; }
+
+    /**
+     * Desktop mode applies only to new jobs and is snapshotted at admission.
+     * Other owners (such as Web) have independent preferences and are unchanged.
+     */
+    public synchronized void setBatchMode(Owner owner, WatchTransferService.BatchMode mode) {
+        Objects.requireNonNull(owner, "owner");
+        Objects.requireNonNull(mode, "mode");
+        if (active != null && active.owner == owner)
+            throw new IllegalStateException("Cannot change transfer mode during an active job");
+        sessions.get(owner).batchMode = mode;
+    }
+
+    public synchronized WatchTransferService.BatchMode batchMode(Owner owner) {
+        return sessions.get(Objects.requireNonNull(owner)).batchMode;
+    }
 
     /** The coordinator owns the logical queue; the Desktop gallery is just its view. */
     public synchronized void replaceQueue(Owner owner, List<Path> items) {
@@ -184,7 +214,7 @@ public final class TransferCoordinator {
         Session session = sessions.get(owner);
         List<TransferUpdate> pending = resumePending(session);
         session.resumable = false;
-        return schedule(new Job(++nextJobId, owner, lease, List.of(), pending, observer));
+        return schedule(new Job(++nextJobId, owner, lease, session.batchMode, List.of(), pending, observer));
     }
 
     private static List<TransferUpdate> resumePending(Session session) {
@@ -236,7 +266,7 @@ public final class TransferCoordinator {
         if (!sameLease) session.results.clear();
         session.previousLease = lease;
         session.resumable = false;
-        return schedule(new Job(++nextJobId, owner, lease, snapshot, null, observer));
+        return schedule(new Job(++nextJobId, owner, lease, session.batchMode, snapshot, null, observer));
     }
 
     /**
@@ -253,7 +283,7 @@ public final class TransferCoordinator {
         session.results.clear();
         session.previousLease = lease;
         session.resumable = false;
-        return schedule(new Job(++nextJobId, owner, lease, snapshot, null, observer));
+        return schedule(new Job(++nextJobId, owner, lease, session.batchMode, snapshot, null, observer));
     }
 
     public synchronized long retry(Owner owner, WatchLease lease, Consumer<Event> observer) {
@@ -266,7 +296,7 @@ public final class TransferCoordinator {
             if (result != null && result.retryable()) pending.add(result);
         }
         session.resumable = false;
-        return schedule(new Job(++nextJobId, owner, lease, List.of(), List.copyOf(pending), observer));
+        return schedule(new Job(++nextJobId, owner, lease, session.batchMode, List.of(), List.copyOf(pending), observer));
     }
 
     /** Requests cancellation; busy remains true until the worker has actually exited. */
@@ -322,7 +352,7 @@ public final class TransferCoordinator {
             };
             if (job.retries != null)
                 backend.retry(job.lease.adb(), job.lease.serial(), job.retries, onProgress);
-            else backend.send(job.lease.adb(), job.lease.serial(), job.files, onProgress);
+            else backend.send(job.lease.adb(), job.lease.serial(), job.files, job.batchMode, onProgress);
             if (job.cancelRequested || !leaseIsCurrent(job.lease))
                 terminal = Phase.CANCELLED;
         } catch (InterruptedException interrupted) {
