@@ -18,6 +18,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -42,6 +45,8 @@ public final class LanUploadGateway implements AutoCloseable {
     private static final Duration SESSION_TTL = Duration.ofMinutes(10);
     private static final Duration FAIL_WINDOW = Duration.ofMinutes(5);
     private static final int MAX_FAILURES = 3;
+    private static final int MAX_PENDING_FORMS = 32;
+    private static final Pattern PIN_FORM = Pattern.compile("pin=([A-Za-z2-7]{8})&formNonce=([0-9a-f]{32})");
     private static final String ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
     private static final String HTML = """
             <!doctype html><html lang="en"><head><meta charset="utf-8">
@@ -53,6 +58,7 @@ public final class LanUploadGateway implements AutoCloseable {
             <form method="post" action="/session">
             <label>One-time PIN shown on Windows <input name="pin" minlength="8"
               maxlength="8" autocomplete="off" required></label>
+            <input type="hidden" name="formNonce" value="__FORM_NONCE__">
             <button type="submit">Pair (test only)</button></form></body></html>
             """;
 
@@ -85,6 +91,7 @@ public final class LanUploadGateway implements AutoCloseable {
     private final SecureRandom random;
     private final Map<String, List<Instant>> failuresByPeer = new HashMap<>();
     private final List<Instant> globalFailures = new ArrayList<>();
+    private final Map<String, Instant> pendingForms = new LinkedHashMap<>();
 
     private HttpServer server;
     private ThreadPoolExecutor executor;
@@ -138,6 +145,7 @@ public final class LanUploadGateway implements AutoCloseable {
             session = null;
             failuresByPeer.clear();
             globalFailures.clear();
+            pendingForms.clear();
             created.start();
             executor = workers;
             server = created;
@@ -181,6 +189,7 @@ public final class LanUploadGateway implements AutoCloseable {
         session = null;
         globalFailures.clear();
         failuresByPeer.clear();
+        pendingForms.clear();
     }
 
     private static boolean allowedPrivateAdapter(Inet4Address address) {
@@ -226,14 +235,15 @@ public final class LanUploadGateway implements AutoCloseable {
             String path = exchange.getRequestURI().getRawPath();
             String method = exchange.getRequestMethod();
             if ("/".equals(path) && "GET".equals(method)) {
-                reply(exchange, 200, HTML, "text/html; charset=utf-8");
+                String formNonce = issueFormNonce(exchange.getResponseHeaders());
+                reply(exchange, 200, HTML.replace("__FORM_NONCE__", formNonce),
+                        "text/html; charset=utf-8");
             } else if ("/status".equals(path) && "GET".equals(method)) {
                 reply(exchange, 200, "test-only: ready\n");
             } else if ("/session".equals(path) && "POST".equals(method)) {
-                if (!sameOrigin(exchange)) { reply(exchange, 403, "Origin rejected"); return; }
                 authenticate(exchange);
             } else if ("/session/logout".equals(path) && "POST".equals(method)) {
-                if (!sameOrigin(exchange) || !authorized(exchange, true)) {
+                if (!originNotForged(exchange) || !authorized(exchange, true)) {
                     reply(exchange, 403, "Unauthorized"); return;
                 }
                 synchronized (this) { session = null; }
@@ -259,10 +269,62 @@ public final class LanUploadGateway implements AutoCloseable {
         return oneHeaderEquals(exchange.getRequestHeaders(), "Host", expected);
     }
 
-    private boolean sameOrigin(HttpExchange exchange) {
+    // A missing Origin is possible for some Safari HTML form submissions.
+    // Explicit mismatched or opaque Origin is NEVER accepted, even with a valid nonce.
+    // A missing Origin requires the short-lived one-page cookie + hidden form token.
+    private boolean originNotForged(HttpExchange exchange) {
+        List<String> values = exchange.getRequestHeaders().get("Origin");
+        String expected;
+        synchronized (this) { expected = url; }
+        if (expected == null) return false;
+        if (values != null) return values.size() == 1 && expected.equals(values.getFirst());
+        List<String> fetchSite = exchange.getRequestHeaders().get("Sec-Fetch-Site");
+        return fetchSite == null || (fetchSite.size() == 1
+                && ("same-origin".equals(fetchSite.getFirst()) || "none".equals(fetchSite.getFirst())));
+    }
+
+    private boolean hasMatchingOrigin(HttpExchange exchange) {
         String expected;
         synchronized (this) { expected = url; }
         return expected != null && oneHeaderEquals(exchange.getRequestHeaders(), "Origin", expected);
+    }
+
+    // A pre-auth form cookie and nonce are never put in the QR, URL or logs.
+    // Both are required on requests without Origin. The token is page-scoped
+    // and short-lived; invalid-origin requests fail before pairing is attempted.
+    private synchronized String issueFormNonce(Headers headers) {
+        Instant now = clock.instant();
+        pendingForms.entrySet().removeIf(entry -> !now.isBefore(entry.getValue()));
+        if (pendingForms.size() >= MAX_PENDING_FORMS) {
+            String oldest = pendingForms.keySet().iterator().next();
+            pendingForms.remove(oldest);
+        }
+        String nonce = randomHex(16);
+        pendingForms.put(nonce, now.plus(PIN_TTL));
+        headers.add("Set-Cookie", "WPFORM=" + nonce + "; HttpOnly; SameSite=Strict; Path=/");
+        return nonce;
+    }
+
+    private synchronized boolean validFormNonce(HttpExchange exchange, String nonce) {
+        if (nonce == null) return false;
+        String cookie = readCookie(exchange.getRequestHeaders(), "WPFORM");
+        Instant expiry = pendingForms.get(nonce);
+        return cookie != null && expiry != null && clock.instant().isBefore(expiry)
+                && constantTimeEquals(cookie, nonce);
+    }
+
+    private static String readCookie(Headers headers, String name) {
+        List<String> all = headers.get("Cookie");
+        if (all == null || all.size() != 1) return null;
+        String found = null;
+        for (String element : all.getFirst().split(";")) {
+            String entry = element.trim();
+            if (entry.startsWith(name + "=")) {
+                if (found != null) return null;
+                found = entry.substring(name.length() + 1);
+            }
+        }
+        return found;
     }
 
     private static boolean oneHeaderEquals(Headers headers, String name, String expected) {
@@ -292,9 +354,16 @@ public final class LanUploadGateway implements AutoCloseable {
         byte[] bytes = exchange.getRequestBody().readNBytes(65);
         if (bytes.length > 64) { reply(exchange, 413, "PIN body too large"); return; }
         String submitted = new String(bytes, StandardCharsets.UTF_8);
+        String formNonce = null;
         if (type.toLowerCase(Locale.ROOT).startsWith("application/x-www-form-urlencoded")) {
-            if (!submitted.startsWith("pin=")) { reply(exchange, 400, "Malformed PIN"); return; }
-            submitted = submitted.substring(4);
+            Matcher parsed = PIN_FORM.matcher(submitted);
+            if (!parsed.matches()) { reply(exchange, 400, "Malformed PIN form"); return; }
+            submitted = parsed.group(1);
+            formNonce = parsed.group(2);
+        }
+        if (!originNotForged(exchange)
+                || (!hasMatchingOrigin(exchange) && !validFormNonce(exchange, formNonce))) {
+            reply(exchange, 403, "Origin rejected"); return;
         }
         String peer = exchange.getRemoteAddress().getAddress().getHostAddress();
         boolean granted = false;
@@ -316,6 +385,7 @@ public final class LanUploadGateway implements AutoCloseable {
                 session = new Session(cookie, csrf, now.plus(SESSION_TTL),
                         startedWith.selectedWatchLease());
                 pin = null; // consumed: cannot pair a second browser
+                if (formNonce != null) pendingForms.remove(formNonce);
                 granted = true;
             } else if (!locked) {
                 globalFailures.add(now);
@@ -328,6 +398,8 @@ public final class LanUploadGateway implements AutoCloseable {
         }
         exchange.getResponseHeaders().add("Set-Cookie",
                 "WPSESSION=" + cookie + "; HttpOnly; SameSite=Strict; Path=/");
+        exchange.getResponseHeaders().add("Set-Cookie",
+                "WPFORM=; Max-Age=0; HttpOnly; SameSite=Strict; Path=/");
         exchange.getResponseHeaders().add("X-WP-CSRF", csrf);
         reply(exchange, 200, "Paired (test only); no upload endpoint is enabled");
     }
