@@ -108,8 +108,8 @@ for required in (
 ):
     assert "        run: " + required in gate, required
 assert "      - uses: dorny/paths-filter@v4" in gate
-gate_filters = gate.split("          filters: |\\n".replace("\\\\", "\\"), 1)[1].split("\\n      - name: Validate CI".replace("\\\\", "\\"), 1)[0].splitlines()
-gate_groups = re.findall(r"^            ([a-z][a-z0-9_-]*):$", "\\n".replace("\\\\", "\\").join(gate_filters), re.M)
+gate_filters = gate.split("          filters: |\n", 1)[1].split("\n      - name: Validate CI", 1)[0].splitlines()
+gate_groups = re.findall(r"^            ([a-z][a-z0-9_-]*):$", "\n".join(gate_filters), re.M)
 assert gate_groups == groups + ["docs"], gate_groups
 for group, module in zip(groups, modules):
     got = set(patterns(section(gate_filters, group, 12), 14))
