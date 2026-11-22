@@ -46,6 +46,7 @@ public final class TransferCoordinator {
         List<Path> queue = List.of();
         final Map<Path, TransferUpdate> results = new LinkedHashMap<>();
         WatchLease previousLease;
+        boolean resumable;
     }
 
     private static final class Job {
@@ -126,7 +127,9 @@ public final class TransferCoordinator {
         if (active != null && active.owner == owner)
             throw new IllegalStateException("Cannot modify the active transfer queue");
         Session session = sessions.get(owner);
-        session.queue = List.copyOf(items);
+        List<Path> replacement = List.copyOf(items);
+        if (!session.queue.equals(replacement)) session.resumable = false;
+        session.queue = replacement;
         session.results.keySet().retainAll(session.queue);
     }
 
@@ -149,6 +152,50 @@ public final class TransferCoordinator {
     }
 
     /**
+     * A cancelled/failed batch can resume on its ORIGINAL watch lease only.
+     * Successfully indexed files are skipped. Scan failures preserve remoteName for
+     * the unchanged scan-only retry; unreported/incomplete items retry their copy.
+     * The in-flight ADB push interrupted before reporting may be ambiguous.
+     */
+    public synchronized boolean canResume(Owner owner) {
+        Session session = sessions.get(Objects.requireNonNull(owner));
+        return active == null && session.resumable && selected != null
+                && selected.equals(session.previousLease) && !resumePending(session).isEmpty();
+    }
+
+    public synchronized int resumeCount(Owner owner) {
+        if (!canResume(owner)) return 0;
+        return resumePending(sessions.get(owner)).size();
+    }
+
+    public synchronized long resume(Owner owner, WatchLease lease, Consumer<Event> observer) {
+        requireAdmission(owner, lease, observer);
+        if (!canResume(owner)) throw new IllegalStateException("No interrupted batch for selected watch");
+        Session session = sessions.get(owner);
+        List<TransferUpdate> pending = resumePending(session);
+        session.resumable = false;
+        return schedule(new Job(++nextJobId, owner, lease, List.of(), pending, observer));
+    }
+
+    private static List<TransferUpdate> resumePending(Session session) {
+        List<TransferUpdate> pending = new ArrayList<>();
+        for (Path path : session.queue) {
+            TransferUpdate previous = session.results.get(path);
+            if (previous != null && previous.status() == TransferUpdate.Status.COPIED_SCAN_REQUESTED)
+                continue;
+            if (previous != null && previous.retryable()) {
+                pending.add(previous);
+            } else {
+                // No completion acknowledgement: push may have been interrupted.
+                // Re-send only this unresolved path; never assume success.
+                pending.add(new TransferUpdate(path, pending.size() + 1, session.queue.size(),
+                        TransferUpdate.Status.FAILED, "No acknowledged result before interruption"));
+            }
+        }
+        return List.copyOf(pending);
+    }
+
+    /**
      * Reject a busy slot rather than run Desktop and Web ADB commands concurrently.
      * The caller must hold a current, explicitly issued watch lease.
      */
@@ -161,6 +208,7 @@ public final class TransferCoordinator {
         session.queue = snapshot;
         session.results.clear();
         session.previousLease = lease;
+        session.resumable = false;
         return schedule(new Job(++nextJobId, owner, lease, snapshot, null, observer));
     }
 
@@ -173,6 +221,7 @@ public final class TransferCoordinator {
             TransferUpdate result = session.results.get(path);
             if (result != null && result.retryable()) pending.add(result);
         }
+        session.resumable = false;
         return schedule(new Job(++nextJobId, owner, lease, List.of(), List.copyOf(pending), observer));
     }
 
@@ -234,7 +283,11 @@ public final class TransferCoordinator {
             if (terminal == Phase.FAILED) failure = exception;
         } finally {
             synchronized (this) {
-                if (active == job) active = null;
+                if (active == job) {
+                    active = null;
+                    sessions.get(job.owner).resumable =
+                            terminal == Phase.CANCELLED || terminal == Phase.FAILED;
+                }
             }
             emit(job, terminal, null, failure);
             job.runner = null;
