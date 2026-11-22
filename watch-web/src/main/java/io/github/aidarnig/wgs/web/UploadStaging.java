@@ -55,8 +55,16 @@ public final class UploadStaging implements AutoCloseable {
         public int status() { return status; }
     }
 
+    // Injectable bounds allow tiny deterministic quota tests without writing 250 MiB.
+    record Limits(long file, long session, long total, int files, int concurrent) {
+        Limits {
+            if (file <= 0 || session < file || total < session || files <= 0 || concurrent <= 0)
+                throw new IllegalArgumentException("Invalid staging limits");
+        }
+    }
     private final Path root;
     private final SecureRandom random;
+    private final Limits limits;
     private final Map<String, StagedUpload> staged = new LinkedHashMap<>();
     private volatile boolean open;
     private int generation;
@@ -74,8 +82,14 @@ public final class UploadStaging implements AutoCloseable {
     }
 
     public UploadStaging(Path root, SecureRandom random) {
+        this(root, random, new Limits(MAX_FILE_BYTES, MAX_SESSION_BYTES, MAX_TOTAL_BYTES,
+                MAX_FILES, MAX_ACTIVE));
+    }
+
+    UploadStaging(Path root, SecureRandom random, Limits limits) {
         this.root = Objects.requireNonNull(root).toAbsolutePath().normalize();
         this.random = Objects.requireNonNull(random);
+        this.limits = Objects.requireNonNull(limits);
     }
 
     /** Sweep only our recognizable abandoned files; reject symlinked directories. */
@@ -141,17 +155,17 @@ public final class UploadStaging implements AutoCloseable {
         if (!Set.of("image/jpeg", "image/png", "application/octet-stream").contains(declaredMime)) {
             throw new Rejected(415, "Only JPEG or PNG is supported");
         }
-        if (declaredLength != null && (declaredLength <= 0 || declaredLength > MAX_FILE_BYTES)) {
+        if (declaredLength != null && (declaredLength <= 0 || declaredLength > limits.file())) {
             throw new Rejected(413, "Image exceeds file limit");
         }
-        long reserve = declaredLength == null ? MAX_FILE_BYTES : declaredLength;
+        long reserve = declaredLength == null ? limits.file() : declaredLength;
         final int myGeneration;
         synchronized (this) {
             if (!open) throw new Rejected(409, "Staging is not available");
-            if (active >= MAX_ACTIVE) throw new Rejected(429, "Too many active uploads");
-            if (staged.size() + active >= MAX_FILES
-                    || stagedBytes + reservedBytes + reserve > MAX_SESSION_BYTES
-                    || stagedBytes + reservedBytes + reserve > MAX_TOTAL_BYTES) {
+            if (active >= limits.concurrent()) throw new Rejected(429, "Too many active uploads");
+            if (staged.size() + active >= limits.files()
+                    || stagedBytes + reservedBytes + reserve > limits.session()
+                    || stagedBytes + reservedBytes + reserve > limits.total()) {
                 throw new Rejected(413, "Staging quota exceeded");
             }
             active++;
@@ -177,7 +191,7 @@ public final class UploadStaging implements AutoCloseable {
                         throw new Rejected(409, "Upload was cancelled");
                     }
                     size += count;
-                    if (size > MAX_FILE_BYTES || size > reserve) {
+                    if (size > limits.file() || size > reserve) {
                         throw new Rejected(413, "Image exceeds file limit");
                     }
                     out.write(buffer, 0, count);
