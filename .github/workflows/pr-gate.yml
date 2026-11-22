@@ -87,10 +87,10 @@ jobs:
           java-version: '25'
           cache: maven
       - name: Validate module routing
-        if: steps.changed.outputs.domain == 'true' || steps.changed.outputs.adb == 'true' || steps.changed.outputs.core == 'true' || steps.changed.outputs.desktop == 'true'
+        if: steps.changed.outputs.domain == 'true' || steps.changed.outputs.adb == 'true' || steps.changed.outputs.core == 'true' || steps.changed.outputs.desktop == 'true' || steps.changed.outputs.web == 'true'
         run: bash ci/test-verify-changed.sh
       - name: Verify changed Java modules and downstream compilation
-        if: steps.changed.outputs.domain == 'true' || steps.changed.outputs.adb == 'true' || steps.changed.outputs.core == 'true' || steps.changed.outputs.desktop == 'true'
+        if: steps.changed.outputs.domain == 'true' || steps.changed.outputs.adb == 'true' || steps.changed.outputs.core == 'true' || steps.changed.outputs.desktop == 'true' || steps.changed.outputs.web == 'true'
         env:
           DOMAIN_CHANGED: ${{ steps.changed.outputs.domain }}
           ADB_CHANGED: ${{ steps.changed.outputs.adb }}
@@ -105,7 +105,7 @@ jobs:
       - name: Explain coverage
         if: always()
         env:
-          JAVA_CHANGED: ${{ steps.changed.outputs.domain == 'true' || steps.changed.outputs.adb == 'true' || steps.changed.outputs.core == 'true' || steps.changed.outputs.desktop == 'true' }}
+          JAVA_CHANGED: ${{ steps.changed.outputs.domain == 'true' || steps.changed.outputs.adb == 'true' || steps.changed.outputs.core == 'true' || steps.changed.outputs.desktop == 'true' || steps.changed.outputs.web == 'true' }}
           DOCS_CHANGED: ${{ steps.changed.outputs.docs }}
           REVIEW_SENSITIVE: ${{ steps.changed.outputs.review_sensitive }}
         run: |
