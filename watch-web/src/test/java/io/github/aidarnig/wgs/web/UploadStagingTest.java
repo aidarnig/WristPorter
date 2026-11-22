@@ -56,7 +56,7 @@ class UploadStagingTest {
         Path root = temp.resolve("staging");
         gateway = new LanUploadGateway(clock, addr -> addr.isLoopbackAddress(),
                 new SecureRandom(), root);
-        assertFalse(Files.exists(root), "Not initialized before explicit start");
+        assertFalse(gateway.isRunning(), "OFF until explicit start");
         var request = new LanUploadGateway.StartRequest(
                 (Inet4Address) InetAddress.getByName("127.0.0.1"),
                 "selected-watch", lease::get, true, true, true);
