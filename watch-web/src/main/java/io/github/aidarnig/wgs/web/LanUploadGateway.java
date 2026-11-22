@@ -57,7 +57,7 @@ public final class LanUploadGateway implements AutoCloseable {
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <title>WristPorter Gateway Test</title></head><body>
             <h1>WristPorter — test gateway only</h1>
-            <p>No photo upload or device controls are available in this build.</p>
+            <p>No photo upload form or watch controls are available on this test page. The authenticated staging API accepts files, but does not transfer them to a watch.</p>
             <p>HTTP traffic is not encrypted. Only use a trusted private LAN.</p>
             <form method="post" action="/session">
             <label>One-time PIN shown on Windows <input name="pin" minlength="8"
@@ -520,7 +520,7 @@ public final class LanUploadGateway implements AutoCloseable {
         exchange.getResponseHeaders().add("Set-Cookie",
                 "WPFORM=; Max-Age=0; HttpOnly; SameSite=Strict; Path=/");
         exchange.getResponseHeaders().add("X-WP-CSRF", csrf);
-        reply(exchange, 200, "Paired (test only); no upload endpoint is enabled");
+        reply(exchange, 200, "Paired (test only); private staging API available, no watch transfer");
     }
 
     private boolean authorized(HttpExchange exchange, boolean requireCsrf) {
