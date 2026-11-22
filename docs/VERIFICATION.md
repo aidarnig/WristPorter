@@ -29,6 +29,12 @@ All observations must include **date, app build/commit, watch model/firmware/API
 
 **Interpretation:** Synthetic Gallery sequence does not match ascending/descending source EXIF capture time or source file modification time. The repeated three-image reversals **suggest**, but do not prove, a MediaStore indexing/timestamp tie. `MEDIA_SCANNER_SCAN_FILE` acknowledges a broadcast request, **not completion of media indexing**. The minimum-delay candidate in draft [PR #66](https://github.com/aidarnig/WristPorter/pull/66) is **NOT TESTED** on hardware and does **not** establish an ordering guarantee. Do not claim PASS based on CI or the reported 16/16 transfer count.
 
+## Desktop #45 — Ordered pacing preview accepted on reference Watch4 (2026-11-22)
+
+**Tester:** project owner; **build:** [draft PR #66 Windows preview run #45048471637](https://github.com/aidarnig/WristPorter/actions/runs/45048471637), commit `05aa185576bb9b21f1fbb2a2e3da132305ff9ac9`. **Device:** Galaxy Watch4 Classic (Android 16/API36 previously observed on same date; exact firmware not independently reconfirmed). **Fixture:** 12 distinct artificial JPEG/PNG photos labelled `B01`–`B12`. **Result: PASS (owner-reported)** — the owner states all new photos appeared in Samsung Gallery in the **same order as the PC queue** using the paced build, whereas a previous default-speed 16-photo test failed. The owner also observed that this build's transfer was **substantially slower**; no precise duration was measured.
+
+**Limit:** The observed PASS validates the paced behavior for **this fixture and watch**, not a universal Gallery guarantee or every 70+ photo scenario. The new Fast/Ordered mode selector requested after this test is a separate code change; its UI and saved preference have **no hardware verification yet**. No private files were uploaded, and no photo bytes or EXIF were changed.
+
 ## W14-A — Desktop regression on physical Galaxy Watch4 Classic (2026-11-22)
 
 **Tester:** project owner, interactive report in Issue #38 executor chat. **Artifact:** PR #43, test-only Windows preview [Actions run #45024705910](https://github.com/aidarnig/WristPorter/actions/runs/45024705910), commit `0df7472b47b79e976c24b08a8231d8768bbb82d6`, Desktop internal version 1.1.2. **Device:** Galaxy Watch4 Classic; exact watch firmware/Android API and Windows OS build **not reported**. No iPhone involved.
