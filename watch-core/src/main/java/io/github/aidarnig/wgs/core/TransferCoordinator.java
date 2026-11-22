@@ -114,7 +114,18 @@ public final class TransferCoordinator {
         selected = device.isEmpty() || executable.isEmpty()
                 ? null : new WatchLease(++nextGeneration, executable, device);
         if (selected == null) ++nextGeneration;
-        if (active != null) interrupt(active);
+        if (active != null) {
+            interrupt(active);
+        } else {
+            // Old watch outcomes are not evidence of a copy to the new target.
+            for (Session session : sessions.values()) invalidateResults(session);
+        }
+    }
+
+    private static void invalidateResults(Session session) {
+        session.results.clear();
+        session.previousLease = null;
+        session.resumable = false;
     }
 
     public synchronized WatchLease selection() { return selected; }
@@ -319,8 +330,13 @@ public final class TransferCoordinator {
             synchronized (this) {
                 if (active == job) {
                     active = null;
-                    sessions.get(job.owner).resumable =
-                            terminal == Phase.CANCELLED || terminal == Phase.FAILED;
+                    Session session = sessions.get(job.owner);
+                    if (!job.lease.equals(selected)) {
+                        invalidateResults(session);
+                    } else {
+                        session.resumable =
+                                terminal == Phase.CANCELLED || terminal == Phase.FAILED;
+                    }
                 }
             }
             emit(job, terminal, null, failure);
