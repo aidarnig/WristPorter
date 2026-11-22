@@ -54,6 +54,10 @@ public final class WatchWorkspace extends BorderPane {
     private final Button cancelTransfer = new Button(I18n.t("progress.cancel.button"));
     private final Button retryFailed = new Button(I18n.t("progress.retry.button"));
     private final Preferences preferences = Preferences.userNodeForPackage(WatchWorkspace.class);
+    private WatchTransferService.BatchMode transferMode = "FAST".equals(
+            preferences.get("transfer.batch.mode", "ORDERED"))
+            ? WatchTransferService.BatchMode.FAST : WatchTransferService.BatchMode.ORDERED;
+    private HBox transferModeControls;
     private boolean hasCompletedTransfer;
     private boolean lightTheme = preferences.getBoolean("appearance.light", false);
 
@@ -62,6 +66,7 @@ public final class WatchWorkspace extends BorderPane {
         this.service = service;
         this.worker = worker;
         this.coordinator = java.util.Objects.requireNonNull(coordinator, "coordinator");
+        this.coordinator.setBatchMode(TransferCoordinator.Owner.DESKTOP, transferMode);
         getStyleClass().add("app-shell");
         applyTheme();
         setTop(header());
@@ -275,6 +280,24 @@ public final class WatchWorkspace extends BorderPane {
         HBox actions = new HBox(8, add, folder, remove, clear);
         actions.setAlignment(Pos.CENTER_LEFT);
 
+        Label modeLabel = new Label(I18n.t("transfer.mode.label"));
+        modeLabel.getStyleClass().add("section-heading");
+        RadioButton fast = new RadioButton(I18n.t("transfer.mode.fast"));
+        RadioButton ordered = new RadioButton(I18n.t("transfer.mode.ordered"));
+        ToggleGroup modes = new ToggleGroup();
+        fast.setToggleGroup(modes);
+        ordered.setToggleGroup(modes);
+        fast.setSelected(transferMode == WatchTransferService.BatchMode.FAST);
+        ordered.setSelected(transferMode == WatchTransferService.BatchMode.ORDERED);
+        Label modeHint = note(I18n.t(transferMode == WatchTransferService.BatchMode.FAST
+                ? "transfer.mode.fast.help" : "transfer.mode.ordered.help"));
+        fast.setTooltip(new Tooltip(I18n.t("transfer.mode.fast.help")));
+        ordered.setTooltip(new Tooltip(I18n.t("transfer.mode.ordered.help")));
+        fast.setOnAction(event -> chooseTransferMode(WatchTransferService.BatchMode.FAST, modeHint));
+        ordered.setOnAction(event -> chooseTransferMode(WatchTransferService.BatchMode.ORDERED, modeHint));
+        transferModeControls = new HBox(14, modeLabel, ordered, fast);
+        transferModeControls.setAlignment(Pos.CENTER_LEFT);
+
         Label queueTitle = new Label(I18n.t("files.queue"));
         queueTitle.getStyleClass().add("section-heading");
         count.getStyleClass().add("muted");
@@ -311,8 +334,8 @@ public final class WatchWorkspace extends BorderPane {
         HBox bottom = new HBox(10, retryFailed, cancelTransfer, send);
         bottom.setAlignment(Pos.CENTER_RIGHT);
 
-        VBox box = new VBox(12, title, explanation, drop, actions, queueHeader,
-                split, progressPanel(), bottom);
+        VBox box = new VBox(12, title, explanation, drop, actions,
+                transferModeControls, modeHint, queueHeader, split, progressPanel(), bottom);
         box.getStyleClass().add("workspace");
         return box;
     }
@@ -508,6 +531,7 @@ public final class WatchWorkspace extends BorderPane {
     }
 
     private void setTransferControls(boolean busy) {
+        if (transferModeControls != null) transferModeControls.setDisable(busy);
         adbPath.setDisable(busy);
         connectionEndpoint.setDisable(busy);
         watchPicker.setDisable(busy || watchPicker.getItems().isEmpty());
@@ -521,6 +545,15 @@ public final class WatchWorkspace extends BorderPane {
         task.setOnSucceeded(event -> { success.run(); activity.setText(I18n.t("operation.done")); });
         task.setOnFailed(event -> failure(I18n.t("operation.adb.error"), task.getException()));
         worker.submit(task);
+    }
+
+    private void chooseTransferMode(WatchTransferService.BatchMode mode, Label hint) {
+        if (coordinator.isBusy()) return;
+        coordinator.setBatchMode(TransferCoordinator.Owner.DESKTOP, mode);
+        transferMode = mode;
+        preferences.put("transfer.batch.mode", mode.name());
+        hint.setText(I18n.t(mode == WatchTransferService.BatchMode.FAST
+                ? "transfer.mode.fast.help" : "transfer.mode.ordered.help"));
     }
 
     private void chooseFiles() {
