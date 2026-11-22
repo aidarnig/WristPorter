@@ -16,6 +16,12 @@ watch-desktop   JavaFX UI, preferences and Spring Boot bootstrap
 
 Spring runs with `WebApplicationType.NONE`, not as a local web server. Blocking ADB calls run on background workers and JavaFX state changes run on the JavaFX application thread.
 
+### Shared selected-watch transfer owner (W14-A)
+
+`watch-core/TransferCoordinator` owns the selected watch+ADB executable lease (with a generation that cannot be revived by selecting the old device again), per-origin logical photo queues and previous results, cancel/retry state, and **one global active ADB transfer slot**. Desktop and a future authorized Web adapter share this instance in the same Windows process. New submissions while busy are rejected, not run concurrently. A watch or ADB selection change invalidates old leases and requests cancellation; the slot is released **only after the running operation exits**, not when cancellation is clicked. Before an enqueued job starts it rechecks the lease, and every invocation of the unchanged transfer service uses the snapshotted serial.
+
+`WatchTransferService.send/retry` remains the single copier/indexer; a successful copy followed by scan failure retains the remote name for **scan-only** retry, never a second push. `TransferCoordinator.Event` is an immutable internal callback invoked off the JavaFX thread; `WatchWorkspace` marshals it with `Platform.runLater`. The event may contain a local path or ADB failure cause, so **a future HTTP adapter must expose only sanitized, coarse progress**, never the event record verbatim. The current refactor starts no listener and introduces no Safari/browser functionality.
+
 ## Copy and indexing
 
 Target the explicitly selected watch via `adb -s SERIAL`. Ensure `/sdcard/DCIM/Camera` exists; create a UUID-based safe filename; push the photo; then broadcast `android.intent.action.MEDIA_SCANNER_SCAN_FILE` for the uploaded URI. A scan failure must be distinguishable from a failed copy. A scan-only retry reuses the remote filename, without a second push. The broadcast is a legacy Android API confirmed on the reference Galaxy Watch 4 Classic.
