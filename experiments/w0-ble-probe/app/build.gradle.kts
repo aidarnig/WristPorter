@@ -11,8 +11,8 @@ android {
         applicationId = "io.github.aidarnig.wristporter.w0"
         minSdk = 30 // EXPERIMENTAL build floor; W0 does not decide Bridge minSdk
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.0.1-w0"
+        versionCode = 2
+        versionName = "0.0.2-w0"
     }
 
     compileOptions {
