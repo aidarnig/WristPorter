@@ -56,16 +56,15 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         adapter = getSystemService(BluetoothManager::class.java)?.adapter
-        val diameter = resources.displayMetrics.widthPixels
-        val round = resources.configuration.isScreenRound
-        // Keep the entire text block within the watch's central safe-width.
-        // Proportional insets also work on different-sized round Wear OS displays.
-        val horizontalInset = if (round) (diameter * 0.16f).toInt() else dp(12)
-        val topInset = if (round) (diameter * 0.15f).toInt() else dp(12)
-        val bottomScrollSlack = if (round) (diameter * 0.48f).toInt() else dp(60)
+        // Percentage insets and bottom scroll space keep the log readable on a round dial.
+        val insets = RoundViewport.insets(
+            resources.displayMetrics.widthPixels,
+            resources.displayMetrics.density,
+            resources.configuration.isScreenRound
+        )
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(horizontalInset, topInset, horizontalInset, 0)
+            setPadding(insets.side, insets.top, insets.side, 0)
         }
         status = TextView(this).apply { textSize = 12f }
         fun control(text: String, action: () -> Unit) {
@@ -92,7 +91,7 @@ class MainActivity : Activity() {
         // Extra scrollable blank space lets the final lines move up from behind
         // the circular lower bezel into the center of the watch face.
         layout.addView(View(this), LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, bottomScrollSlack
+            ViewGroup.LayoutParams.MATCH_PARENT, insets.bottomScrollSlack
         ))
         setContentView(ScrollView(this).apply {
             addView(layout)
