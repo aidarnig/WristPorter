@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: wristporter-web-gateway-probe-${{ github.event.pull_request.number || github.ref }}
+  group: wristporter-web-gateway-probe-${{ github.sha }}
   cancel-in-progress: true
 
 jobs:
