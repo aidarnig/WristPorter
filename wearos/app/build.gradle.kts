@@ -35,7 +35,7 @@ dependencies {
     implementation(composeBom)
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.activity:activity-compose:1.13.0")
-    implementation("androidx.wear.compose:compose-material3:1.7.1")
+    implementation("androidx.wear.compose:compose-material3:1.6.2")
     testImplementation("junit:junit:4.13.2")
 }
 
