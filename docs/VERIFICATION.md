@@ -18,6 +18,17 @@ All observations must include **date, app build/commit, watch model/firmware/API
 - **Desktop v1.1.2 screenshots:** EN/RU user visual acceptance, 9/9 application-reported transfer; this is not an independent later Gallery verification.
 - **Bridge ANCS/AMS on Watch4 Classic:** **NOT TESTED**.
 
+## Desktop #45 — Queue order versus Samsung Gallery order (2026-11-22)
+
+**Tester:** project owner, interactive report in [Issue #45](https://github.com/aidarnig/WristPorter/issues/45). **Application:** existing Desktop v1.1.2 (production ordering path in `main` prior to [draft PR #66](https://github.com/aidarnig/WristPorter/pull/66)); exact installed executable/checksum not reconfirmed. **Watch:** Galaxy Watch4 Classic; Android 16/API36 previously confirmed on the same day during W0, **not rechecked during this photo test**. Windows build not reported. iPhone not involved. **Fixture:** 16 numbered, non-private JPEG/PNG test images, with intentionally scrambled EXIF dates and modification times.
+
+| ID | Hardware check | Status | Owner-observed result |
+| --- | --- | --- | --- |
+| DESK-ORDER-01 | Add 16 synthetic photos as a folder, verify visible queue and journal, send once and inspect watch Gallery | **FAIL (Gallery ordering)** | Desktop queue and journal were `01..16`; Galaxy Gallery displayed `01-04-03-02-07-06-05-10-09-08-13-12-11-16-15-14`. All 16 present |
+| DESK-ORDER-02 | Prior real-world batch of ~70 personal photos followed by individually initiated sends | **FAIL (batch), PASS (owner-reported manual workaround)** | Some images were out of order in the original bulk transfer, whereas sending the same photos one at a time in the desired order produced the expected Gallery sequence. No private photos or raw device data shared |
+
+**Interpretation:** Synthetic Gallery sequence does not match ascending/descending source EXIF capture time or source file modification time. The repeated three-image reversals **suggest**, but do not prove, a MediaStore indexing/timestamp tie. `MEDIA_SCANNER_SCAN_FILE` acknowledges a broadcast request, **not completion of media indexing**. The minimum-delay candidate in draft [PR #66](https://github.com/aidarnig/WristPorter/pull/66) is **NOT TESTED** on hardware and does **not** establish an ordering guarantee. Do not claim PASS based on CI or the reported 16/16 transfer count.
+
 ## W14-A — Desktop regression on physical Galaxy Watch4 Classic (2026-11-22)
 
 **Tester:** project owner, interactive report in Issue #38 executor chat. **Artifact:** PR #43, test-only Windows preview [Actions run #45024705910](https://github.com/aidarnig/WristPorter/actions/runs/45024705910), commit `0df7472b47b79e976c24b08a8231d8768bbb82d6`, Desktop internal version 1.1.2. **Device:** Galaxy Watch4 Classic; exact watch firmware/Android API and Windows OS build **not reported**. No iPhone involved.
