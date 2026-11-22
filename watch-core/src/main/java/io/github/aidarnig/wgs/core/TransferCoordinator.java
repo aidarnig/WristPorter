@@ -307,6 +307,12 @@ public final class TransferCoordinator {
             Consumer<TransferUpdate> onProgress = update -> {
                 Event event;
                 synchronized (TransferCoordinator.this) {
+                    // A slow ADB command may finish after cancellation or watch/ADB
+                    // retargeting. Never admit its old-device result into the current
+                    // session, or publish misleading progress for the revoked lease.
+                    // Keep the global ADB slot until run() exits in its finally block.
+                    if (active != job || job.cancelRequested || !job.lease.equals(selected))
+                        return;
                     // Preserve the remote name for a later scan-only retry.
                     sessions.get(job.owner).results.put(update.source(), update);
                     job.completed++;
