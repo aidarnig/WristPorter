@@ -114,12 +114,11 @@ public final class TransferCoordinator {
         selected = device.isEmpty() || executable.isEmpty()
                 ? null : new WatchLease(++nextGeneration, executable, device);
         if (selected == null) ++nextGeneration;
-        if (active != null) {
-            interrupt(active);
-        } else {
-            // Old watch outcomes are not evidence of a copy to the new target.
-            for (Session session : sessions.values()) invalidateResults(session);
-        }
+        if (active != null) interrupt(active);
+        // Revoke previous-device outcomes immediately, even while a slow ADB job
+        // is still exiting. Late callbacks are separately rejected by onProgress.
+        // Clearing results never frees the global ADB slot early.
+        for (Session session : sessions.values()) invalidateResults(session);
     }
 
     private static void invalidateResults(Session session) {
