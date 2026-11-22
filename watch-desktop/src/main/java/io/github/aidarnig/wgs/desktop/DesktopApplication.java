@@ -1,6 +1,7 @@
 package io.github.aidarnig.wgs.desktop;
 
 import atlantafx.base.theme.PrimerDark;
+import io.github.aidarnig.wgs.core.TransferCoordinator;
 import io.github.aidarnig.wgs.core.WatchTransferService;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -23,7 +24,9 @@ public final class DesktopApplication extends Application {
 
     @Override public void start(Stage stage) {
         Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
-        var workspace = new WatchWorkspace(context.getBean(WatchTransferService.class), workers);
+        WatchTransferService service = context.getBean(WatchTransferService.class);
+        TransferCoordinator coordinator = new TransferCoordinator(service, workers);
+        var workspace = new WatchWorkspace(service, workers, coordinator);
         var scene = new Scene(workspace, 1160, 780);
         scene.getStylesheets().add(getClass().getResource("/watch-gallery.css").toExternalForm());
         stage.setTitle("WristPorter");

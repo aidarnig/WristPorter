@@ -20,14 +20,14 @@ Prefer one independently testable outcome and a focused PR per executor chat. Br
 
 The Windows preview workflow builds a test-only portable ZIP, checksum and provenance notice for relevant PRs, or when manually dispatched. It does not publish GitHub Releases. The existing W0 experiment branch builds its own Android debug APK. A generic Wear OS preview build is deferred until W1 creates a real installable Wear project. Never confuse a test artifact with a signed stable release.
 
-For owner-assisted Android tests, a trusted checkout includes ci/install-watch-test-apk.ps1. It requires an explicit APK path, one authorized selected ADB watch and a typed INSTALL confirmation; it never pairs, unpairs, resets or silently installs anything. Give the owner a confirmed Actions run and precise test scenario in the same chat, then iterate based on observed feedback.
+For **justified** owner-assisted Android tests, a trusted checkout includes ci/install-watch-test-apk.ps1. It requires an explicit APK path, one authorized selected ADB watch and a typed INSTALL confirmation; it never pairs, unpairs, resets or silently installs anything. Only prepare a manual artifact and scenario when the decision rule in section 3 is met.
 
 ## 2. Per-Issue execution cycle
 
 1. Confirm goal, scope/exclusions, dependency gates, affected contracts and observable acceptance tests. Check whether real iPhone/watch/PC facts or tests are needed **now or after a build**.
 2. Create a unique branch from current `main` (`feat/`, `fix/`, `test/`, `docs/`, `ci/`). One chat owns one working branch. Split an oversized Issue into focused PRs without creating redundant planning documents.
 3. Implement, test and repair in scope. Use fake transports and automated checks first **where possible**, but do not replace physical acceptance with simulations. Preserve the shipped Desktop photo path, security and original-image constraints.
-4. **At the earliest meaningful hardware checkpoint, follow section 3 in the current chat.** Continue the task after the owner's result; do not defer every real-device test to a final summary.
+4. **Assess whether owner-assisted testing passes the value gate in section 3.** If not, finish autonomously and record any real-device scenario as NOT TESTED. If yes, request the smallest decisive check in the current chat and continue after feedback.
 5. Open a focused PR linked to the Issue; inspect diff, dependencies, CI and documentation. Fix failures, then apply the merge policy (section 4).
 6. Record verified outcomes and remaining work in Issue/PR and, only when required, canonical docs. Close the Issue only after all acceptance gates pass. A merged experimental step can leave the Issue open.
 
@@ -35,22 +35,23 @@ A short PR summary must include scope, changed components, **actual** test comma
 
 ## 3. Owner-assisted real-device testing
 
-**The project owner is an available manual tester, not an unavailable CI environment.** When a task requires an iPhone, Galaxy Watch4 Classic or the owner's Windows PC, the executor must initiate a **guided test in the same working conversation**, at the earliest point when the test is both safe and meaningful. Device/OS information needed to choose an implementation target should be requested **before** building the wrong target. Do not wait for the PR to be final.
+**Protect the owner's time.** Physical iPhone, Galaxy Watch4 or Windows tests are valuable only when they answer something that a reliable automated test cannot. The default is to test autonomously and **not** ask the owner to execute routine checks. A successful CI run is not proof of hardware compatibility, but `NOT TESTED` alone does not justify interrupting the owner.
 
-**Before requesting a test**, complete everything possible autonomously: build a reproducible artifact or probe, run appropriate automated tests, verify the download/build link and prepare the expected behavior. If there is no actionable artifact, continue development instead of asking the owner to improvise. Prefer small checkpoints (first launch/discovery → first event/upload → reconnect/negative cases) over an overwhelming full test matrix.
+### Decision rule — request an owner test only if all three apply
 
-**Each request to the owner must contain:**
-1. **What is being checked:** Issue, precise scenario / `VERIFICATION.md` test ID and why this checkpoint is necessary.
-2. **What to use:** exact artifact/commit/version and a verified GitHub Actions or Release download link (when applicable), target device, prerequisites and a safe installation/rollback method. If a link is not verified, say so; do not invent one.
-3. **What to do:** concise, numbered, reproducible user actions in ordinary Russian (or the owner's current language), including the next screen/button/command only where necessary. No factory reset, unpairing, forced install, destructive change or unsupported workaround.
-4. **Expected result and failure path:** what success looks like, what to do if a permission prompt or error appears, and how to stop/undo the test safely.
-5. **What to report back:** PASS/FAIL/UNSURE, the exact observed screen/error, relevant watch/iOS/Windows/app versions and optional sanitized screenshot. Never ask for real notification contents, Bluetooth identifiers, pairing codes, LAN IPs or personal photos in public Issues/PRs.
+1. **Evidence gap:** The behavior depends on real hardware, iOS/Safari, Wear OS, Windows-specific UI or environmental behavior that cannot be established with reasonable confidence through automated unit/integration tests, supported emulators or existing evidence.
+2. **Material consequence:** The answer is needed to choose an implementation, confirm an important user journey or security/compatibility boundary, diagnose a demonstrated device-specific problem, or satisfy an actual release/acceptance gate. The executor must be able to say **what decision will change if the test fails**.
+3. **Ready and minimal:** Relevant code and CI have passed, a safe reproducible build/probe and rollback exist, and the requested steps are the **smallest test that resolves the uncertainty**. Group related essential observations into one short session; do not request a different owner test for every endpoint, failure case, or trivial feature.
 
-**After the owner's response:** interpret it, ask at most the specific follow-up information actually needed, update code/test instructions where necessary, and request a targeted **retest** until accepted or genuinely blocked. Record sanitized evidence in [VERIFICATION.md](VERIFICATION.md) and link the Issue/PR to it. Do not downgrade an available test to a permanent `NOT TESTED` simply because the executor lacks physical hardware.
+**Do not ask for manual tests just because they are possible**, because a checklist contains them, or to replace `NOT TESTED` with PASS. Prefer deterministic server-level tests for stop/port closure, HTTP validation, error handling, retries and security rejection. For example, a one-time **Safari → Windows PIN pairing** test can establish real browser/network interoperability; asking the owner to reload Safari after shutdown is ordinarily redundant when the server stop/port lifecycle is already covered by reliable integration tests, unless there is a specific observed platform-specific failure. Avoid repeated 1-file, 10-file, 20-file checks when earlier evidence already answers the same question.
 
-**Pending user test:** if a question has been posed but not answered, record `AWAITING OWNER TEST` in the Issue/PR as workflow status; the scenario remains **NOT TESTED** in the verification ledger. Keep a safe PR open or isolate unverified functionality behind an OFF-by-default/experimental boundary. If the owner cannot or chooses not to run the test, state the genuine blocker and finish only the independently verifiable portion; do not falsely mark hardware acceptance or ship the feature.
+### When an owner test is justified
 
-An executor cannot simulate the owner's physical result. The owner's test is **interactive within the chat**, not a promise of unattended background execution.
+In the **same executor conversation**, state in one sentence **why this cannot be tested adequately in CI and which decision it will unblock**. Supply the exact verified artifact/link/commit, target device prerequisites, concise numbered steps, expected and failure results, safe abort/rollback, and the smallest feedback requested. Never require factory resets, forced unpairing, destructive watch actions, public-network exposure, or publishing secrets/photos. Ask for OS/firmware details only when they affect interpreting that particular result.
+
+Interpret the answer and fix any demonstrated defect. **Retest only the changed, material behavior**, not the full earlier matrix. Report sanitized actual evidence in [VERIFICATION.md](VERIFICATION.md), linked from the Issue/PR. `NOT TESTED` remains the truthful hardware result when no meaningful owner test was justified; automated evidence and limited experimental scope can still allow a safely isolated, OFF-by-default PR to merge under section 4.
+
+If a genuinely required test cannot be performed, mark `AWAITING OWNER TEST` only in the Issue/PR workflow, keep hardware status `NOT TESTED`, and leave the related **feature acceptance or release** open. Do not hold unrelated low-risk work or ask for more manual tests without a specific evidence gap. No background testing or silent owner action is implied.
 
 ## 4. PR integration and escalation
 
