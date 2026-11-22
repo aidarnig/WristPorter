@@ -35,6 +35,16 @@ To use the ZIP: extract **the entire folder** and run `WristPorter/WristPorter.e
 
 ADB can be overridden through the advanced UI field or `WRISTPORTER_ADB` environment variable (`WGS_ADB` is an older compatibility alias). Development fallback searches `~/Documents/platform-tools` and PATH. The bundled ADB is downloaded only by the *packager*, never by the app at startup.
 
+## Test artifacts for owner-assisted checks
+
+The **Windows preview artifact** workflow runs on eligible Desktop PR changes and can be manually dispatched on a selected branch. Download the artifact named "wristporter-windows-preview-<run number>" from the successful Actions run. It contains a portable ZIP, SHA-256 checksum and PREVIEW-READ-ME.txt explaining that this is **not a release**, even if the internal app version still says 1.1.2. Extract the complete ZIP and test only the scenario requested by the executor. Stable releases are published separately by windows-portable.yml.
+
+For an APK from a trusted, successful W0 or future Wear OS Actions build, use the optional PowerShell test installer in a checkout of this repository:
+
+    .\ci\install-watch-test-apk.ps1 -ApkPath "C:\path\to\app-debug.apk" -AdbPath "C:\path\to\platform-tools\adb.exe"
+
+The script checks authorized ADB devices, requires one selected watch (or an explicit -Serial) and asks to type INSTALL. It never factory-resets, unpairs or silently installs apps. Do not run it against an unidentified device. The executor is responsible for giving the exact build, download and test/rollback instructions and recording the observed result in the same chat; see [engineering standard](ENGINEERING_STANDARD.md).
+
 ## Collaboration
 
 Use focused `feat/<scope>` or `fix/<scope>` branches and Conventional Commit-style messages. Track acceptance in GitHub Issues; update only the document that owns the relevant decision. Do not commit photographs, pairing secrets, ADB keys, build artifacts or private device identifiers.
