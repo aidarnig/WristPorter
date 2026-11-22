@@ -65,6 +65,17 @@ The 2026-11-22 owner observed that an explicit **Disconnect → Choose bonded ph
 
 This is a bounded foreground-only diagnostic, not an automatic repair guarantee. If the service is temporarily unpublished or the iPhone media player sends no event, a refresh alone may not restore it. No production battery/reliability guarantee is implied.
 
+## v0.0.4 GATT Inspector — one targeted AMS write-permission checkpoint
+
+**Why:** Owner confirmed v0.0.3 `GATT_WRITE_NOT_PERMITTED` (status 3) **persists even after one manual Refresh GATT**; see [Issue #13](https://github.com/aidarnig/WristPorter/issues/13). We must distinguish characteristics' advertised write/notify capabilities, the local Android operation start status, and the callback result from the remote GATT server. Apple AMS defines Entity Update as writable **with response**, so this probe does not blindly switch write types or auto-retry failures.
+
+- Latest independent test build is labeled **W0 GATT Inspector** and shows **v0.0.4 inspector** in the on-watch summary, package `io.github.aidarnig.wristporter.w0.inspector`. It installs alongside prior debug apps and does not require unpairing, uninstalling any probe, or resetting the watch.
+- When services are discovered, the screen lists `ANCS source`, `AMS command`, `AMS entity` with safe public capabilities: `N` (Notify), `I` (Indicate), `W` (write with response), `WNR` (write without response), `R` (read) and `CCCD` descriptor present. These flags are **not** proof of authorization.
+- For each subscription: `CCCD start` / `CCCD local start code` describe **whether the Android call started**; `CCCD remote callback ... status` describes the asynchronous BLE result. For each AMS entity registration: `AMS write start entity=0/2 type=WITH_RESPONSE`, `AMS local start code` and `AMS register entity=... remote callback status` distinguish the same two stages. Status 3 means `WRITE_NOT_PERMITTED`. No message text, track value, UID or BLE identifiers are logged.
+- The round-safe end-of-log summary shows `Last AMS issue` and `GATT operations: queued / active`. Let these become `queued=0 active=false` before assuming all writes completed; `AMS registrations=0/1` is not proof that the second registration finished.
+
+**Minimal device test after successful CI build:** open the new **W0 GATT Inspector**, grant Nearby devices and select the already bonded iPhone. Let the one-shot connection settle (no Bluetooth toggle). Swipe to the end of the text, and send one sanitized photo or transcribe the `AMS command` / `AMS entity` capabilities and the relevant `local start`, `remote callback`, and `Last AMS issue` statuses. **Do not press Refresh** unless specifically requested after those results. If there is no music event, that is already known; do not repeatedly switch tracks. Close with **4. Disconnect**. The next implementation decision is whether the iPhone advertises a different characteristic write mode from the one required by AMS, or whether it advertises that mode but rejects writes during this link.
+
 ## Real watch/iPhone test instructions
 
 1. Record watch model, Android API and firmware (probe UI or adb shell getprop ro.build.version.sdk); record iPhone model, iOS version and Bluetooth state separately. Never publish serial, MAC, pairing codes or private notification/media contents.
