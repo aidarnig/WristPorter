@@ -30,7 +30,7 @@ The experimental debug APK is attached to the latest passing [W0 experimental BL
 
 ### Safer installation using the repository's Windows helper
 
-From a trusted checkout of WristPorter's `main`, use [`ci/install-watch-test-apk.ps1`](../../ci/install-watch-test-apk.ps1). Connect to your already configured watch over Wi-Fi ADB using the existing WristPorter UI (or your authorized ADB pairing), then run from repository root:
+From a trusted checkout of WristPorter's `main`, use [`ci/install-watch-test-apk.ps1` on main](https://github.com/aidarnig/WristPorter/blob/main/ci/install-watch-test-apk.ps1). Connect to your already configured watch over Wi-Fi ADB using the existing WristPorter UI (or your authorized ADB pairing), then run from repository root:
 
 ```powershell
 .\ci\install-watch-test-apk.ps1 -ApkPath "C:\Path\to\app-debug.apk" -AdbPath "C:\Path\to\platform-tools\adb.exe"
