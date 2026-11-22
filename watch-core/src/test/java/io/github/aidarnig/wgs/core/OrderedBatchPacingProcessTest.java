@@ -51,6 +51,29 @@ class OrderedBatchPacingProcessTest {
         assertArrayEquals(secondBefore, Files.readAllBytes(second));
     }
 
+    @Test void fastModeKeepsOriginalSequentialPushAndScanWithoutAddedDelay() throws Exception {
+        Path log = temp.resolve("fast-calls.txt");
+        Path adb = fakeAdb(log);
+        Path first = png("F01.png");
+        Path second = jpeg("F02.jpg");
+        List<TransferUpdate> results = new ArrayList<>();
+
+        new WatchTransferService().send(adb.toString(), "watch-1", List.of(first, second),
+                WatchTransferService.BatchMode.FAST, results::add);
+
+        assertEquals(List.of(first, second), results.stream().map(TransferUpdate::source).toList());
+        List<String> calls = Files.readAllLines(log);
+        assertEquals(4, calls.size());
+        assertTrue(calls.get(0).startsWith("push|F01.png|"));
+        assertTrue(calls.get(1).startsWith("scan|"));
+        assertTrue(calls.get(2).startsWith("push|F02.jpg|"));
+        assertTrue(calls.get(3).startsWith("scan|"));
+        long firstScanMillis = Long.parseLong(calls.get(1).split("\\|")[1]);
+        long secondPushMillis = Long.parseLong(calls.get(2).split("\\|")[2]);
+        assertTrue(secondPushMillis - firstScanMillis < 1_100,
+                "Fast mode must not wait for the Ordered-mode pacing interval");
+    }
+
     @Test void cancellingAfterFirstPhotoInterruptsPacingWithoutStartingSecondPush() throws Exception {
         Path log = temp.resolve("cancel-calls.txt");
         Path adb = fakeAdb(log);
