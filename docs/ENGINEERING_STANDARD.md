@@ -1,90 +1,71 @@
 # WristPorter engineering workflow
 
-**Binding procedure for executor chats.** Read [AGENTS.md](../AGENTS.md) first; this file defines *how work gets done*. Feature requirements and detailed design belong to their [canonical document owners](INDEX.md), not here.
+**Binding execution policy.** [AGENTS.md](../AGENTS.md) owns the minimal reading order; this document owns **how executors work**. [INDEX.md](INDEX.md) identifies the authoritative source for each technical fact.
 
-## 1. Ownership and autonomy
+## 1. Roles and autonomous delivery
 
-- **Coordinator chat + product owner:** choose priorities and independent Issues, accept material product/security/architecture decisions and release/device-acceptance gates. The coordinator reviews cross-track dependencies and merge conflicts; it does **not** repeat implementation work.
-- **Executor chat:** owns one assigned Issue or explicit PR-sized slice, discovers missing ordinary details, makes routine technical decisions, implements/tests/fixes, updates its Issue/PR and integrates safe changes. It must not depend on private previous-chat context.
-- **GitHub:** current `main` plus Issues/PRs are authoritative for code and task status. [STATE.md](STATE.md) is a small overview, **not a log of each commit**.
+- **Product owner + coordination chat:** prioritize Issues, decide material product/security/architecture changes, and accept releases and actual hardware compatibility.
+- **Executor chat:** owns one Issue or clearly specified PR-sized slice. Recover context from GitHub, make routine implementation decisions, write/test/fix code, update the Issue, and independently merge **safe in-scope** PRs where the conditions below are met.
+- **GitHub:** Issue = task, acceptance, progress and blockers; PR = code changes and test evidence; canonical docs = lasting facts; [STATE.md](STATE.md) = short cross-track snapshot. No alternative chat handoff files.
 
-Minimum prompt: `WristPorter Issue #N`. The mandatory reading sequence is defined **once** in [AGENTS.md](../AGENTS.md). Do not copy all linked documents into an Issue or another chat. If an Issue is underspecified, inspect relevant code and define executable acceptance steps in that Issue without asking the owner to repeat known facts.
+Only a GitHub Issue number/link is needed to start. Follow the reading path in AGENTS; inspect actual `main`, active PRs and dependencies before editing. When Issue details are incomplete but the decision is ordinary, investigate, choose and record acceptance details without sending the owner another context questionnaire.
 
-### Decisions executors make without asking
+## 2. Per-Issue execution cycle
 
-Library structure within approved constraints, implementation approach, test design, bug fixes inside assigned scope, routine refactors, internal UX details consistent with [UX.md](UX.md), small ADR-free improvements, writing documentation, opening PRs and resolving non-semantic merge conflicts.
+1. Confirm goal, scope/exclusions, dependency gates, affected contracts and observable acceptance tests. Check whether real iPhone/watch/PC facts or tests are needed **now or after a build**.
+2. Create a unique branch from current `main` (`feat/`, `fix/`, `test/`, `docs/`, `ci/`). One chat owns one working branch. Split an oversized Issue into focused PRs without creating redundant planning documents.
+3. Implement, test and repair in scope. Use fake transports and automated checks first **where possible**, but do not replace physical acceptance with simulations. Preserve the shipped Desktop photo path, security and original-image constraints.
+4. **At the earliest meaningful hardware checkpoint, follow section 3 in the current chat.** Continue the task after the owner's result; do not defer every real-device test to a final summary.
+5. Open a focused PR linked to the Issue; inspect diff, dependencies, CI and documentation. Fix failures, then apply the merge policy (section 4).
+6. Record verified outcomes and remaining work in Issue/PR and, only when required, canonical docs. Close the Issue only after all acceptance gates pass. A merged experimental step can leave the Issue open.
 
-### Escalate to coordinator/owner only when necessary
+A short PR summary must include scope, changed components, **actual** test commands/check status, hardware result or pending checkpoint, relevant docs, risks and rollback. Never report a test as passed when only planned or simulated.
 
-- Changing product scope, supported platforms, core architecture or a published API used by another active task.
-- New network exposure, security/TLS risk acceptance, reduced authentication/privacy, sensitive data handling or consequential license changes.
-- Destructive actions, factory resets, pairing/bond removal, credential or signing-key changes, release/tag publication, public claims of compatibility.
-- A dependency that cannot be verified or resolved safely, a security-critical review finding, a shared-file/API collision that changes behavior, or a required **physical watch/iPhone/Windows test** the executor cannot perform.
+## 3. Owner-assisted real-device testing
 
-When escalating, supply **one concise decision package**: evidence, recommended option, alternatives, implications and the smallest requested action. Never request general context already in GitHub.
+**The project owner is an available manual tester, not an unavailable CI environment.** When a task requires an iPhone, Galaxy Watch4 Classic or the owner's Windows PC, the executor must initiate a **guided test in the same working conversation**, at the earliest point when the test is both safe and meaningful. Device/OS information needed to choose an implementation target should be requested **before** building the wrong target. Do not wait for the PR to be final.
 
-## 2. Starting and delivering one Issue
+**Before requesting a test**, complete everything possible autonomously: build a reproducible artifact or probe, run appropriate automated tests, verify the download/build link and prepare the expected behavior. If there is no actionable artifact, continue development instead of asking the owner to improvise. Prefer small checkpoints (first launch/discovery → first event/upload → reconnect/negative cases) over an overwhelming full test matrix.
 
-1. Read the Issue, current state and relevant canonical docs using the [AGENTS.md order](../AGENTS.md). Check dependency status, latest `main`, open PRs and touched modules. If an upstream hardware gate is missing, do not fabricate success or build an unsupported dependency.
-2. Define **observable output**, in-scope and out-of-scope behavior, affected contracts, acceptance checks and rollback. For a large milestone, split into coherent PR-sized steps **within the same Issue**; do not open redundant planning docs.
-3. Create a **unique branch from current `main`**: `feat/...`, `fix/...`, `test/...`, `docs/...`, `ci/...`. One executor owns a branch; nobody writes directly to `main`. Prefer Conventional Commits.
-4. Implement the smallest useful slice, add relevant automated tests and handle error/cancel/retry behavior. Keep Desktop and Wear OS builds independent. Never copy third-party code without verifying its license.
-5. Run appropriate focused tests and full module/reactor checks when shared contracts change. If a test cannot be run, mark **NOT RUN** and explain; failed CI must be repaired, not ignored. For hardware, record **NOT TESTED** unless actually observed.
-6. Open a focused PR linked to the Issue. Examine the actual diff, CI results, dependency conflicts, behavior and docs. Fix defects before deciding whether to merge.
-7. Follow the merge rules below. Update the Issue with PR, commit, test evidence, remaining work and next step. Close only when **all** Issue acceptance checks are met; partial experimental integration leaves it open.
+**Each request to the owner must contain:**
+1. **What is being checked:** Issue, precise scenario / `VERIFICATION.md` test ID and why this checkpoint is necessary.
+2. **What to use:** exact artifact/commit/version and a verified GitHub Actions or Release download link (when applicable), target device, prerequisites and a safe installation/rollback method. If a link is not verified, say so; do not invent one.
+3. **What to do:** concise, numbered, reproducible user actions in ordinary Russian (or the owner's current language), including the next screen/button/command only where necessary. No factory reset, unpairing, forced install, destructive change or unsupported workaround.
+4. **Expected result and failure path:** what success looks like, what to do if a permission prompt or error appears, and how to stop/undo the test safely.
+5. **What to report back:** PASS/FAIL/UNSURE, the exact observed screen/error, relevant watch/iOS/Windows/app versions and optional sanitized screenshot. Never ask for real notification contents, Bluetooth identifiers, pairing codes, LAN IPs or personal photos in public Issues/PRs.
 
-**Required PR summary (brief, not a duplicate spec):** Issue/scope, changes and touched modules; commands and CI outcomes; physical-device outcome or NOT TESTED; security/compatibility risks and rollback; canonical docs touched; any unresolved blocker.
+**After the owner's response:** interpret it, ask at most the specific follow-up information actually needed, update code/test instructions where necessary, and request a targeted **retest** until accepted or genuinely blocked. Record sanitized evidence in [VERIFICATION.md](VERIFICATION.md) and link the Issue/PR to it. Do not downgrade an available test to a permanent `NOT TESTED` simply because the executor lacks physical hardware.
 
-## 3. Merge policy: autonomy by default, strict exceptions
+**Pending user test:** if a question has been posed but not answered, record `AWAITING OWNER TEST` in the Issue/PR as workflow status; the scenario remains **NOT TESTED** in the verification ledger. Keep a safe PR open or isolate unverified functionality behind an OFF-by-default/experimental boundary. If the owner cannot or chooses not to run the test, state the genuine blocker and finish only the independently verifiable portion; do not falsely mark hardware acceptance or ship the feature.
 
-### Routine change — executor may merge autonomously
+An executor cannot simulate the owner's physical result. The owner's test is **interactive within the chat**, not a promise of unattended background execution.
 
-A PR may be merged without an additional owner prompt only if **all** apply:
+## 4. PR integration and escalation
 
-- It implements an **already approved Issue** without extending its product/security scope, destructive behavior, user-visible compatibility promise or release policy.
-- The diff is focused, no unrelated files or active branch ownership conflicts, no unresolved review findings; current `main` has been considered and shared API consumers are tested.
-- Applicable automated checks are **actually green** on the PR's current head (or the exact approved equivalent); no unexplained skipped required checks, failing tests, unsupported dependency or unreviewed security change.
-- It preserves existing Windows photo transfer and other agreed invariants. Any code dependent on missing physical-device evidence remains explicitly experimental, isolated and not enabled by default; the Issue stays open until actual acceptance.
-- The executor's GitHub permissions and repository branch protection allow the merge. If not, report a concrete blocker; never circumvent protections.
+**Autonomous merge permitted only when all conditions hold:** approved Issue/scope; small reviewed diff; current green relevant CI/tests with no unexplained skipped gates; no active branch/shared-contract collision; no regression to shipped Desktop behavior; no material new security/network/privacy or destructive behavior; repository permissions allow the merge. Isolated, OFF-by-default experimental foundations may merge while hardware acceptance is pending **only if** the unverified feature is not presented as shipped and its Issue remains open.
 
-Examples: docs fixes, test/CI improvements with proven results, non-breaking internal fixes and isolated experimental groundwork that does not silently enable an unverified end-user feature.
+**Hold the PR and bring a concise recommendation to the coordinator/owner** for: material scope or shared API change affecting another task; new network exposure or unapproved security/TLS/privacy trade-off; destructive data/bond operations; signing/credentials, licensing, release/tag publication; unverified hardware acceptance; unresolved significant CI/security failure or unsafe conflict. Do not repeatedly seek approval for ordinary technical choices.
 
-### Hold PR and request a decision
+**Parallel development:** one owner per branch/shared contract; inspect open PRs before changing shared code. Merge dependency contracts first, update dependent branches from `main`, re-run affected tests after rebase or conflict resolution. Use Issues/PRs for interim updates rather than concurrently rewriting `STATE.md`.
 
-Do **not** self-merge when changes touch a previously undecided material security/privacy design, add a new LAN listener or remote capability, alter pairing/permissions/OTA/install semantics, change transfer data integrity, break shared interfaces, remove data, require licensing/signing decisions, release binaries or claim real-device acceptance without evidence. Prepare a complete PR and ask a **targeted** question rather than pausing routine development. If risk or classification is uncertain, hold the PR for coordinator review.
+**Important distinction:** merging code ≠ shipping a release ≠ verifying real-device compatibility. See [QUALITY.md](QUALITY.md) and [VERIFICATION.md](VERIFICATION.md).
 
-**Merging code is not the same as accepting a feature or publishing it.** A draft/experimental implementation can be integrated behind an inactive gate only under the safe conditions above. A milestone may remain open after a merged PR. Release or changing a hardware status to VERIFIED always follows [QUALITY.md](QUALITY.md) and [VERIFICATION.md](VERIFICATION.md).
+## 5. Write documentation once
 
-## 4. Parallel development and conflicts
+Follow [INDEX.md](INDEX.md), without duplicating stable requirements or full PR histories:
 
-- Before work, compare active Issues and open PRs for overlapping source files, shared APIs and database/build contracts. Independent W0 Bluetooth, W13 Web feasibility and #7 CI may progress in parallel; W3 and W5 need a stabilized W2 BLE contract first.
-- One chat owns a shared interface change. Other branches wait for that contract or use mocks; do not race into different incompatible APIs.
-- Minimize simultaneous edits to cross-track docs (`AGENTS.md`, `INDEX.md`, `ROADMAP.md`, `STATE.md`, ADR index). Put interim progress in the Issue/PR and rebase dependent branches after the shared merge.
-- After any dependency change, update from current `main`, inspect conflicts and rerun affected tests before merge. Failed conflict resolution is a blocker, not a reason to discard work silently.
+1. **Issue/PR:** live implementation status, blockers, test commands/results, linked commits and owner-assisted test requests/results.
+2. **VERIFICATION.md:** only actual physical-device test evidence (date, app commit, exact OS/device, steps, sanitized observations). Pending/blocked/untested scenarios retain the correct status.
+3. **Canonical owner:** update only when a lasting requirement/architecture/API/security/CI contract changes. Product → [PRODUCT.md](PRODUCT.md); architecture → [ARCHITECTURE.md](ARCHITECTURE.md)/[BRIDGE_ARCHITECTURE.md](BRIDGE_ARCHITECTURE.md); LAN portal → [LOCAL_WEB_PORTAL.md](LOCAL_WEB_PORTAL.md); build/CI → [DEVELOPMENT.md](DEVELOPMENT.md)/[CI.md](CI.md). A consequential approved decision gets a **new** [ADR](adr/README.md); do not rewrite historical ADRs.
+4. **STATE.md / ROADMAP.md:** only meaningful cross-track state, milestone or dependency changes. Do not update these for each test run or intermediate PR. Keep public EN/RU docs consistent **when shipped behavior changes**.
 
-## 5. Documentation: read little, write once
+Run `python ci/check-doc-links.py` for documentation edits when possible (otherwise state NOT RUN); inspect docs CI. Its green status validates links, not underlying facts.
 
-**Single owner per fact:** use [INDEX.md](INDEX.md). No extra handoff, duplicate roadmap, alternative architecture file or long session summary. Issue = task/scope/status; PR = change/tests/review; canonical docs = lasting facts/decisions; [STATE.md](STATE.md) = brief cross-track snapshot.
+## 6. Security, verification and handoff
 
-**Write in this order when relevant:**
-1. Record discoveries and unfinished work **in Issue/PR**, not in global STATE.
-2. Record *actual* physical/compatibility evidence with model/OS/build/test conditions in [VERIFICATION.md](VERIFICATION.md); code/CI does not qualify.
-3. Update the **one canonical doc** whose contract or product behavior changed: product/scope → [PRODUCT.md](PRODUCT.md); module/API → [ARCHITECTURE.md](ARCHITECTURE.md) or [BRIDGE_ARCHITECTURE.md](BRIDGE_ARCHITECTURE.md); browser/HTTP → [LOCAL_WEB_PORTAL.md](LOCAL_WEB_PORTAL.md); build/CI → [DEVELOPMENT.md](DEVELOPMENT.md) or [CI.md](CI.md); quality thresholds → [QUALITY.md](QUALITY.md).
-4. A consequential **approved** architectural decision gets a new [ADR](adr/README.md), never an overwritten historical rationale. Shipped public EN/RU docs, releases and compatibility claims change **only when release behavior is verified**.
-5. During PR review, validate links with `python ci/check-doc-links.py` when possible or the docs CI; report NOT RUN if unavailable. Update [STATE.md](STATE.md) **only** when a milestone, shipped behavior, fundamental blocker, or next cross-track priority materially changes — preferably by one coordinator/integrator, not every chat.
+- Desktop: JDK 25, Maven; full `mvn -B -ntp verify` for relevant shared changes and before release. Wear Kotlin/Gradle and its CI are separate; [DEVELOPMENT.md](DEVELOPMENT.md) and [CI.md](CI.md) own detailed commands.
+- BLE: explicit permissions and user consent; bounded GATT operations, reconnect and cancellation; ANCS/AMS events cannot be called verified without real Watch4+iPhone evidence. LAN upload: approved trusted-private-network HTTP boundary remains subject to [security and release gates](LOCAL_WEB_PORTAL.md).
+- Privacy: do not put private photos/messages, local addresses, Bluetooth identifiers, pairing secrets, credentials, keys, or raw sensitive logs in public artifacts. Avoid destructive changes, unbounded retries, silent telemetry and unauthorized remote commands. Follow [PRODUCT.md](PRODUCT.md) original-photo rule.
+- Proof status definitions and hardware test matrix live in [VERIFICATION.md](VERIFICATION.md); **NOT TESTED** is not PASS. Do not invent results or battery measurements.
 
-Do not copy roadmap definitions into STATE. Do not update the ROADMAP for every passing unit test; update it only for approved dependency/milestone changes. Keep documents succinct by editing the canonical fact in place.
-
-## 6. Verification and security
-
-- **Automated:** use JDK 25 and Maven for Desktop; `mvn -B -ntp verify` for changes to shared APIs and as the release gate. See [DEVELOPMENT.md](DEVELOPMENT.md) and [CI.md](CI.md). Future Wear OS Gradle/Kotlin tests are separate from the Maven reactor. Cover parser/transport errors, reconnect, malformed inputs and cancellation when applicable.
-- **Real hardware:** reference Galaxy Watch4 Classic + actual iPhone tests are not implied by fake ADB, build output, screenshots of a mock or another watch. Use [VERIFICATION.md](VERIFICATION.md) statuses PASS/FAIL/BLOCKED/NOT TESTED/INCONCLUSIVE, recording exact model, firmware/API, app commit, steps and privacy-safe evidence. Never invent battery measurements.
-- **Privacy/safety:** no private photos, notification text, account credentials, pairing codes, BLE IDs, IPs, keys or identifying logs in public artifacts. No unexpected telemetry, unapproved cloud/iOS app, malicious external code, unbounded retries or destructive watch operations.
-- **Original photo rule:** accepted JPEG/PNG transfer payloads are not resized, compressed, re-encoded or stripped of metadata; preserve original bytes. For Safari, [LOCAL_WEB_PORTAL.md](LOCAL_WEB_PORTAL.md) owns the iOS representation caveat. A separate quality-audit task is **deferred**, not silently assigned.
-- **Release:** separate Desktop and future Bridge version lines/signing. No automatic signed release, no blanket compatibility claim, and no release-gate bypass from a green unit test.
-
-## 7. End-of-task handoff
-
-Report concisely: Issue + PR/merge commit; what changed; test commands and results; physical-device status; remaining risks/decisions; next small task. Put lasting facts in the appropriate canonical source. Never ask the owner to manually transfer summaries between chats.
-
-**Done means the state is reconstructible from current GitHub without the chat history.** If tool access fails, record the exact failing action and offer a patch/PR-ready output; do not pretend remote writes or checks occurred.
+**End-of-task response:** Issue and PR/merge link; user-visible outcome; executed tests and evidence; owner-assisted test result or actionable pending checkpoint; blockers/risks; next small step. Leave GitHub independently understandable without the chat history.
