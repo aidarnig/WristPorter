@@ -337,6 +337,156 @@ class TransferCoordinatorTest {
         assertEquals(1, recovery.get());
     }
 
+    @Test void appendingPhotosSendsOnlyUnsentFilesOnSameWatch() throws Exception {
+        List<List<Path>> batches = new java.util.concurrent.CopyOnWriteArrayList<>();
+        TransferCoordinator coordinator = new TransferCoordinator(new FakeBackend() {
+            @Override public void send(String adb, String serial, List<Path> photos,
+                                       Consumer<TransferUpdate> observer) {
+                assertEquals("watch-A", serial);
+                batches.add(List.copyOf(photos));
+                for (int i = 0; i < photos.size(); i++)
+                    observer.accept(new TransferUpdate(photos.get(i), i + 1, photos.size(),
+                            TransferUpdate.Status.COPIED_SCAN_REQUESTED, "copied", "remote"));
+            }
+        }, worker);
+        coordinator.selectWatch(ADB, "watch-A");
+        var lease = coordinator.selection();
+        BlockingQueue<TransferCoordinator.Event> events = new LinkedBlockingQueue<>();
+
+        coordinator.replaceQueue(TransferCoordinator.Owner.DESKTOP, List.of(FIRST));
+        assertEquals(1, coordinator.pendingCount(TransferCoordinator.Owner.DESKTOP));
+        coordinator.sendPending(TransferCoordinator.Owner.DESKTOP, lease, events::add);
+        assertEquals(TransferCoordinator.Phase.COMPLETED, terminal(events).phase());
+        var firstResult = coordinator.outcomes(TransferCoordinator.Owner.DESKTOP).get(FIRST);
+        assertNotNull(firstResult);
+        assertEquals(0, coordinator.pendingCount(TransferCoordinator.Owner.DESKTOP));
+
+        // Original item remains selected in the Desktop queue; add 10 new images.
+        List<Path> more = java.util.stream.IntStream.range(0, 10)
+                .mapToObj(i -> Path.of("new-" + i + ".png")).toList();
+        List<Path> combined = new java.util.ArrayList<>();
+        combined.add(FIRST);
+        combined.addAll(more);
+        coordinator.replaceQueue(TransferCoordinator.Owner.DESKTOP, combined);
+        assertEquals(10, coordinator.pendingCount(TransferCoordinator.Owner.DESKTOP));
+        assertEquals(firstResult, coordinator.outcomes(TransferCoordinator.Owner.DESKTOP).get(FIRST));
+
+        coordinator.sendPending(TransferCoordinator.Owner.DESKTOP, lease, events::add);
+        TransferCoordinator.Event finished = terminal(events);
+        assertEquals(TransferCoordinator.Phase.COMPLETED, finished.phase());
+        assertEquals(10, finished.total());
+        assertEquals(List.of(List.of(FIRST), more), batches,
+                "First photo must never be re-copied as part of the second batch");
+        assertEquals(11, coordinator.outcomes(TransferCoordinator.Owner.DESKTOP).size());
+        assertEquals(firstResult, coordinator.outcomes(TransferCoordinator.Owner.DESKTOP).get(FIRST));
+        assertEquals(0, coordinator.pendingCount(TransferCoordinator.Owner.DESKTOP));
+        assertThrows(IllegalStateException.class, () -> coordinator.sendPending(
+                TransferCoordinator.Owner.DESKTOP, lease, events::add));
+    }
+
+    @Test void changingWatchInvalidatesPreviousSuccessForNewDevice() throws Exception {
+        List<String> calls = new java.util.concurrent.CopyOnWriteArrayList<>();
+        TransferCoordinator coordinator = new TransferCoordinator(new FakeBackend() {
+            @Override public void send(String adb, String serial, List<Path> photos,
+                                       Consumer<TransferUpdate> observer) {
+                calls.add(serial + "|" + photos);
+                observer.accept(new TransferUpdate(FIRST, 1, 1,
+                        TransferUpdate.Status.COPIED_SCAN_REQUESTED, "done", "remote"));
+            }
+        }, worker);
+        coordinator.selectWatch(ADB, "watch-A");
+        var original = coordinator.selection();
+        BlockingQueue<TransferCoordinator.Event> events = new LinkedBlockingQueue<>();
+        coordinator.replaceQueue(TransferCoordinator.Owner.DESKTOP, List.of(FIRST));
+        coordinator.sendPending(TransferCoordinator.Owner.DESKTOP, original, events::add);
+        assertEquals(TransferCoordinator.Phase.COMPLETED, terminal(events).phase());
+        assertEquals(0, coordinator.pendingCount(TransferCoordinator.Owner.DESKTOP));
+
+        coordinator.selectWatch(ADB, "watch-B");
+        assertEquals(1, coordinator.pendingCount(TransferCoordinator.Owner.DESKTOP));
+        assertThrows(IllegalStateException.class, () -> coordinator.sendPending(
+                TransferCoordinator.Owner.DESKTOP, original, events::add));
+        var other = coordinator.selection();
+        coordinator.sendPending(TransferCoordinator.Owner.DESKTOP, other, events::add);
+        assertEquals(TransferCoordinator.Phase.COMPLETED, terminal(events).phase());
+        assertEquals(List.of("watch-A|[one.png]", "watch-B|[one.png]"), calls);
+        assertEquals(0, coordinator.pendingCount(TransferCoordinator.Owner.DESKTOP));
+
+        coordinator.selectWatch(ADB, "watch-A");
+        assertEquals(1, coordinator.pendingCount(TransferCoordinator.Owner.DESKTOP),
+                "Returning to an old device cannot revive its previous lease");
+    }
+
+    @Test void newPhotosDoNotRepushEarlierScanFailuresAndRetryRemainsScanOnly() throws Exception {
+        String remote = "wgs-123e4567-e89b-12d3-a456-426614174000.png";
+        AtomicInteger sends = new AtomicInteger();
+        TransferCoordinator coordinator = new TransferCoordinator(new FakeBackend() {
+            @Override public void send(String adb, String serial, List<Path> photos,
+                                       Consumer<TransferUpdate> observer) {
+                int n = sends.incrementAndGet();
+                assertEquals(n == 1 ? List.of(FIRST) : List.of(SECOND), photos);
+                observer.accept(new TransferUpdate(photos.getFirst(), 1, 1,
+                        n == 1 ? TransferUpdate.Status.COPIED_SCAN_FAILED
+                               : TransferUpdate.Status.COPIED_SCAN_REQUESTED,
+                        "copied", n == 1 ? remote : "remote-second"));
+            }
+            @Override public void retry(String adb, String serial, List<TransferUpdate> prior,
+                                        Consumer<TransferUpdate> observer) {
+                assertEquals(1, prior.size());
+                assertEquals(FIRST, prior.getFirst().source());
+                assertEquals(TransferUpdate.Status.COPIED_SCAN_FAILED, prior.getFirst().status());
+                assertEquals(remote, prior.getFirst().remoteName());
+                observer.accept(new TransferUpdate(FIRST, 1, 1,
+                        TransferUpdate.Status.COPIED_SCAN_REQUESTED, "rescanned", remote));
+            }
+        }, worker);
+        coordinator.selectWatch(ADB, "watch-A");
+        var lease = coordinator.selection();
+        BlockingQueue<TransferCoordinator.Event> events = new LinkedBlockingQueue<>();
+        coordinator.replaceQueue(TransferCoordinator.Owner.DESKTOP, List.of(FIRST));
+        coordinator.sendPending(TransferCoordinator.Owner.DESKTOP, lease, events::add);
+        assertEquals(TransferCoordinator.Phase.COMPLETED, terminal(events).phase());
+        assertTrue(coordinator.canRetry(TransferCoordinator.Owner.DESKTOP));
+
+        coordinator.replaceQueue(TransferCoordinator.Owner.DESKTOP, List.of(FIRST, SECOND));
+        assertEquals(1, coordinator.pendingCount(TransferCoordinator.Owner.DESKTOP));
+        coordinator.sendPending(TransferCoordinator.Owner.DESKTOP, lease, events::add);
+        assertEquals(TransferCoordinator.Phase.COMPLETED, terminal(events).phase());
+        assertEquals(2, sends.get());
+        assertTrue(coordinator.canRetry(TransferCoordinator.Owner.DESKTOP));
+        assertEquals(TransferUpdate.Status.COPIED_SCAN_FAILED,
+                coordinator.outcomes(TransferCoordinator.Owner.DESKTOP).get(FIRST).status());
+        coordinator.retry(TransferCoordinator.Owner.DESKTOP, lease, events::add);
+        assertEquals(TransferCoordinator.Phase.COMPLETED, terminal(events).phase());
+        assertEquals(2, sends.get(), "Scan-only retry must never invoke a second photo push");
+        assertFalse(coordinator.canRetry(TransferCoordinator.Owner.DESKTOP));
+    }
+
+    @Test void removingAndReaddingPreviouslySentPhotoMakesItExplicitlyNew() throws Exception {
+        AtomicInteger pushes = new AtomicInteger();
+        TransferCoordinator coordinator = new TransferCoordinator(new FakeBackend() {
+            @Override public void send(String adb, String serial, List<Path> photos,
+                                       Consumer<TransferUpdate> observer) {
+                pushes.incrementAndGet();
+                observer.accept(new TransferUpdate(FIRST, 1, 1,
+                        TransferUpdate.Status.COPIED_SCAN_REQUESTED, "done", "remote"));
+            }
+        }, worker);
+        coordinator.selectWatch(ADB, "watch-A");
+        var lease = coordinator.selection();
+        BlockingQueue<TransferCoordinator.Event> events = new LinkedBlockingQueue<>();
+        coordinator.replaceQueue(TransferCoordinator.Owner.DESKTOP, List.of(FIRST));
+        coordinator.sendPending(TransferCoordinator.Owner.DESKTOP, lease, events::add);
+        assertEquals(TransferCoordinator.Phase.COMPLETED, terminal(events).phase());
+        coordinator.replaceQueue(TransferCoordinator.Owner.DESKTOP, List.of());
+        assertTrue(coordinator.outcomes(TransferCoordinator.Owner.DESKTOP).isEmpty());
+        coordinator.replaceQueue(TransferCoordinator.Owner.DESKTOP, List.of(FIRST));
+        assertEquals(1, coordinator.pendingCount(TransferCoordinator.Owner.DESKTOP));
+        coordinator.sendPending(TransferCoordinator.Owner.DESKTOP, lease, events::add);
+        assertEquals(TransferCoordinator.Phase.COMPLETED, terminal(events).phase());
+        assertEquals(2, pushes.get());
+    }
+
     private static TransferCoordinator.Event take(BlockingQueue<TransferCoordinator.Event> queue)
             throws Exception {
         var event = queue.poll(5, TimeUnit.SECONDS);
