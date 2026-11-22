@@ -27,7 +27,7 @@
 
 | ID | Issue / status | Outcome | Blocking dependencies |
 | --- | --- | --- | --- |
-| **W0** | [#13](https://github.com/aidarnig/WristPorter/issues/13) · PLANNED | Validate Watch4/iPhone pairing, ANCS/AMS discovery and first events on real hardware | None — **start here** |
+| **W0** | [#13](https://github.com/aidarnig/WristPorter/issues/13) · **DONE (foreground feasibility only)** | Watch4/iPhone GATT, ANCS, AMS event reception and explicit manual reconnect shown on reference pair; [experimental PR #34](https://github.com/aidarnig/WristPorter/pull/34) archived unmerged | None; **does not verify production Bridge, background recovery, media commands or other OS versions** |
 | **W1** | [#14](https://github.com/aidarnig/WristPorter/issues/14) · PLANNED | Independent Kotlin Wear OS build, tests, CI, bilingual UI shell | W0 API/device facts |
 | **W2** | [#15](https://github.com/aidarnig/WristPorter/issues/15) · PLANNED | Explicit BLE bond/pairing, selected-device identity, serialized GATT transport | W0, W1 |
 | **W3** | [#16](https://github.com/aidarnig/WristPorter/issues/16) · PLANNED | ANCS notification lifecycle, app attrs, categories, privacy-safe watch notifications | W2 |
