@@ -34,6 +34,8 @@ class MainActivity : Activity() {
     private val remoteCommand = UUID.fromString("9b3c81d8-57b1-4a8a-b8df-0e56f7ca51c2")
     private val entityUpdate = UUID.fromString("2f7cabce-808d-411f-9a0c-bb92ba96c102")
     private val cccd = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
+    private val gattService = uuid16(0x1801)
+    private val serviceChangedCharacteristic = uuid16(0x2a05)
 
     private data class Op(val characteristic: BluetoothGattCharacteristic, val subscribe: Boolean, val value: ByteArray)
     private val operationQueue = ArrayDeque<Op>()
@@ -41,6 +43,12 @@ class MainActivity : Activity() {
     private var adapter: BluetoothAdapter? = null
     private var gatt: BluetoothGatt? = null
     private lateinit var status: TextView
+    private lateinit var health: TextView
+    private val diagnostics = ProbeSessionState()
+    private var connected = false
+    private var discoveryInProgress = false
+    private var serviceRefreshPending = false
+    private var serviceChangeRefreshUsed = false
     private val lines = ArrayDeque<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,6 +69,9 @@ class MainActivity : Activity() {
         control("2. Discoverable (120s)") { requestDiscoverable() }
         control("3. Choose bonded phone") { showBondedDevices() }
         control("4. Disconnect") { disconnect("user request") }
+        control("5. Refresh GATT services") { requestServiceRefresh("manual") }
+        health = TextView(this).apply { textSize = 11f; setPadding(0, 6, 0, 6) }
+        layout.addView(health)
         layout.addView(status)
         setContentView(ScrollView(this).apply { addView(layout) })
         record("W0 experimental only; no phone data saved")
@@ -128,6 +139,11 @@ class MainActivity : Activity() {
     private fun connect(device: BluetoothDevice) {
         if (!hasAccess()) { record("Permission missing"); return }
         disconnect("replace connection")
+        diagnostics.newConnection()
+        connected = false
+        discoveryInProgress = false
+        serviceRefreshPending = false
+        serviceChangeRefreshUsed = false
         try {
             gatt = device.connectGatt(this, false, callbacks, BluetoothDevice.TRANSPORT_LE)
             record("GATT connection requested (selected bonded device; LE transport)")
@@ -145,34 +161,44 @@ class MainActivity : Activity() {
                 if (gatt !== connection) return@runOnUiThread
                 record("Link state=${if (newState == BluetoothProfile.STATE_CONNECTED) "connected" else "disconnected"}, GATT status=$statusCode")
                 if (statusCode == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED) {
-                    try {
-                        if (!connection.discoverServices()) record("Service discovery start refused")
-                    } catch (_: SecurityException) { record("Service discovery permission denied") }
+                    connected = true
+                    diagnostics.connected()
+                    requestServiceRefresh("new GATT link")
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                     disconnect("remote disconnected; no auto-retry")
                 }
             }
         }
 
+        override fun onServiceChanged(connection: BluetoothGatt) {
+            runOnUiThread {
+                if (gatt !== connection) return@runOnUiThread
+                serviceChanged("Android onServiceChanged")
+            }
+        }
+
         override fun onServicesDiscovered(connection: BluetoothGatt, statusCode: Int) {
             runOnUiThread {
                 if (gatt !== connection) return@runOnUiThread
+                discoveryInProgress = false
                 if (statusCode != BluetoothGatt.GATT_SUCCESS) {
-                    record("Service discovery failed status=$statusCode"); return@runOnUiThread
+                    record("Service discovery failed status=$statusCode")
+                    requestDeferredRefreshIfReady()
+                    return@runOnUiThread
                 }
                 val ids = connection.services.map { it.uuid }.toSet()
-                record("ANCS present=${ancsService in ids}; AMS present=${amsService in ids}")
-                record("Optional GATT: Battery=${uuid16(0x180f) in ids}, DeviceInfo=${uuid16(0x180a) in ids}, Time=${uuid16(0x1805) in ids}")
-                val ancs = connection.getService(ancsService)
-                val ams = connection.getService(amsService)
-                subscribe(ancs?.getCharacteristic(notificationSource))
-                subscribe(ams?.getCharacteristic(remoteCommand))
-                subscribe(ams?.getCharacteristic(entityUpdate))
-                // Subscribe to Entity Update first, then register monitoring of Player and Track.
-                ams?.getCharacteristic(entityUpdate)?.let { ch ->
-                    operationQueue.addLast(Op(ch, false, byteArrayOf(0, 0, 1))) // Player name + playback status
-                    operationQueue.addLast(Op(ch, false, byteArrayOf(2, 2)))    // Track title: event only, never displayed
-                }
+                diagnostics.servicesDiscovered(ancsService in ids, amsService in ids)
+                record("ANCS present=" + (ancsService in ids) + "; AMS present=" + (amsService in ids))
+                record("Optional GATT: Battery=" + (uuid16(0x180f) in ids) +
+                       ", DeviceInfo=" + (uuid16(0x180a) in ids) + ", Time=" + (uuid16(0x1805) in ids))
+                val changed = connection.getService(gattService)?.getCharacteristic(serviceChangedCharacteristic)
+                if (changed != null) subscribe(changed, indication = true)
+                else record("GATT Service Changed characteristic not exposed")
+                subscribe(connection.getService(ancsService)?.getCharacteristic(notificationSource))
+                subscribe(connection.getService(amsService)?.getCharacteristic(remoteCommand))
+                subscribe(connection.getService(amsService)?.getCharacteristic(entityUpdate))
+                // AMS registration writes follow a successful Entity Update CCCD response.
+                // Re-register after each discovery because iOS may republish AMS.
                 runNext()
             }
         }
@@ -180,8 +206,20 @@ class MainActivity : Activity() {
         override fun onDescriptorWrite(connection: BluetoothGatt, descriptor: BluetoothGattDescriptor, statusCode: Int) {
             runOnUiThread {
                 if (gatt !== connection) return@runOnUiThread
-                if (inFlight?.subscribe != true || inFlight?.characteristic?.uuid != descriptor.characteristic.uuid) return@runOnUiThread
-                record("Subscribed ${serviceLabel(descriptor.characteristic.uuid)} status=$statusCode")
+                val characteristic = descriptor.characteristic
+                if (inFlight?.subscribe != true || inFlight?.characteristic?.uuid != characteristic.uuid) return@runOnUiThread
+                record("Subscribed " + serviceLabel(characteristic.uuid) + " status=$statusCode")
+                when (characteristic.uuid) {
+                    notificationSource -> diagnostics.subscription("ANCS", statusCode)
+                    remoteCommand -> diagnostics.subscription("AMS command", statusCode)
+                    entityUpdate -> {
+                        diagnostics.subscription("AMS entity", statusCode)
+                        if (statusCode == BluetoothGatt.GATT_SUCCESS) {
+                            operationQueue.addLast(Op(characteristic, false, byteArrayOf(0, 0, 1))) // Player name and playback status
+                            operationQueue.addLast(Op(characteristic, false, byteArrayOf(2, 2))) // Track title; never display the value
+                        }
+                    }
+                }
                 inFlight = null
                 runNext()
             }
@@ -192,6 +230,7 @@ class MainActivity : Activity() {
                 if (gatt !== connection) return@runOnUiThread
                 if (inFlight?.subscribe != false || inFlight?.characteristic?.uuid != characteristic.uuid) return@runOnUiThread
                 record("AMS metadata subscription request status=$statusCode")
+                diagnostics.amsRegistration(statusCode)
                 inFlight = null
                 runNext()
             }
@@ -210,19 +249,32 @@ class MainActivity : Activity() {
     private fun received(connection: BluetoothGatt, characteristic: UUID, data: ByteArray) {
         runOnUiThread {
             if (gatt !== connection) return@runOnUiThread
-            val summary = when (characteristic) {
-                notificationSource -> ProbeSummaries.ancs(data)
+            if (characteristic == serviceChangedCharacteristic) {
+                serviceChanged("GATT indication")
+                return@runOnUiThread
+            }
+            val eventSummary = when (characteristic) {
+                notificationSource -> {
+                    diagnostics.ancsEvent()
+                    ProbeSummaries.ancs(data)
+                }
                 remoteCommand -> ProbeSummaries.amsCommands(data)
-                entityUpdate -> ProbeSummaries.amsEntity(data)
+                entityUpdate -> {
+                    diagnostics.amsEvent()
+                    ProbeSummaries.amsEntity(data)
+                }
                 else -> return@runOnUiThread
             }
-            record(summary) // No raw bytes, UID, text or remote identity.
+            record(eventSummary) // No raw bytes, UID, text or remote identity.
         }
     }
 
-    private fun subscribe(ch: BluetoothGattCharacteristic?) {
-        if (ch != null) operationQueue.addLast(Op(ch, true, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE))
-        else record("One optional protocol characteristic not exposed")
+    private fun subscribe(ch: BluetoothGattCharacteristic?, indication: Boolean = false) {
+        if (ch != null) {
+            val value = if (indication) BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
+                        else BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+            operationQueue.addLast(Op(ch, true, value))
+        } else record("One protocol characteristic not exposed")
     }
 
     private fun runNext() {
@@ -238,7 +290,50 @@ class MainActivity : Activity() {
                 } else writeCharacteristic(connection, op.characteristic, op.value)
             } catch (_: SecurityException) { false } catch (_: IllegalArgumentException) { false }
             if (started) { inFlight = op; return }
-            record("GATT operation could not start (${serviceLabel(op.characteristic.uuid)})")
+            record("GATT operation could not start (" + serviceLabel(op.characteristic.uuid) + ")")
+        }
+        requestDeferredRefreshIfReady()
+    }
+
+    private fun serviceChanged(source: String) {
+        record("GATT services changed: $source")
+        if (!serviceChangeRefreshUsed) {
+            serviceChangeRefreshUsed = true // One automatic refresh maximum per selected GATT connection.
+            requestServiceRefresh("service change")
+        } else record("Additional change: use manual Refresh GATT services")
+    }
+
+    private fun requestServiceRefresh(reason: String) {
+        val connection = gatt
+        if (connection == null || !connected) {
+            record("GATT refresh unavailable: select bonded phone first")
+            return
+        }
+        if (discoveryInProgress || inFlight != null || operationQueue.isNotEmpty()) {
+            serviceRefreshPending = true
+            record("GATT refresh queued ($reason)")
+            return
+        }
+        serviceRefreshPending = false
+        discoveryInProgress = true
+        record("GATT service discovery requested ($reason)")
+        try {
+            if (!connection.discoverServices()) {
+                discoveryInProgress = false
+                record("GATT service discovery request refused")
+            }
+        } catch (_: SecurityException) {
+            discoveryInProgress = false
+            record("GATT service discovery permission denied")
+        } catch (_: IllegalStateException) {
+            discoveryInProgress = false
+            record("GATT service discovery unavailable")
+        }
+    }
+
+    private fun requestDeferredRefreshIfReady() {
+        if (serviceRefreshPending && !discoveryInProgress && inFlight == null && operationQueue.isEmpty()) {
+            requestServiceRefresh("deferred service change")
         }
     }
 
@@ -259,6 +354,11 @@ class MainActivity : Activity() {
         inFlight = null
         val old = gatt
         gatt = null
+        connected = false
+        discoveryInProgress = false
+        serviceRefreshPending = false
+        serviceChangeRefreshUsed = false
+        diagnostics.disconnected()
         try { old?.disconnect() } catch (_: Exception) { /* permission may have been revoked */ }
         try { old?.close() } catch (_: Exception) { /* ignore */ }
         if (old != null) record("Disconnected: $reason")
@@ -268,6 +368,7 @@ class MainActivity : Activity() {
         notificationSource -> "ANCS Notification Source"
         remoteCommand -> "AMS Remote Command"
         entityUpdate -> "AMS Entity Update"
+        serviceChangedCharacteristic -> "GATT Service Changed"
         else -> "unknown characteristic"
     }
 
@@ -277,6 +378,7 @@ class MainActivity : Activity() {
         lines.addLast(message)
         while (lines.size > 60) lines.removeFirst()
         status.text = lines.joinToString("\n")
+        if (::health.isInitialized) health.text = diagnostics.summary()
     }
 
     override fun onDestroy() {
