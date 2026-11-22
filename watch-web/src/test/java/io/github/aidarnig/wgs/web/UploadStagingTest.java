@@ -316,7 +316,9 @@ class UploadStagingTest {
             resume.countDown();
             assertInstanceOf(UploadStaging.Rejected.class, first.get(6, TimeUnit.SECONDS));
             assertInstanceOf(UploadStaging.Rejected.class, second.get(6, TimeUnit.SECONDS));
-            assertEquals(0, Files.list(temp.resolve("parallel")).count());
+            try (var listing = Files.list(temp.resolve("parallel"))) {
+                assertEquals(0, listing.count());
+            }
         } finally {
             resume.countDown();
             pool.shutdownNow();
