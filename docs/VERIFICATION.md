@@ -33,7 +33,17 @@ All observations must include **date, app build/commit, watch model/firmware/API
 
 **Tester:** project owner; **build:** [draft PR #66 Windows preview run #45048471637](https://github.com/aidarnig/WristPorter/actions/runs/45048471637), commit `05aa185576bb9b21f1fbb2a2e3da132305ff9ac9`. **Device:** Galaxy Watch4 Classic (Android 16/API36 previously observed on same date; exact firmware not independently reconfirmed). **Fixture:** 12 distinct artificial JPEG/PNG photos labelled `B01`–`B12`. **Result: PASS (owner-reported)** — the owner states all new photos appeared in Samsung Gallery in the **same order as the PC queue** using the paced build, whereas a previous default-speed 16-photo test failed. The owner also observed that this build's transfer was **substantially slower**; no precise duration was measured.
 
-**Limit:** The observed PASS validates the paced behavior for **this fixture and watch**, not a universal Gallery guarantee or every 70+ photo scenario. The new Fast/Ordered mode selector requested after this test is a separate code change; its UI and saved preference have **no hardware verification yet**. No private files were uploaded, and no photo bytes or EXIF were changed.
+**Limit:** The observed PASS validates the paced behavior for **this fixture and watch**, not a universal Gallery guarantee or every 70+ photo scenario. The Fast/Ordered mode selector was implemented in a later build; its **Windows UI and persistence were subsequently owner-confirmed** (see next section). The latter does not reverify Samsung Gallery ordering. No private files were uploaded, and no photo bytes or EXIF were changed.
+
+## Desktop #45 — Windows Fast/Ordered selector acceptance (2026-11-22)
+
+**Tester:** project owner, interactive acknowledgment “все хорошо” (“everything is good”) in the Issue #45 executor chat in direct response to the specific three-step UI checkpoint. **Build offered immediately before response:** [draft PR #66 Windows preview run #45050356950](https://github.com/aidarnig/WristPorter/actions/runs/45050356950), source commit `9806f43a86a14db047a908d0451ebeae8c5660ff` (preview artifact `wristporter-windows-preview-45050356950`). Owner did not explicitly re-report the executable checksum, Windows build, individual step-by-step results or a separate gallery test.
+
+| ID | Owner checkpoint | Result | Evidential limits |
+| --- | --- | --- | --- |
+| DESK-ORDER-03 | Confirm both `По порядку` and `Быстрый` are visible, choose `Быстрый`, restart preview, verify `Быстрый` remains selected | **PASS (owner-reported, aggregate confirmation)** | User responded “все хорошо” to all three requested steps. No screenshots/logs, timed performance measurement or fresh photo transfer were provided |
+
+**Conclusion:** The switch and persisted selection are accepted for the targeted Windows preview as an owner report. The earlier **12-photo Gallery-order PASS** supports the paced algorithm, but is **not** an independent repeat of Gallery ordering on this newer selector build or a universal guarantee. The Fast no-pause implementation is covered by fake-ADB tests, not by a new hardware speed measurement. Merge still requires the separate independent review of the shared transfer/coordinator changes.
 
 ## W14-A — Desktop regression on physical Galaxy Watch4 Classic (2026-11-22)
 
