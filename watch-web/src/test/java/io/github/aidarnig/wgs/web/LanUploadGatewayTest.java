@@ -120,7 +120,7 @@ class LanUploadGatewayTest {
         assertEquals("same-origin", root.headers().firstValue("Referrer-Policy").orElseThrow());
         assertTrue(root.headers().firstValue("Content-Security-Policy").orElseThrow()
                 .contains("default-src 'none'"));
-        assertEquals(404, get("uploads").statusCode());
+        assertEquals(405, get("uploads").statusCode(), "Route exists, GET is forbidden");
         assertEquals(404, get("session/fake").statusCode());
         assertEquals(404, get("status/extra").statusCode());
         assertEquals(400, get("status?token=123").statusCode());
