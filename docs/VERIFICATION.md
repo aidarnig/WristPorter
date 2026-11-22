@@ -18,6 +18,19 @@ All observations must include **date, app build/commit, watch model/firmware/API
 - **Desktop v1.1.2 screenshots:** EN/RU user visual acceptance, 9/9 application-reported transfer; this is not an independent later Gallery verification.
 - **Bridge ANCS/AMS on Watch4 Classic:** **NOT TESTED**.
 
+## W14-A — Desktop regression on physical Galaxy Watch4 Classic (2026-11-22)
+
+**Tester:** project owner, interactive report in Issue #38 executor chat. **Artifact:** PR #43, test-only Windows preview [Actions run #45024705910](https://github.com/aidarnig/WristPorter/actions/runs/45024705910), commit `0df7472b47b79e976c24b08a8231d8768bbb82d6`, Desktop internal version 1.1.2. **Device:** Galaxy Watch4 Classic; exact watch firmware/Android API and Windows OS build **not reported**. No iPhone involved.
+
+| ID | Manual scenario | Result | Actual owner-observed outcome |
+| --- | --- | --- | --- |
+| W14A-DESK-01 | Selected watch, transfer one photo, inspect Gallery | **PASS** | Photo sent and visible in Galaxy Watch4 Classic Gallery |
+| W14A-DESK-02 | Transfer batch larger than 20 photos | **PASS** | Owner reports 20+ photos all transferred; precise count and Gallery confirmation for each batch item not separately specified |
+| W14A-DESK-03 | Cancel during a 15-photo batch at 10/15 | **PASS (stop)** | Transfer stops on Cancel; no claim of device-side cleanup of in-flight photo |
+| W14A-DESK-04 | Press Send after cancellation and check already transferred files | **FAIL (resume UX)** | Progress restarts at 0/15 and already transferred photos are sent again; duplicate local-to-watch pushes observed, but exact extra Gallery entries not counted |
+
+**Disposition:** W14-A transfer/cancel hardware baseline verified; resume behavior needs correction and a targeted second owner test before PR merge. No claims about Safari, HTTP, iOS, scan-only retry under injected failure or alternate devices. For interruptions mid-ADB push, remote copy completion may be ambiguous without a callback; do not promise perfect deduplication of that in-flight file.
+
 ## W0 — initial real-device probe (all NOT TESTED)
 
 | ID | Scenario | Status | Evidence requirements |
