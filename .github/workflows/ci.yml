@@ -11,15 +11,6 @@ on:
       - 'ci/test-verify-changed.sh'
       - 'ci/test-ci-triggers.py'
       - '.github/workflows/ci.yml'
-  pull_request:
-    paths:
-      - 'pom.xml'
-      - 'watch-*/pom.xml'
-      - 'watch-*/src/**'
-      - 'ci/verify-changed.sh'
-      - 'ci/test-verify-changed.sh'
-      - 'ci/test-ci-triggers.py'
-      - '.github/workflows/ci.yml'
   workflow_dispatch:
 
 permissions:
